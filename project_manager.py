@@ -476,9 +476,9 @@ class ProjectManager:
                 category_tags_html = category_tags[0]
 
             # 既存のカテゴリセクションを更新
-            # <div class="article-categories">から</div>までの内容を置換
-            category_pattern = r'(<div class="article-categories">\s*)(.*?)(\s*</div>)'
-            new_category_section = f'\\g<1>\n                        {category_tags_html}\n                    \\g<3>'
+            # <div class="article-categories">から</div>までの内容を置換（改行の累積を防ぐ）
+            category_pattern = r'<div class="article-categories">\s*.*?\s*</div>'
+            new_category_section = f'<div class="article-categories">\n                        {category_tags_html}\n                    </div>'
 
             new_content = re.sub(category_pattern, new_category_section, content, flags=re.DOTALL)
 
@@ -650,6 +650,7 @@ class ProjectManager:
             content = content.replace('{{CATEGORIES}}', ', '.join(project['categories']))
             content = content.replace('{{CATEGORY_TAGS}}', category_tags_html)
             content = content.replace('{{DATE}}', current_date)
+            content = content.replace('VIDEO_ID_HERE', 'VIDEO_ID_PLACEHOLDER')
 
             # 記事ファイルを保存
             article_file = project_dir / "index.html"
