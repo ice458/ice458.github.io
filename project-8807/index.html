@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>低出力AB級パワーアンプ - ice458の物置き</title>
+    <link rel="stylesheet" href="../styles.css">
+    <!-- ファビコン設定 -->
+    <link rel="icon" type="image/x-icon" href="../favicon.ico">
+    <link rel="icon" type="image/png" sizes="16x16" href="../favicon-16x16.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="../favicon-32x32.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="../favicon-180x180.png">
+    <link rel="manifest" href="../site.webmanifest">
+
+    <!-- ブラウザ固有のメタタグ -->
+    <meta name="theme-color" content="#aaaeae">
+    <meta name="msapplication-TileColor" content="#aaaeae">
+    <meta name="msapplication-TileImage" content="../favicon-180x180.png">
+</head>
+
+<body>
+    <header class="site-header">
+        <div class="site-branding">
+            <div class="site-logo">
+                <img src="../logo.png" alt="ロゴ" class="logo-img">
+            </div>
+            <h1 class="site-title"><a href="../index.html">ice458の物置き</a></h1>
+        </div>
+    </header>
+
+    <main class="site-main">
+        <article class="main-content">
+            <div class="article-header">
+                <h1 class="article-title">低出力AB級パワーアンプ</h1>
+                <div class="article-meta">
+                    <div class="article-categories">
+
+
+
+                        <span class="category-tag">オーディオ</span>
+                        <span class="category-tag">電子工作</span>
+
+
+
+                    </div>
+                    <div class="article-date">作成日: 2021年02月13日</div>
+                </div>
+            </div>
+
+            <div class="article-content">
+                <div class="article-overview">
+                    <h2>概要</h2>
+                    <p>できるだけ低コストでつくるオーディオアンプです。</p>
+                </div>
+
+                <div class="article-section">
+                    <h2>製作の背景</h2>
+                    <p>今まで数年間、鎌ベイアンプこと SDAR-2100
+                        を使って音楽を聴いていたのですが、アナログのものが欲しくなり製作しました。低予算で良いものが作れたので公開してみます。<br><br>最近は安価で小さなデジタルアンプの製品があふれていますが、アナログアンプでそれらの価格帯のものとなるとまず見かけることはありません。こういう時は自作してしまうのが手っ取り早いのかもしれません。
+                    </p>
+                </div>
+
+                <div class="article-section">
+                    <h2>仕様</h2>
+                    <ul>
+                        <li>4Ωで4W+4W 程度の出力</li>
+                        <li>筐体のサイズは小さく</li>
+                        <li>予算1万円以内</li>
+                        <li>できるだけ現行品の部品を使う</li>
+                    </ul>
+                    <p>前に使っていた鎌ベイアンプでは10W+10W の出力があったのに普段の音量では1W
+                        も出ていなかったので、低出力のものを作ることにしました。当たり前ですが、最大出力を下げれば全体のサイズもコストも低く抑えられます。できるだけ現行品を使うというのは、入手可能なディスクリートのトランジスタは減っているので入手性の良いものを使おう、ということです。
+                    </p>
+                </div>
+
+                <div class="article-section">
+                    <h2>回路図(増幅部)</h2>
+                    <div class="article-image">
+                        <img src="img/ab-1.webp" alt="AB級アンプの回路図">
+                        <p class="image-caption">AB級アンプの回路図</p>
+                    </div>
+                    <p>オペアンプにバッファを付けただけのごく簡単な構成です。オペアンプは安価な NJM4580DD を選びました。電圧利得はおよそ12dB に設定しました。<br><br>
+                        出力段は東芝のスイッチング用の石、 TTA1452B / TTC3710B です。オーディオ用のものではありませんが、hFE の直線性がとても良いので使ってみることにしました。ドライバ段と
+                        Vbe マルチプライヤには同じく東芝の TTA004B / TTC004B を選びました。TO-126パッケージってなんだかかわいらしい見た目で好きです。<br><br>
+
+                        電源ラインのパスコンはすべて一般用です。電解コンデンサと並列に入っているのは積層セラミックコンデンサです。オーディオ用途としてはご法度なのかもしれませんが、信号経路ではないのでそう大きな差は出ないでしょう。<br><br>
+
+                        フィルムコンデンサは色の好みで適当に選んだので様々なものが混じっています。C3 は東信工業の UPZ シリーズ 、C6 はFaithful Linkの MEM シリーズ 、C11 はルビコンの
+                        F2D シリーズ です。多回転半固定抵抗器が青なので、赤青黄白と揃います。カラフルなのって良いですよね(?) </p>
+
+                    <h2>回路図(電源部)</h2>
+                    <div class="article-image">
+                        <img src="img/pw-1.png" alt="電源の回路図">
+                        <p class="image-caption">電源の回路図</p>
+                    </div>
+                    <p>こちらもひねりのない電源です。電源トランスは東栄変成器の J-162 を使いました。±8V 2A で2000円ほどのものです。<br><br>
+
+                        整流ダイオードはショットキーバリアダイオードの SB240LES です。順電圧が低いので普通のダイオードを使うよりより電源電圧を高く取れます。<br><br>
+
+                        平滑コンデンサは安く手に入った ニチコン KW の22000uF を使いましたが、ここまでの容量は不要でした。半分ほどの容量でも十二分だと思われます。</p>
+
+                </div>
+
+                <div class="article-section">
+                    <h2>組み立て、調整</h2>
+                    <div class="process-step">
+                        <div class="article-image">
+                            <img src="img/kiban.png" alt="基板の配線図">
+                            <p class="image-caption">基板の配線図</p>
+                        </div>
+                        <p>アンプ基板のパターン例です。秋月電子通商取り扱いの C タイプユニバーサル基板 (販売コード：100517) にぴったり収まります。緑色が裏面配線、赤色が表面配線です。<br><br>
+                            TTA1452B / TTC3710B は端子配列が ECB ではないので気を付けてください。<br><br>
+
+                            NJM4580DD は2回路入りですが、各チャンネルの基板に1粒ずつ載せています。使用しない回路の処理を忘れずにしてください。<br><br>
+
+                            コイルは直径1.0mmの UEW 線を単3電池に9～10回程度巻き付けて作るとちょうどいい具合の値になるはずです。精度の必要な部品ではないので適当でいいと思います。
+                        </p>
+                        <div class="article-image">
+                            <img src="img/img_4185-e382b3e38394e383bc.webp" alt="ケースへの組み込み">
+                            <p class="image-caption">ケースへの組み込み</p>
+                        </div>
+                        <p> ケース (MB14-8-20 / タカチ) へ組み込みました。<br><br>
+
+                            回路図には書かれていませんが、2SA1015 / 2SC1815 を出力ショート保護回路用に追加しています。東芝製の 2SA1015 / 2SC1815
+                            はすでにディスコンですが、他社製のものが出回っています。<br><br>
+
+                            出力段と Vbe
+                            マルチプライヤのトランジスタは熱結合させるため同じヒートシンクに固定します。初めから3つ分の穴が開いているヒートシンクはあまり売っていないと思うので、適当なヒートシンクに自分で穴をあけるのが良いでしょう。今回はグローバル電子の
+                            17PB046-01025 を使用しました。<br><br>
+
+                            入力のRCA端子は絶縁タイプにするとグランドループを防止できます。配線はツイストにするとハムノイズが乗りにくくなります。<br><br>
+
+                            TTA1452B / TTC3710B のエミッタ間の電圧を測ることでバイアス電流を知ることができます。半固定抵抗を回して15ｍA 程度になるように調整しました。エミッタ間の抵抗が
+                            0.47+0.47 = 0.94Ω なので、およそ14mV になるようにすればよいです。</p>
+                    </div>
+                </div>
+
+                <div class="article-section">
+                    <h2>動作テスト</h2>
+                    <p>
+                        3.9Ω 抵抗負荷で1kHz の正弦波を入れます。
+                    </p>
+                    <div class="article-image">
+                        <img src="img/ds1z_quickprint3-e382b3e38394e383bc.png" alt="正弦波出力">
+                        <p class="image-caption">正弦波出力</p>
+                    </div>
+                    <p>
+                        ボリュームを少し絞った状態で測定していますが、4.5W ほど出ています。目標出力の 4W
+                        は達成できました。全開にすればもう少しだけ出ます(歪みが出てきますが)。この動作テストでは片チャンネルずつ測定しています。両チャンネル同時に連続して4.5W
+                        を出すことは電源の容量が足りなくてできません。両チャンネル同時にフルパワーで使うことはないので、問題なしとします。<br><br>
+
+                        歪み率は測っていませんが、見た目でわかる歪みはありません。聴覚上も問題ありませんでした。LTspice のシミュレーションでは歪率は 0.013％ (1kHz、8Vp-p出力、4Ω抵抗負荷時)
+                        となりました。実際の回路ではこの値からずれていることも十分考えられますが、0.1%を下回っていればその違いは耳ではほとんどわからないでしょう。<br><br>
+
+                        シミュレーションでの周波数特性です。
+                    </p>
+                    <div class="article-image">
+                        <img src="img/f.webp" alt="周波数特性">
+                        <p class="image-caption">周波数特性</p>
+                    </div>
+                    <p>
+                        信号経路にコンデンサが入っていないので、0Hz から増幅できています。カットオフ周波数は190kHz くらいです。<br><br>
+
+                        ＊2022/8/14 追記<br>
+                        オシロスコープで実機の周波数特性を取ってみました。垂直軸分解能が8bitしかないのであまり参考になりませんが、概形はシミュレーション通りといえそうです。
+                    </p>
+                    <div class="article-image">
+                        <img src="img/fe789b9e680a7.webp" alt="実機の周波数特性">
+                        <p class="image-caption">実機の周波数特性</p>
+                    </div>
+                </div>
+                <div class="article-section">
+                    <h2>完成</h2>
+                    <div class="article-image">
+                        <img src="img/img_4187-e382b3e38394e383bc.webp" alt="完成したアンプ">
+                        <p class="image-caption">完成したアンプ</p>
+                    </div>
+                    <p>ポップノイズも DC 漏れもほぼありません。トランスからの磁束漏れを心配していたのですが、ハムノイズも出ませんでした。<br><br>
+
+                        1か月ほど使い込んだのですが、とても聞きやすいです。スピーカーはVictorの SP-FS1
+                        につないで聴いているのですが、こんなに鳴るものだったのかと驚きました。出力は小さいですが、十分すぎる音量が出ます。定位が非常に正確で、極端にパート数の多い曲であっても楽器の位置がはっきりと分かり楽しいです。とても満足のいくものに仕上がりました。
+                    </p>
+                </div>
+
+                <div class="article-section">
+                    <h2>主な使用部品</h2>
+                    <div class="parts-table">
+                        <table class="parts-list">
+                            <thead>
+                                <tr>
+                                    <th>部品名</th>
+                                    <th>型番</th>
+                                    <th>備考</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>オペアンプ</td>
+                                    <td>NJM4580DD</td>
+                                    <td>新日本無線</td>
+                                </tr>
+                                <tr>
+                                    <td>出力トランジスタ</td>
+                                    <td>TTA1452B / TTC3710B</td>
+                                    <td>東芝</td>
+                                </tr>
+                                <tr>
+                                    <td>ドライバトランジスタ</td>
+                                    <td>TTA004B / TTC004B</td>
+                                    <td>東芝</td>
+                                </tr>
+                                <tr>
+                                    <td>電源トランス</td>
+                                    <td>J-162</td>
+                                    <td>東栄変成器</td>
+                                </tr>
+                                <tr>
+                                    <td>整流ダイオード</td>
+                                    <td>SB240LES</td>
+                                    <td>PANJIT</td>
+                                </tr>
+                                <tr>
+                                    <td>平滑コンデンサ</td>
+                                    <td>KWシリーズ 22000uF 25V</td>
+                                    <td>ニチコン</td>
+                                </tr>
+                                <tr>
+                                    <td>ケース</td>
+                                    <td>MB14-8-20</td>
+                                    <td>タカチ</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <p>その他部品は汎用品。R10-R13 の定格電力は余裕を持たせてください。<br><br>
+                        最終的に8000円ほどで制作できました。</p>
+                </div>
+            </div>
+
+            <div class="article-footer">
+                <div class="back-link">
+                    <a href="../index.html" class="back-button">← 物置きに戻る</a>
+                </div>
+                <div class="article-info">
+                    <p>最終更新: 2022年08月14日</p>
+                </div>
+            </div>
+        </article>
+    </main>
+
+    <footer class="site-footer">
+        <div class="site-info">
+            <p>&copy; 2025 ice458の物置き</p>
+        </div>
+    </footer>
+</body>
+
+</html>

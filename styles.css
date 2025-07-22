@@ -764,6 +764,44 @@ a:hover {
     font-size: 1.1rem;
 }
 
+/* 本番画像用のスタイル */
+.article-image {
+    margin: 24px 0;
+    text-align: center;
+}
+
+.article-image img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    display: block;
+    margin: 0 auto;
+}
+
+.image-caption {
+    margin: 12px 0 0 0;
+    font-size: 0.9rem;
+    color: #64748b;
+    font-style: italic;
+    text-align: center;
+}
+
+/* 記事内画像の自動調整（汎用） */
+.article-content img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    margin: 16px 0;
+    display: block;
+}
+
+/* プレースホルダー内の画像は無効にする（本来は画像を入れるべきではない） */
+.image-placeholder img {
+    display: none;
+}
+
 /* 参考資料リスト */
 .reference-list {
     list-style: none;
@@ -877,6 +915,25 @@ a:hover {
         padding: 16px;
     }
     
+    /* 画像のモバイル対応 */
+    .article-image {
+        margin: 16px 0;
+    }
+    
+    .article-image img {
+        border-radius: 6px;
+    }
+    
+    .image-caption {
+        font-size: 0.85rem;
+        margin-top: 8px;
+    }
+    
+    .image-placeholder {
+        padding: 30px 16px;
+        margin: 16px 0;
+    }
+    
     .article-footer {
         flex-direction: column;
         align-items: flex-start;
@@ -894,5 +951,15 @@ a:hover {
     
     .article-section h3 {
         font-size: 1.2rem;
+    }
+    
+    /* 小画面での画像調整 */
+    .image-placeholder {
+        padding: 24px 12px;
+        margin: 12px 0;
+    }
+    
+    .image-placeholder p {
+        font-size: 0.9rem;
     }
 }
