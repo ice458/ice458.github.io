@@ -46,12 +46,14 @@
                     <div class="filter-buttons">
 
                         <button class="filter-btn active" data-category="all">全て</button>
-                        <button class="filter-btn" data-category="test">test</button>
+                        <button class="filter-btn" data-category="オーディオ">オーディオ</button>
+                        <button class="filter-btn" data-category="原理理解">原理理解</button>
                         <button class="filter-btn" data-category="時計">時計</button>
                         <button class="filter-btn" data-category="測定器">測定器</button>
                         <button class="filter-btn" data-category="無線">無線</button>
+                        <button class="filter-btn" data-category="表示器">表示器</button>
+                        <button class="filter-btn" data-category="電卓">電卓</button>
                         <button class="filter-btn" data-category="電子工作">電子工作</button>
-                        <button class="filter-btn" data-category="音響">音響</button>
                     </div>
                 </div>
                 
@@ -66,35 +68,127 @@
                         </thead>
                         <tbody>
 
-                            <tr class="project-row" data-category="電子工作,測定器" data-search="test">
-                                <td><a href="project-7906/index.html">テスト</a></td>
+                            <tr class="project-row" data-category="電子工作,電卓" data-search="">
+                                <td><a href="#rpn関数電卓">RPN関数電卓</a></td>
                                 <td>
                                     <span class="category-tag">電子工作</span>
-                                    <span class="category-tag">測定器</span>
+                                    <span class="category-tag">電卓</span>
                                 </td>
-                                <td>test</td>
+                                <td>逆ポーランド記法の関数電卓です。</td>
                             </tr>
-                            <tr class="project-row" data-category="音響,時計,無線" data-search="ああ">
-                                <td><a href="project-3854/index.html">てすと</a></td>
+                            <tr class="project-row" data-category="オーディオ,電子工作" data-search="">
+                                <td><a href="#電子オルゴール">電子オルゴール</a></td>
                                 <td>
-                                    <span class="category-tag">音響</span>
+                                    <span class="category-tag">オーディオ</span>
+                                    <span class="category-tag">電子工作</span>
+                                </td>
+                                <td>8bitPICで4chの減衰正弦波を鳴らす電子オルゴールです。</td>
+                            </tr>
+                            <tr class="project-row" data-category="表示器,電子工作" data-search="">
+                                <td><a href="#8桁7セグled駆動基板">8桁7セグLED駆動基板</a></td>
+                                <td>
+                                    <span class="category-tag">表示器</span>
+                                    <span class="category-tag">電子工作</span>
+                                </td>
+                                <td>GL91ARというLEDをシリアル制御で動かす基板です。</td>
+                            </tr>
+                            <tr class="project-row" data-category="測定器,電子工作" data-search="">
+                                <td><a href="#usbインターフェース付きcvcc電源">USBインターフェース付きCVCC電源</a></td>
+                                <td>
+                                    <span class="category-tag">測定器</span>
+                                    <span class="category-tag">電子工作</span>
+                                </td>
+                                <td>PCからリモートで操作できる汎用電源装置です。</td>
+                            </tr>
+                            <tr class="project-row" data-category="測定器,電子工作" data-search="">
+                                <td><a href="#高安定精密電源装置">高安定精密電源装置</a></td>
+                                <td>
+                                    <span class="category-tag">測定器</span>
+                                    <span class="category-tag">電子工作</span>
+                                </td>
+                                <td>6.5桁DMMの最下位を止める安定度の電源装置です。</td>
+                            </tr>
+                            <tr class="project-row" data-category="電子工作,原理理解" data-search="">
+                                <td><a href="#逐次比較型adc">逐次比較型ADC</a></td>
+                                <td>
+                                    <span class="category-tag">電子工作</span>
+                                    <span class="category-tag">原理理解</span>
+                                </td>
+                                <td>標準ロジックICで作る4bitのSAR ADCです。</td>
+                            </tr>
+                            <tr class="project-row" data-category="測定器,電子工作" data-search="">
+                                <td><a href="#心電計">心電計</a></td>
+                                <td>
+                                    <span class="category-tag">測定器</span>
+                                    <span class="category-tag">電子工作</span>
+                                </td>
+                                <td>1チャンネルの心電図を見るための装置です。</td>
+                            </tr>
+                            <tr class="project-row" data-category="オーディオ,電子工作" data-search="">
+                                <td><a href="#パラメトリックスピーカー">パラメトリックスピーカー</a></td>
+                                <td>
+                                    <span class="category-tag">オーディオ</span>
+                                    <span class="category-tag">電子工作</span>
+                                </td>
+                                <td>非常に強い指向性を持ったスピーカーです。</td>
+                            </tr>
+                            <tr class="project-row" data-category="時計,表示器,電子工作" data-search="">
+                                <td><a href="#実用的なvfd時計">実用的なVFD時計</a></td>
+                                <td>
                                     <span class="category-tag">時計</span>
-                                    <span class="category-tag">無線</span>
+                                    <span class="category-tag">表示器</span>
+                                    <span class="category-tag">電子工作</span>
                                 </td>
-                                <td>てすと</td>
+                                <td>PICでダイナミック制御をします。</td>
                             </tr>
-                            <tr class="project-row" data-category="test" data-search="">
-                                <td><a href="test/index.html">test</a></td>
-                                <td><span class="category-tag">test</span></td>
-                                <td></td>
-                            </tr>
-                            <tr class="project-row" data-category="test,測定器" data-search="123">
-                                <td><a href="test123/index.html">test123</a></td>
+                            <tr class="project-row" data-category="測定器,電子工作" data-search="">
+                                <td><a href="#デュアルトラッキング電源装置">デュアルトラッキング電源装置</a></td>
                                 <td>
-                                    <span class="category-tag">test</span>
                                     <span class="category-tag">測定器</span>
+                                    <span class="category-tag">電子工作</span>
                                 </td>
-                                <td>111</td>
+                                <td>絶対値の等しい正負電圧を出力可能な電源装置です。</td>
+                            </tr>
+                            <tr class="project-row" data-category="測定器,電子工作" data-search="">
+                                <td><a href="#簡易ファンクションジェネレータ">簡易ファンクションジェネレータ</a></td>
+                                <td>
+                                    <span class="category-tag">測定器</span>
+                                    <span class="category-tag">電子工作</span>
+                                </td>
+                                <td>AD9833を使った簡易的なファンクションジェネレータです。</td>
+                            </tr>
+                            <tr class="project-row" data-category="無線,電子工作" data-search="">
+                                <td><a href="#無電源fmラジオ">無電源FMラジオ</a></td>
+                                <td>
+                                    <span class="category-tag">無線</span>
+                                    <span class="category-tag">電子工作</span>
+                                </td>
+                                <td>いわゆるFM用ゲルマラジオ的なものです。</td>
+                            </tr>
+                            <tr class="project-row" data-category="時計,表示器,電子工作" data-search="">
+                                <td><a href="#シンプルなvfd時計">シンプルなVFD時計</a></td>
+                                <td>
+                                    <span class="category-tag">時計</span>
+                                    <span class="category-tag">表示器</span>
+                                    <span class="category-tag">電子工作</span>
+                                </td>
+                                <td>専用ICで小さくまとめます。</td>
+                            </tr>
+                            <tr class="project-row" data-category="測定器,電子工作" data-search="">
+                                <td><a href="#放射線感知ねこ">放射線感知ねこ</a></td>
+                                <td>
+                                    <span class="category-tag">測定器</span>
+                                    <span class="category-tag">電子工作</span>
+                                </td>
+                                <td>PINフォトダイオードでγ線を検出します。</td>
+                            </tr>
+                            <tr class="project-row" data-category="オーディオ,電子工作" data-search="">
+                                <td><a href="#低出力ab級パワーアンプ">低出力AB級パワーアンプ</a></td>
+                                <td>
+                                    <span class="category-tag">オーディオ</span>
+                                    <span class="category-tag">電子工作</span>
+                                </td>
+                                <td>できるだけ低コストでつくるオーディオアンプです。</td>
                             </tr>
                         </tbody>
                     </table>
