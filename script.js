@@ -62,6 +62,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // ページ読み込み時に色を設定
     assignCategoryColors();
 
+    // カテゴリタグのクリックリスナーを追加
+    addCategoryTagListeners();
+
     // 検索機能
     searchInput.addEventListener('input', function() {
         currentSearchTerm = this.value.toLowerCase().trim();
@@ -94,6 +97,53 @@ document.addEventListener('DOMContentLoaded', function() {
             filterProjects();
         });
     });
+
+    // カテゴリタグクリック機能
+    function addCategoryTagListeners() {
+        const categoryTags = document.querySelectorAll('.category-tag');
+        categoryTags.forEach(tag => {
+            tag.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const categoryName = this.textContent.trim();
+                
+                // フィルタボタンのアクティブ状態を更新
+                filterBtns.forEach(btn => {
+                    btn.classList.remove('active');
+                    if (btn.getAttribute('data-category') === categoryName) {
+                        btn.classList.add('active');
+                    }
+                });
+                
+                // もしフィルタボタンが見つからない場合（新しいカテゴリの場合）
+                let activeButtonFound = false;
+                filterBtns.forEach(btn => {
+                    if (btn.classList.contains('active')) {
+                        activeButtonFound = true;
+                    }
+                });
+                
+                if (!activeButtonFound) {
+                    // "全て"ボタンをアクティブにする
+                    const allButton = document.querySelector('[data-category="all"]');
+                    if (allButton) {
+                        allButton.classList.add('active');
+                    }
+                }
+                
+                currentFilter = categoryName;
+                filterProjects();
+                
+                // 検索フィールドをクリア（オプション）
+                if (currentSearchTerm) {
+                    searchInput.value = '';
+                    currentSearchTerm = '';
+                    toggleClearButton();
+                }
+            });
+        });
+    }
 
     // プロジェクトのフィルタリング（複数カテゴリ対応）
     function filterProjects() {
