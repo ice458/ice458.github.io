@@ -279,16 +279,37 @@ body {
 }
 
 /* 将来のカテゴリ用の予備色 */
-.category-tag[data-color="6"] { background: linear-gradient(135deg, #06b6d4, #0891b2); }
-.category-tag[data-color="7"] { background: linear-gradient(135deg, #84cc16, #65a30d); }
-.category-tag[data-color="8"] { background: linear-gradient(135deg, #eab308, #ca8a04); }
-.category-tag[data-color="9"] { background: linear-gradient(135deg, #f97316, #ea580c); }
-.category-tag[data-color="10"] { background: linear-gradient(135deg, #ec4899, #db2777); }
+.category-tag[data-color="6"] {
+    background: linear-gradient(135deg, #06b6d4, #0891b2);
+}
+
+.category-tag[data-color="7"] {
+    background: linear-gradient(135deg, #84cc16, #65a30d);
+}
+
+.category-tag[data-color="8"] {
+    background: linear-gradient(135deg, #eab308, #ca8a04);
+}
+
+.category-tag[data-color="9"] {
+    background: linear-gradient(135deg, #f97316, #ea580c);
+}
+
+.category-tag[data-color="10"] {
+    background: linear-gradient(135deg, #ec4899, #db2777);
+}
 
 /* アニメーション */
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 /* プロジェクトテーブル */
@@ -403,6 +424,228 @@ a:hover {
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
+/* ソーシャルリンクセクション */
+.social-links-section {
+    margin: 48px 0 32px 0;
+    text-align: center;
+    padding: 24px;
+}
+
+.social-title {
+    font-size: 1rem;
+    font-weight: 500;
+    margin-bottom: 20px;
+    letter-spacing: 0.3px;
+}
+
+.social-links {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.social-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.social-link::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    transition: left 0.5s;
+}
+
+.social-link:hover::before {
+    left: 100%;
+}
+
+.social-icon {
+    width: 28px;
+    height: 28px;
+    flex-shrink: 0;
+    transition: transform 0.3s ease;
+    z-index: 1;
+}
+
+/* GitHub リンク */
+.social-link.github {
+    background: linear-gradient(135deg, #6b7280, #4b5563);
+    color: white;
+}
+
+.social-link.github:hover {
+    background: linear-gradient(135deg, #374151, #1f2937);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(75, 85, 99, 0.3);
+}
+
+.social-link.github:hover .social-icon {
+    transform: rotate(5deg) scale(1.1);
+}
+
+/* YouTube リンク */
+.social-link.youtube {
+    background: linear-gradient(135deg, #f87171, #dc2626);
+    color: white;
+}
+
+.social-link.youtube:hover {
+    background: linear-gradient(135deg, #ef4444, #b91c1c);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(220, 38, 38, 0.3);
+}
+
+.social-link.youtube:hover .social-icon {
+    transform: scale(1.15);
+}
+
+/* X（旧Twitter）リンク */
+.social-link.twitter {
+    background: linear-gradient(135deg, #374151, #111827);
+    color: white;
+}
+
+.social-link.twitter:hover {
+    background: linear-gradient(135deg, #1f2937, #000000);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(17, 24, 39, 0.4);
+}
+
+.social-link.twitter:hover .social-icon {
+    transform: rotate(-5deg) scale(1.1);
+}
+
+/* ニコニコ動画リンク */
+.social-link.niconico {
+    background: linear-gradient(135deg, #fb923c, #ea580c);
+    color: white;
+}
+
+.social-link.niconico:hover {
+    background: linear-gradient(135deg, #f97316, #c2410c);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(234, 88, 12, 0.3);
+}
+
+.social-link.niconico:hover .social-icon {
+    transform: rotate(3deg) scale(1.1);
+}
+
+/* YouTube リンク */
+.social-link.youtube {
+    background: linear-gradient(135deg, #ff0000, #cc0000);
+    color: white;
+    border: 2px solid transparent;
+}
+
+.social-link.youtube:hover {
+    background: linear-gradient(135deg, #ff1a1a, #ff0000);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(255, 0, 0, 0.4);
+}
+
+.social-link.youtube:hover .social-icon {
+    transform: scale(1.2);
+}
+
+/* X（旧Twitter）リンク */
+.social-link.twitter {
+    background: linear-gradient(135deg, #000000, #1a1a1a);
+    color: white;
+    border: 2px solid transparent;
+}
+
+.social-link.twitter:hover {
+    background: linear-gradient(135deg, #333333, #000000);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
+}
+
+.social-link.twitter:hover .social-icon {
+    transform: rotate(-10deg) scale(1.1);
+}
+
+/* ニコニコ動画リンク */
+.social-link.niconico {
+    background: white;
+    color: #333;
+    border: 2px solid #ddd;
+}
+
+.social-link.niconico:hover {
+    background: #f5f5f5;
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+    border-color: #999;
+}
+
+.social-link.niconico:hover .social-icon {
+    transform: rotate(5deg) scale(1.15);
+    color: #000;
+}
+
+/* アクティブ状態 */
+.social-link:active {
+    transform: translateY(-1px);
+}
+
+/* ソーシャルリンクのレスポンシブ対応 */
+@media (max-width: 768px) {
+    .social-links {
+        gap: 12px;
+    }
+
+    .social-link {
+        width: 44px;
+        height: 44px;
+    }
+
+    .social-icon {
+        width: 24px;
+        height: 24px;
+    }
+}
+
+@media (max-width: 480px) {
+    .social-links-section {
+        margin: 32px 0 24px 0;
+        padding: 20px 16px;
+    }
+
+    .social-links {
+        gap: 10px;
+    }
+
+    .social-link {
+        width: 40px;
+        height: 40px;
+    }
+
+    .social-icon {
+        width: 22px;
+        height: 22px;
+    }
+
+    .social-title {
+        font-size: 0.9rem;
+        margin-bottom: 16px;
+    }
+}
+
 /* フッター */
 .site-footer {
     background-color: #8F9393;
@@ -422,24 +665,24 @@ a:hover {
     body {
         font-size: 16px;
     }
-    
+
     .site-header {
         padding: 48px 32px;
     }
-    
+
     .site-main {
         padding: 48px 32px;
     }
-    
+
     .projects-list th,
     .projects-list td {
         padding: 20px 16px;
     }
-    
+
     .projects-list {
         font-size: 16px;
     }
-    
+
     .site-title {
         font-size: 2.5rem;
     }
@@ -449,38 +692,38 @@ a:hover {
     .projects-list {
         font-size: 14px;
     }
-    
+
     .projects-list th,
     .projects-list td {
         padding: 12px 8px;
     }
-    
+
     .site-title {
         font-size: 1.8rem;
     }
-    
+
     .projects-list th:first-child {
         width: 35%;
     }
-    
+
     .projects-list th:nth-child(2) {
         width: 20%;
     }
-    
+
     .projects-list th:last-child {
         width: 45%;
     }
-    
+
     .filter-buttons {
         justify-content: flex-start;
         max-height: 80px;
     }
-    
+
     .filter-btn {
         font-size: 11px;
         padding: 5px 10px;
     }
-    
+
     .category-tag {
         font-size: 9px;
         padding: 2px 6px;
@@ -516,17 +759,18 @@ a:hover {
 
 /* プリント用スタイル */
 @media print {
+
     .site-header,
     .site-footer {
         background: none !important;
         color: black !important;
     }
-    
+
     body {
         background: white !important;
         color: black !important;
     }
-    
+
     a {
         color: black !important;
         text-decoration: underline !important;
@@ -879,61 +1123,61 @@ a:hover {
     .article-title {
         font-size: 2rem;
     }
-    
+
     .article-content {
         padding: 24px 20px;
     }
-    
+
     .article-header {
         padding: 24px 20px;
     }
-    
+
     .article-meta {
         flex-direction: column;
         align-items: flex-start;
     }
-    
+
     .spec-list li {
         flex-direction: column;
         align-items: flex-start;
         gap: 4px;
     }
-    
+
     .parts-table,
     .measurement-table {
         font-size: 0.85rem;
     }
-    
+
     .parts-list th,
     .parts-list td,
     .results-table th,
     .results-table td {
         padding: 10px 8px;
     }
-    
+
     .process-step {
         padding: 16px;
     }
-    
+
     /* 画像のモバイル対応 */
     .article-image {
         margin: 16px 0;
     }
-    
+
     .article-image img {
         border-radius: 6px;
     }
-    
+
     .image-caption {
         font-size: 0.85rem;
         margin-top: 8px;
     }
-    
+
     .image-placeholder {
         padding: 30px 16px;
         margin: 16px 0;
     }
-    
+
     .article-footer {
         flex-direction: column;
         align-items: flex-start;
@@ -944,21 +1188,21 @@ a:hover {
     .article-title {
         font-size: 1.6rem;
     }
-    
+
     .article-section h2 {
         font-size: 1.4rem;
     }
-    
+
     .article-section h3 {
         font-size: 1.2rem;
     }
-    
+
     /* 小画面での画像調整 */
     .image-placeholder {
         padding: 24px 12px;
         margin: 12px 0;
     }
-    
+
     .image-placeholder p {
         font-size: 0.9rem;
     }
