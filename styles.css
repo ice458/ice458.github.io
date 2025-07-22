@@ -529,22 +529,6 @@ a:hover {
     transform: rotate(-5deg) scale(1.1);
 }
 
-/* ニコニコ動画リンク */
-.social-link.niconico {
-    background: linear-gradient(135deg, #fb923c, #ea580c);
-    color: white;
-}
-
-.social-link.niconico:hover {
-    background: linear-gradient(135deg, #f97316, #c2410c);
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(234, 88, 12, 0.3);
-}
-
-.social-link.niconico:hover .social-icon {
-    transform: rotate(3deg) scale(1.1);
-}
-
 /* YouTube リンク */
 .social-link.youtube {
     background: linear-gradient(135deg, #ff0000, #cc0000);
