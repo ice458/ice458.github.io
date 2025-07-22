@@ -8,6 +8,10 @@ document.addEventListener('DOMContentLoaded', function() {
     let currentFilter = 'all';
     let currentSearchTerm = '';
     
+    // 検索履歴管理
+    let searchHistory = JSON.parse(localStorage.getItem('searchHistory') || '[]');
+    const maxHistoryItems = 10;
+    
     // カテゴリ色の動的生成
     const categoryColors = [
         'linear-gradient(135deg, #3b82f6, #1e40af)',  // 青
@@ -70,6 +74,46 @@ document.addEventListener('DOMContentLoaded', function() {
         currentSearchTerm = this.value.toLowerCase().trim();
         filterProjects();
         toggleClearButton();
+        showSuggestions();
+    });
+
+    // Enterキーで検索履歴に追加
+    searchInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            const searchTerm = this.value.trim();
+            if (searchTerm && !searchHistory.includes(searchTerm)) {
+                searchHistory.unshift(searchTerm);
+                if (searchHistory.length > maxHistoryItems) {
+                    searchHistory = searchHistory.slice(0, maxHistoryItems);
+                }
+                localStorage.setItem('searchHistory', JSON.stringify(searchHistory));
+            }
+            hideSuggestions();
+        } else if (e.key === 'Escape') {
+            hideSuggestions();
+            this.blur();
+        } else if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            navigateSuggestions('down');
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            navigateSuggestions('up');
+        }
+    });
+
+    // フォーカス時に履歴表示
+    searchInput.addEventListener('focus', function() {
+        if (searchHistory.length > 0) {
+            showHistoryDropdown();
+        }
+    });
+
+    // フォーカス外した時に履歴非表示
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.search-box')) {
+            hideSuggestions();
+        }
     });
 
     // 検索クリアボタン
@@ -78,6 +122,7 @@ document.addEventListener('DOMContentLoaded', function() {
         currentSearchTerm = '';
         filterProjects();
         toggleClearButton();
+        hideSuggestions();
         searchInput.focus();
     });
 
@@ -152,14 +197,26 @@ document.addEventListener('DOMContentLoaded', function() {
         projectRows.forEach(row => {
             const categories = row.getAttribute('data-category').split(','); // カンマで分割
             const searchData = row.getAttribute('data-search');
+            const titleElement = row.querySelector('td:first-child a');
+            const descriptionElement = row.querySelector('td:last-child');
             
             // カテゴリフィルタのチェック（複数カテゴリに対応）
             const categoryMatch = currentFilter === 'all' || 
                 categories.some(cat => cat.trim() === currentFilter);
             
-            // 検索フィルタのチェック
-            const searchMatch = currentSearchTerm === '' || 
-                searchData.toLowerCase().includes(currentSearchTerm);
+            // 拡張された検索フィルタのチェック
+            let searchMatch = currentSearchTerm === '';
+            if (currentSearchTerm !== '') {
+                const titleText = titleElement ? titleElement.textContent.toLowerCase() : '';
+                const descriptionText = descriptionElement ? descriptionElement.textContent.toLowerCase() : '';
+                const categoryText = categories.join(' ').toLowerCase();
+                const searchDataText = searchData.toLowerCase();
+                
+                searchMatch = titleText.includes(currentSearchTerm) ||
+                             descriptionText.includes(currentSearchTerm) ||
+                             categoryText.includes(currentSearchTerm) ||
+                             searchDataText.includes(currentSearchTerm);
+            }
             
             if (categoryMatch && searchMatch) {
                 row.style.display = '';
@@ -190,6 +247,154 @@ document.addEventListener('DOMContentLoaded', function() {
         } else {
             infoElement.style.display = 'none';
         }
+    }
+
+    // 検索候補表示
+    function showSuggestions() {
+        const searchTerm = searchInput.value.toLowerCase().trim();
+        if (searchTerm.length === 0) {
+            if (searchHistory.length > 0) {
+                showHistoryDropdown();
+            }
+            return;
+        }
+
+        // 現在のテキストに基づく候補を生成
+        const suggestions = generateSuggestions(searchTerm);
+        const filteredHistory = searchHistory.filter(item => 
+            item.toLowerCase().includes(searchTerm));
+
+        const allSuggestions = [...new Set([...suggestions, ...filteredHistory])].slice(0, 8);
+        
+        if (allSuggestions.length > 0) {
+            showSuggestionsDropdown(allSuggestions);
+        } else {
+            hideSuggestions();
+        }
+    }
+
+    // 履歴ドロップダウン表示
+    function showHistoryDropdown() {
+        const recentHistory = searchHistory.slice(0, 5);
+        if (recentHistory.length > 0) {
+            showSuggestionsDropdown(recentHistory, true);
+        }
+    }
+
+    // 候補の生成
+    function generateSuggestions(searchTerm) {
+        const suggestions = new Set();
+        
+        projectRows.forEach(row => {
+            const titleElement = row.querySelector('td:first-child a');
+            const descriptionElement = row.querySelector('td:last-child');
+            const categories = row.getAttribute('data-category').split(',');
+            
+            if (titleElement) {
+                const title = titleElement.textContent.toLowerCase();
+                if (title.includes(searchTerm)) {
+                    suggestions.add(titleElement.textContent);
+                }
+            }
+            
+            if (descriptionElement) {
+                const description = descriptionElement.textContent.toLowerCase();
+                if (description.includes(searchTerm) && description.trim()) {
+                    suggestions.add(descriptionElement.textContent.trim());
+                }
+            }
+            
+            categories.forEach(cat => {
+                const category = cat.trim().toLowerCase();
+                if (category.includes(searchTerm)) {
+                    suggestions.add(cat.trim());
+                }
+            });
+        });
+        
+        return Array.from(suggestions);
+    }
+
+    // 候補ドロップダウン表示
+    function showSuggestionsDropdown(suggestions, isHistory = false) {
+        hideSuggestions(); // 既存の候補を削除
+        
+        const dropdown = document.createElement('div');
+        dropdown.className = 'search-suggestions';
+        dropdown.setAttribute('data-is-history', isHistory);
+        
+        if (isHistory && suggestions.length > 0) {
+            const header = document.createElement('div');
+            header.className = 'suggestions-header';
+            header.textContent = '最近の検索';
+            dropdown.appendChild(header);
+        }
+        
+        suggestions.forEach((suggestion, index) => {
+            const item = document.createElement('div');
+            item.className = 'suggestion-item';
+            item.textContent = suggestion;
+            item.setAttribute('data-index', index);
+            
+            item.addEventListener('click', function() {
+                searchInput.value = suggestion;
+                currentSearchTerm = suggestion.toLowerCase().trim();
+                filterProjects();
+                toggleClearButton();
+                hideSuggestions();
+                
+                // 履歴に追加
+                if (!searchHistory.includes(suggestion)) {
+                    searchHistory.unshift(suggestion);
+                    if (searchHistory.length > maxHistoryItems) {
+                        searchHistory = searchHistory.slice(0, maxHistoryItems);
+                    }
+                    localStorage.setItem('searchHistory', JSON.stringify(searchHistory));
+                }
+            });
+            
+            dropdown.appendChild(item);
+        });
+        
+        document.querySelector('.search-box').appendChild(dropdown);
+    }
+
+    // 候補非表示
+    function hideSuggestions() {
+        const existing = document.querySelector('.search-suggestions');
+        if (existing) {
+            existing.remove();
+        }
+        selectedSuggestionIndex = -1;
+    }
+
+    // 候補ナビゲーション
+    let selectedSuggestionIndex = -1;
+    
+    function navigateSuggestions(direction) {
+        const dropdown = document.querySelector('.search-suggestions');
+        if (!dropdown) return;
+        
+        const items = dropdown.querySelectorAll('.suggestion-item');
+        if (items.length === 0) return;
+        
+        // 前の選択をクリア
+        if (selectedSuggestionIndex >= 0) {
+            items[selectedSuggestionIndex].classList.remove('selected');
+        }
+        
+        if (direction === 'down') {
+            selectedSuggestionIndex = (selectedSuggestionIndex + 1) % items.length;
+        } else {
+            selectedSuggestionIndex = selectedSuggestionIndex <= 0 ? 
+                items.length - 1 : selectedSuggestionIndex - 1;
+        }
+        
+        // 新しい選択をハイライト
+        items[selectedSuggestionIndex].classList.add('selected');
+        
+        // 選択されたアイテムを検索フィールドにプレビュー
+        searchInput.value = items[selectedSuggestionIndex].textContent;
     }
 
     // 初期状態でクリアボタンを非表示
