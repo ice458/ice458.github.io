@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>放射線感知ねこ - ice458の物置き</title>
+    <link rel="stylesheet" href="../styles.css">
+    <!-- ファビコン設定 -->
+    <link rel="icon" type="image/x-icon" href="../favicon.ico">
+    <link rel="icon" type="image/png" sizes="16x16" href="../favicon-16x16.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="../favicon-32x32.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="../favicon-180x180.png">
+    <link rel="manifest" href="../site.webmanifest">
+
+    <!-- ブラウザ固有のメタタグ -->
+    <meta name="theme-color" content="#aaaeae">
+    <meta name="msapplication-TileColor" content="#aaaeae">
+    <meta name="msapplication-TileImage" content="../favicon-180x180.png">
+</head>
+
+<body>
+    <header class="site-header">
+        <div class="site-branding">
+            <div class="site-logo">
+                <img src="../logo.png" alt="ロゴ" class="logo-img">
+            </div>
+            <h1 class="site-title"><a href="../index.html">ice458の物置き</a></h1>
+        </div>
+    </header>
+
+    <main class="site-main">
+        <article class="main-content">
+            <div class="article-header">
+                <h1 class="article-title">放射線感知ねこ</h1>
+                <div class="article-meta">
+                    <div class="article-categories">
+
+
+                        <span class="category-tag">測定器</span>
+                        <span class="category-tag">電子工作</span>
+
+
+                    </div>
+                    <div class="article-date">作成日: 2020年03月01日</div>
+                </div>
+            </div>
+
+            <div class="article-content">
+                <div class="article-overview">
+                    <h2>概要</h2>
+                    <p>PINフォトダイオードでγ線を検出します。</p>
+                </div>
+
+                <div class="article-section">
+                    <h2>製作の背景</h2>
+                    <p>放射線を感知すると “にゃーん” と鳴くねこ(?)が入った箱です。シュレーディンガーの猫に着想を得て製作しました。検出できるのは γ 線のはずです。
+                    </p>
+                </div>
+
+                <div class="article-section">
+                    <h2>動画</h2>
+                    <div class="video-container">
+                        <iframe width="560" height="315" src="https://www.youtube.com/embed/hn2Zz56xRCw"
+                            title="放射線で鳴くネコの箱【γ線検出器】" frameborder="0"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                            allowfullscreen>
+                        </iframe>
+                    </div>
+                </div>
+
+                <div class="article-section">
+                    <h2>ハードウェア概要</h2>
+                    <p>時々飛んでくる放射線をPINフォトダイオードでとらえ、PICマイコンでWAVファイルを再生します。青い点線より上がアナログ部、下がデジタル部です。</p>
+
+                    <div class="article-image">
+                        <img src="img/1.png" alt="放射線感知ねこの回路図">
+                        <p class="image-caption">放射線感知ねこの回路図</p>
+                    </div>
+
+                    <h3>アナログ部について</h3>
+                    <p>フォトダイオードの光電流をチャージアンプで増幅する回路です。各部品の定数は手持ちの部品からあてずっぽうで決めたので適当です。γ線のスペクトル等を見たいわけではなく、ただパルスを出したいだけなので発振しなければ問題ないでしょう。
+                    </p>
+
+                    <p>フォトダイオードは浜松ホトニクスのS2506-2を選びました。5Vの逆電圧をかけて使っています。ネット上の作例ではS6775を使用したものが多いようですが、こちらは大面積なので検出頻度が高くなり、ねこが鳴きすぎてやかましくなると考え採用しませんでした。
+                    </p>
+
+                    <p>オペアンプはアナログデバイセズのAD8616ARMZを使用しました。入力バイアス電流が小さく、スルーレートが高く、利得帯域幅積も広いので本作のような微小信号を扱う用途に向いています。</p>
+
+                    <p>回路図には入っていませんが、アナログ部とデジタル部それぞれに新日本無線の三端子レギュレータNJM7805SDL1を使用した電源を用意しました。</p>
+
+                    <h3>デジタル部について</h3>
+                    <p>PICマイコンでパルスを検出し、WAVファイルを再生する回路です。</p>
+
+                    <p>WAVの再生はPWMで実現しています。可変抵抗で分圧した信号をアンプICのHT82V739に入れ、8Ωスピーカーを駆動しています。このICは最大で1.2W出すことができます。</p>
+
+                    <p>PICはペリフェラルが豊富なPIC12F1822-I/Pを使用しました。プログラムメモリが2kWしかないので、音声ファイルを保存しておくのはI2CROMの24LC64で行っています。</p>
+                </div>
+
+
+                <div class="article-section">
+                    <h2>部品実装について</h2>
+
+                    <div class="article-image">
+                        <img src="img/img_4205.png" alt="ふたを外したところ">
+                        <p class="image-caption">ふたを外したところ</p>
+                    </div>
+
+                    <div class="article-image">
+                        <img src="img/img_4206.png" alt="スピーカーをどけたところ">
+                        <p class="image-caption">スピーカーをどけたところ</p>
+                    </div>
+
+                    <p>AD8616ARMZはMSOPパッケージでピン間隔は0.65mmと非常に狭いですが、慣れれば手はんだでもきれいにできます。DIP変換基板に乗せ、ユニバーサル基板で使えるようにしました。</p>
+
+                    <p>S2506-2はアルミホイルで遮光と静電シールドをしています。フォトダイオードの背中に導線を這わせ、シールドが回路のGNDに落ちるようにしてあります。また、ケースもGNDに接続されています。これらをきちんとやらないとノイズまみれになってしまいます。
+                    </p>
+                </div>
+
+                <div class="article-section">
+                    <h2>ソフトウェア概要</h2>
+                    <p>パルスと内蔵DACの出力を内蔵コンパレータで比較して検出します。検出したら8bit16kHzのWAVデータを再生します。WAVデータはヘッダ部分を削除したものを使っています。データが0x00になったら再生終了としています。
+                    </p>
+
+                    <p>パルスはノイズ対策のためコンパレータで2度確認してからさらに50us後にもう一度確認するようにしています。ほとんどのパルスは20us前後の長さなので、50us後にパルスがある状態ならノイズと判定しています。が、振動のノイズはうまく判別できていないので改善の余地ありです。
+                    </p>
+                </div>
+
+                <div class="article-section">
+                    <h2>動作確認</h2>
+
+                    <div class="article-image">
+                        <img src="img/ds1z_quickprint1.png" alt="検出パルス">
+                        <p class="image-caption">検出パルス</p>
+                    </div>
+
+                    <div class="article-image">
+                        <img src="img/ds1z_quickprint2.png" alt="拡大した波形">
+                        <p class="image-caption">拡大した波形</p>
+                    </div>
+
+                    <p>上の波形の一番振幅が出ているところが検出されたパルスです。パルスの後ろはかなりノイジーになっていますが、PICがWAVを再生しているためです。パルスより前のノイズは少ないです。下の波形は拡大したものですが、うまく動いているようです。
+                    </p>
+
+                    <p>確実に出ているといえる放射線源は持っていないので、バックグラウンドかカリウム豊富な食品などに頼るしかありませんでした。バックグラウンドでは20~30分に1回くらいの頻度でパルスを検出できました。バナナやわかめなどを近づけると10分に1回ほどに増えます。おそらくは正しく検出で来ているのでしょう。そういう曖昧さが味になっているのかもしれない……
+                    </p>
+                </div>
+
+                <div class="article-section">
+                    <h2>主な使用部品</h2>
+                    <div class="parts-table">
+                        <table class="parts-list">
+                            <thead>
+                                <tr>
+                                    <th>部品名</th>
+                                    <th>型番</th>
+                                    <th>備考</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>PINフォトダイオード</td>
+                                    <td>S2506-2</td>
+                                    <td>浜松ホトニクス</td>
+                                </tr>
+                                <tr>
+                                    <td>オペアンプ</td>
+                                    <td>AD8616ARMZ</td>
+                                    <td>アナログデバイセズ</td>
+                                </tr>
+                                <tr>
+                                    <td>PICマイコン</td>
+                                    <td>PIC12F1822-I/P</td>
+                                    <td>Microchip</td>
+                                </tr>
+                                <tr>
+                                    <td>シリアルROM</td>
+                                    <td>24LC64</td>
+                                    <td>Microchip</td>
+                                </tr>
+                                <tr>
+                                    <td>アンプIC</td>
+                                    <td>HT82V739</td>
+                                    <td>Holtek</td>
+                                </tr>
+                                <tr>
+                                    <td>メタルグレーズ抵抗</td>
+                                    <td>RMシリーズ 5MΩ</td>
+                                    <td>利久電器</td>
+                                </tr>
+                                <tr>
+                                    <td>三端子レギュレータ</td>
+                                    <td>NJM7805SDL1</td>
+                                    <td>新日本無線</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <p>その他の部品は汎用品です。</p>
+                </div>
+            </div>
+
+            <div class="article-footer">
+                <div class="back-link">
+                    <a href="../index.html" class="back-button">← 物置きに戻る</a>
+                </div>
+                <div class="article-info">
+                    <p>最終更新: 2020年03月01日</p>
+                </div>
+            </div>
+        </article>
+    </main>
+
+    <footer class="site-footer">
+        <div class="site-info">
+            <p>&copy; 2025 ice458の物置き</p>
+        </div>
+    </footer>
+</body>
+
+</html>
