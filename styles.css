@@ -470,3 +470,367 @@ a:hover {
         text-decoration: underline !important;
     }
 }
+
+
+/* =========================== */
+/* 記事ページ用スタイル (自動統合) */
+/* =========================== */
+
+/* 記事ページ専用スタイル */
+
+/* 記事ヘッダー */
+.article-header {
+    background-color: rgba(255, 255, 255, 0.9);
+    padding: 32px 24px;
+    border-radius: 12px;
+    margin-bottom: 32px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.article-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #333;
+    margin: 0 0 16px 0;
+    line-height: 1.3;
+    border-bottom: 3px solid #2563eb;
+    padding-bottom: 12px;
+}
+
+.article-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-top: 20px;
+}
+
+.article-categories {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.article-date {
+    color: #64748b;
+    font-size: 0.95rem;
+    font-weight: 500;
+}
+
+/* 記事コンテンツ */
+.article-content {
+    background-color: rgba(255, 255, 255, 0.95);
+    padding: 40px 32px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    line-height: 1.8;
+}
+
+.article-section {
+    margin-bottom: 48px;
+}
+
+.article-section:last-child {
+    margin-bottom: 0;
+}
+
+.article-section h2 {
+    font-size: 1.8rem;
+    font-weight: 600;
+    color: #1e40af;
+    margin: 0 0 20px 0;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #e2e8f0;
+    position: relative;
+}
+
+.article-section h2::before {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 60px;
+    height: 2px;
+    background-color: #2563eb;
+}
+
+.article-section h3 {
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: #374151;
+    margin: 32px 0 16px 0;
+}
+
+.article-section p {
+    margin-bottom: 16px;
+    color: #374151;
+}
+
+.article-section ul,
+.article-section ol {
+    margin-left: 24px;
+    margin-bottom: 16px;
+}
+
+.article-section li {
+    margin-bottom: 8px;
+    color: #374151;
+}
+
+/* 概要セクション */
+.article-overview {
+    background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+    border: 1px solid #bae6fd;
+    border-radius: 8px;
+    padding: 24px;
+    margin-bottom: 32px;
+}
+
+.article-overview h2 {
+    color: #0369a1;
+    border-bottom: 2px solid #0ea5e9;
+}
+
+.article-overview h2::before {
+    background-color: #0ea5e9;
+}
+
+/* 仕様リスト */
+.spec-list {
+    background-color: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 24px;
+    margin: 0;
+    list-style: none;
+}
+
+.spec-list li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid #e2e8f0;
+    margin-bottom: 0;
+}
+
+.spec-list li:last-child {
+    border-bottom: none;
+}
+
+.spec-list strong {
+    color: #475569;
+    min-width: 120px;
+}
+
+/* テーブル */
+.parts-table,
+.measurement-table {
+    overflow-x: auto;
+    margin: 20px 0;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.parts-list,
+.results-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    background-color: #fff;
+    border-radius: 8px;
+    overflow: hidden;
+    font-size: 0.95rem;
+}
+
+.parts-list th,
+.results-table th {
+    background-color: #475569;
+    color: #fff;
+    padding: 16px 12px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.parts-list td,
+.results-table td {
+    padding: 14px 12px;
+    border-bottom: 1px solid #e9ecef;
+    color: #374151;
+}
+
+.parts-list tr:nth-child(even) td,
+.results-table tr:nth-child(even) td {
+    background-color: #f8f9fa;
+}
+
+.parts-list tr:hover td,
+.results-table tr:hover td {
+    background-color: #e3f2fd;
+}
+
+/* 製作過程 */
+.process-step {
+    background-color: #fafafa;
+    border-left: 4px solid #2563eb;
+    padding: 24px;
+    margin-bottom: 24px;
+    border-radius: 0 8px 8px 0;
+}
+
+.process-step h3 {
+    margin-top: 0;
+    color: #1e40af;
+}
+
+/* 画像プレースホルダー */
+.image-placeholder {
+    background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
+    border: 2px dashed #cbd5e1;
+    border-radius: 8px;
+    padding: 40px 20px;
+    text-align: center;
+    margin: 20px 0;
+    color: #64748b;
+    font-style: italic;
+}
+
+.image-placeholder p {
+    margin: 0;
+    font-size: 1.1rem;
+}
+
+/* 参考資料リスト */
+.reference-list {
+    list-style: none;
+    margin-left: 0;
+}
+
+.reference-list li {
+    background-color: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 12px 16px;
+    margin-bottom: 8px;
+}
+
+.reference-list a {
+    color: #2563eb;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.reference-list a:hover {
+    color: #1d4ed8;
+    text-decoration: underline;
+}
+
+/* 記事フッター */
+.article-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 48px;
+    padding: 24px 0;
+    border-top: 2px solid #e2e8f0;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.back-button {
+    display: inline-flex;
+    align-items: center;
+    background-color: #2563eb;
+    color: #fff;
+    padding: 12px 24px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px rgba(37, 99, 235, 0.3);
+}
+
+.back-button:hover {
+    background-color: #1d4ed8;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(37, 99, 235, 0.4);
+}
+
+.article-info {
+    color: #64748b;
+    font-size: 0.9rem;
+}
+
+/* サイトタイトルのリンク */
+.site-title a {
+    color: #333;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.site-title a:hover {
+    color: #2563eb;
+}
+
+/* レスポンシブ対応 */
+@media (max-width: 768px) {
+    .article-title {
+        font-size: 2rem;
+    }
+    
+    .article-content {
+        padding: 24px 20px;
+    }
+    
+    .article-header {
+        padding: 24px 20px;
+    }
+    
+    .article-meta {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .spec-list li {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+    }
+    
+    .parts-table,
+    .measurement-table {
+        font-size: 0.85rem;
+    }
+    
+    .parts-list th,
+    .parts-list td,
+    .results-table th,
+    .results-table td {
+        padding: 10px 8px;
+    }
+    
+    .process-step {
+        padding: 16px;
+    }
+    
+    .article-footer {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}
+
+@media (max-width: 480px) {
+    .article-title {
+        font-size: 1.6rem;
+    }
+    
+    .article-section h2 {
+        font-size: 1.4rem;
+    }
+    
+    .article-section h3 {
+        font-size: 1.2rem;
+    }
+}
