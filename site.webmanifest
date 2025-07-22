@@ -1,0 +1,21 @@
+{
+    "name": "ice458の物置き",
+    "short_name": "ice458",
+    "description": "ice458の製作物等を紹介するページです",
+    "icons": [
+        {
+            "src": "logo.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "logo.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        }
+    ],
+    "start_url": "/",
+    "display": "standalone",
+    "theme_color": "#aaaeae",
+    "background_color": "#ffffff"
+}

@@ -3,9 +3,108 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>test</title>
+    <title>ice458の物置き</title>
+    <link rel="stylesheet" href="styles.css">
+    
+    <!-- ファビコン設定 -->
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="favicon-180x180.png">
+    <link rel="manifest" href="site.webmanifest">
+    
+    <!-- ブラウザ固有のメタタグ -->
+    <meta name="theme-color" content="#aaaeae">
+    <meta name="msapplication-TileColor" content="#aaaeae">
+    <meta name="msapplication-TileImage" content="favicon-180x180.png">
 </head>
 <body>
-    <h1>test</h1>
+    <header class="site-header">
+        <div class="site-branding">
+            <div class="site-logo">
+                <img src="logo.png" alt="ロゴ" class="logo-img">
+            </div>
+            <h1 class="site-title">ice458の物置き</h1>
+        </div>
+    </header>
+
+    <main class="site-main">
+        <article class="main-content">
+            <div class="entry-content">
+                <p class="welcome-text">ようこそ</p>
+
+                <p class="welcome-text">工事中です。</p>
+                
+                <p class="description">私の製作物等を紹介するページです。項目名クリックで詳細ページに飛びます。</p>
+                
+                <!-- 検索・フィルタ機能 -->
+                <div class="search-filter-container">
+                    <div class="search-box">
+                        <input type="text" id="searchInput" placeholder="製作物を検索..." class="search-input">
+                        <button id="clearSearch" class="clear-search">×</button>
+                    </div>
+                    <div class="filter-buttons">
+
+                        <button class="filter-btn active" data-category="all">全て</button>
+                        <button class="filter-btn" data-category="test">test</button>
+                        <button class="filter-btn" data-category="時計">時計</button>
+                        <button class="filter-btn" data-category="測定器">測定器</button>
+                        <button class="filter-btn" data-category="無線">無線</button>
+                        <button class="filter-btn" data-category="電子工作">電子工作</button>
+                        <button class="filter-btn" data-category="音響">音響</button>
+                    </div>
+                </div>
+                
+                <div class="projects-table">
+                    <table class="projects-list">
+                        <thead>
+                            <tr>
+                                <th>作った物たち</th>
+                                <th>カテゴリ</th>
+                                <th>説明</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+
+                            <tr class="project-row" data-category="電子工作,測定器" data-search="test">
+                                <td><a href="project-7906/index.html">テスト</a></td>
+                                <td>
+                                    <span class="category-tag">電子工作</span>
+                                    <span class="category-tag">測定器</span>
+                                </td>
+                                <td>test</td>
+                            </tr>
+                            <tr class="project-row" data-category="音響,時計,無線" data-search="ああ">
+                                <td><a href="project-3854/index.html">てすと</a></td>
+                                <td>
+                                    <span class="category-tag">音響</span>
+                                    <span class="category-tag">時計</span>
+                                    <span class="category-tag">無線</span>
+                                </td>
+                                <td>てすと</td>
+                            </tr>
+                            <tr class="project-row" data-category="test" data-search="">
+                                <td><a href="test/index.html">test</a></td>
+                                <td><span class="category-tag">test</span></td>
+                                <td></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <p class="misc-link">
+                    <a href="#notes">雑多なメモ等</a>：作品ではないもののたち。備忘録など。
+                </p>
+            </div>
+        </article>
+    </main>
+
+    <footer class="site-footer">
+        <div class="site-info">
+            <p>&copy; 2025 ice458の物置き</p>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
 </body>
 </html>

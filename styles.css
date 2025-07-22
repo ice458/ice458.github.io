@@ -1,0 +1,472 @@
+/* リセットとベーススタイル */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans JP", "Hiragino Kaku Gothic ProN", "Yu Gothic", "Meiryo", sans-serif;
+    font-size: 16px;
+    line-height: 1.7;
+    color: #333;
+    background-color: #aaaeae;
+    margin: 0;
+    padding: 0;
+}
+
+/* ヘッダー */
+.site-header {
+    background-color: #aaaeae;
+    padding: 32px 16px;
+    text-align: center;
+    border-bottom: 1px solid #8F9393;
+}
+
+.site-branding {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.site-logo {
+    margin-bottom: 16px;
+}
+
+.logo-img {
+    max-width: 200px;
+    height: auto;
+}
+
+.site-title {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans JP", "Hiragino Kaku Gothic ProN", "Yu Gothic", "Meiryo", sans-serif;
+    font-size: 2rem;
+    font-weight: 700;
+    color: #333;
+    margin: 0;
+}
+
+/* メインコンテンツ */
+.site-main {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 32px 16px;
+    background-color: #aaaeae;
+    min-height: calc(100vh - 200px);
+}
+
+.main-content {
+    width: 100%;
+}
+
+.entry-content {
+    max-width: 100%;
+}
+
+.welcome-text {
+    font-size: 1.2rem;
+    color: #333;
+    font-weight: 600;
+    padding: 12px 16px;
+}
+
+.description {
+    margin-bottom: 32px;
+    color: #333;
+    padding: 12px 16px;
+}
+
+/* 検索・フィルタ機能 */
+.search-filter-container {
+    margin: 32px 0;
+    background-color: rgba(255, 255, 255, 0.9);
+    padding: 24px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.search-box {
+    position: relative;
+    margin-bottom: 20px;
+}
+
+.search-input {
+    width: 100%;
+    padding: 12px 40px 12px 16px;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 16px;
+    font-family: inherit;
+    background-color: #fff;
+    transition: all 0.2s ease;
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.clear-search {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: #64748b;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
+    display: none;
+    font-size: 14px;
+    line-height: 1;
+    transition: background-color 0.2s ease;
+}
+
+.clear-search:hover {
+    background-color: #475569;
+}
+
+.filter-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    max-height: 120px;
+    overflow-y: auto;
+    padding: 4px;
+    border-radius: 8px;
+}
+
+.filter-btn {
+    padding: 8px 16px;
+    border: 2px solid #e2e8f0;
+    background-color: #fff;
+    color: #64748b;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    font-family: inherit;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.filter-btn:hover {
+    border-color: #2563eb;
+    color: #2563eb;
+    transform: translateY(-1px);
+}
+
+.filter-btn.active {
+    background-color: #2563eb;
+    border-color: #2563eb;
+    color: white;
+    box-shadow: 0 2px 4px rgba(37, 99, 235, 0.3);
+}
+
+.results-info {
+    margin: 16px 0 8px 0;
+    padding: 8px 12px;
+    background-color: #f1f5f9;
+    border-radius: 6px;
+    font-size: 14px;
+    color: #475569;
+    font-weight: 500;
+}
+
+.category-tag {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    color: white;
+    background-color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    margin: 2px 4px 2px 0;
+    white-space: nowrap;
+}
+
+.category-tag:last-child {
+    margin-right: 0;
+}
+
+/* 動的カテゴリ色生成 - HSLを使用した自動色分け */
+.project-row[data-category="測定器"] .category-tag {
+    background: linear-gradient(135deg, #3b82f6, #1e40af);
+}
+
+.project-row[data-category="音響"] .category-tag {
+    background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+}
+
+.project-row[data-category="時計"] .category-tag {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+}
+
+.project-row[data-category="無線"] .category-tag {
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+}
+
+.project-row[data-category="電子工作"] .category-tag {
+    background: linear-gradient(135deg, #10b981, #059669);
+}
+
+/* 将来のカテゴリ用の予備色 */
+.category-tag[data-color="6"] { background: linear-gradient(135deg, #06b6d4, #0891b2); }
+.category-tag[data-color="7"] { background: linear-gradient(135deg, #84cc16, #65a30d); }
+.category-tag[data-color="8"] { background: linear-gradient(135deg, #eab308, #ca8a04); }
+.category-tag[data-color="9"] { background: linear-gradient(135deg, #f97316, #ea580c); }
+.category-tag[data-color="10"] { background: linear-gradient(135deg, #ec4899, #db2777); }
+
+/* アニメーション */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* プロジェクトテーブル */
+.projects-table {
+    margin: 32px 0;
+    overflow-x: auto;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    background-color: #fff;
+}
+
+.projects-list {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    background-color: #fff;
+    border-radius: 12px;
+    overflow: hidden;
+    font-size: 15px;
+}
+
+.projects-list th {
+    background-color: #4a5568;
+    padding: 20px 16px;
+    text-align: left;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans JP", "Hiragino Kaku Gothic ProN", "Yu Gothic", "Meiryo", sans-serif;
+    font-weight: 600;
+    color: #fff;
+    font-size: 16px;
+    letter-spacing: 0.5px;
+}
+
+.projects-list th:first-child {
+    width: 30%;
+    min-width: 180px;
+}
+
+.projects-list th:nth-child(2) {
+    width: 20%;
+    min-width: 120px;
+}
+
+.projects-list th:last-child {
+    width: 50%;
+    min-width: 200px;
+}
+
+.projects-list td {
+    padding: 18px 16px;
+    border-bottom: 1px solid #e9ecef;
+    vertical-align: top;
+    transition: all 0.2s ease;
+    background-color: #fff;
+}
+
+.projects-list tr:nth-child(even) td {
+    background-color: #f8f9fa;
+}
+
+.projects-list tr:hover td {
+    background-color: #e3f2fd;
+    transform: scale(1.01);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.projects-list tr:last-child td {
+    border-bottom: none;
+}
+
+.projects-list td:first-child {
+    font-weight: 600;
+}
+
+/* リンク */
+a {
+    color: #2563eb;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    border-radius: 4px;
+    padding: 2px 4px;
+    margin: -2px -4px;
+}
+
+a:hover {
+    color: #1d4ed8;
+    background-color: rgba(37, 99, 235, 0.1);
+    text-decoration: none;
+}
+
+.projects-list a {
+    font-weight: 600;
+    color: #1e40af;
+    padding: 4px 8px;
+    border-radius: 6px;
+    display: inline-block;
+    transition: all 0.2s ease;
+}
+
+.projects-list a:hover {
+    background-color: #dbeafe;
+    color: #1e3a8a;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.misc-link {
+    margin-top: 32px;
+    padding: 16px;
+    background-color: rgba(255, 255, 255, 0.9);
+    border-left: 4px solid #2563eb;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* フッター */
+.site-footer {
+    background-color: #8F9393;
+    color: #fff;
+    text-align: center;
+    padding: 24px 16px;
+    margin-top: auto;
+}
+
+.site-info {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans JP", "Hiragino Kaku Gothic ProN", "Yu Gothic", "Meiryo", sans-serif;
+    font-size: 0.9rem;
+}
+
+/* レスポンシブデザイン */
+@media (min-width: 768px) {
+    body {
+        font-size: 16px;
+    }
+    
+    .site-header {
+        padding: 48px 32px;
+    }
+    
+    .site-main {
+        padding: 48px 32px;
+    }
+    
+    .projects-list th,
+    .projects-list td {
+        padding: 20px 16px;
+    }
+    
+    .projects-list {
+        font-size: 16px;
+    }
+    
+    .site-title {
+        font-size: 2.5rem;
+    }
+}
+
+@media (max-width: 767px) {
+    .projects-list {
+        font-size: 14px;
+    }
+    
+    .projects-list th,
+    .projects-list td {
+        padding: 12px 8px;
+    }
+    
+    .site-title {
+        font-size: 1.8rem;
+    }
+    
+    .projects-list th:first-child {
+        width: 35%;
+    }
+    
+    .projects-list th:nth-child(2) {
+        width: 20%;
+    }
+    
+    .projects-list th:last-child {
+        width: 45%;
+    }
+    
+    .filter-buttons {
+        justify-content: flex-start;
+        max-height: 80px;
+    }
+    
+    .filter-btn {
+        font-size: 11px;
+        padding: 5px 10px;
+    }
+    
+    .category-tag {
+        font-size: 9px;
+        padding: 2px 6px;
+    }
+}
+
+/* スクロールバー（WebKit系ブラウザ） */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+/* アクセシビリティ */
+.screen-reader-text {
+    clip: rect(1px, 1px, 1px, 1px);
+    position: absolute !important;
+    height: 1px;
+    width: 1px;
+    overflow: hidden;
+}
+
+/* プリント用スタイル */
+@media print {
+    .site-header,
+    .site-footer {
+        background: none !important;
+        color: black !important;
+    }
+    
+    body {
+        background: white !important;
+        color: black !important;
+    }
+    
+    a {
+        color: black !important;
+        text-decoration: underline !important;
+    }
+}
