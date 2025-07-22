@@ -529,40 +529,6 @@ a:hover {
     transform: rotate(-5deg) scale(1.1);
 }
 
-/* YouTube リンク */
-.social-link.youtube {
-    background: linear-gradient(135deg, #ff0000, #cc0000);
-    color: white;
-    border: 2px solid transparent;
-}
-
-.social-link.youtube:hover {
-    background: linear-gradient(135deg, #ff1a1a, #ff0000);
-    transform: translateY(-3px);
-    box-shadow: 0 8px 25px rgba(255, 0, 0, 0.4);
-}
-
-.social-link.youtube:hover .social-icon {
-    transform: scale(1.2);
-}
-
-/* X（旧Twitter）リンク */
-.social-link.twitter {
-    background: linear-gradient(135deg, #000000, #1a1a1a);
-    color: white;
-    border: 2px solid transparent;
-}
-
-.social-link.twitter:hover {
-    background: linear-gradient(135deg, #333333, #000000);
-    transform: translateY(-3px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
-}
-
-.social-link.twitter:hover .social-icon {
-    transform: rotate(-10deg) scale(1.1);
-}
-
 /* ニコニコ動画リンク */
 .social-link.niconico {
     background: white;
