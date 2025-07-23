@@ -788,6 +788,7 @@ a:hover {
     border-radius: 12px;
     margin-bottom: 32px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    text-align: center;
 }
 
 .article-title {
@@ -1466,31 +1467,6 @@ a:hover {
     padding: 0 16px;
 }
 
-.blog-header {
-    text-align: center;
-    margin-bottom: 32px;
-    padding: 32px 0;
-    background-color: rgba(255, 255, 255, 0.9);
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.page-title {
-    font-size: 2.5rem;
-    font-weight: 700;
-    color: #333;
-    margin: 0 0 12px 0;
-    border-bottom: 3px solid #2563eb;
-    display: inline-block;
-    padding-bottom: 8px;
-}
-
-.page-description {
-    color: #64748b;
-    font-size: 1.1rem;
-    margin: 0;
-}
-
 /* ブログフィルタ */
 .blog-filters {
     margin-bottom: 32px;
@@ -1591,19 +1567,6 @@ a:hover {
         font-size: 0.9rem;
     }
     
-    .page-title {
-        font-size: 2rem;
-    }
-    
-    .page-description {
-        font-size: 1rem;
-    }
-    
-    .blog-header {
-        padding: 24px 16px;
-        margin-bottom: 24px;
-    }
-    
     .blog-filters {
         padding: 16px;
         margin-bottom: 24px;
@@ -1668,7 +1631,8 @@ a:hover {
     border-color: #333;
 }
 
-/* ブログ専用の注意ボックス */
+/* コンテンツ用の注意ボックス（ブログ・記事共通） */
+.content-notice,
 .blog-notice {
     background: linear-gradient(135deg, #fef3c7, #fed7aa);
     border-left: 4px solid #f59e0b;
@@ -1677,19 +1641,22 @@ a:hover {
     border-radius: 0 8px 8px 0;
 }
 
+.content-notice h4,
 .blog-notice h4 {
     color: #92400e;
     margin: 0 0 8px 0;
     font-size: 1rem;
 }
 
+.content-notice p,
 .blog-notice p {
     color: #78350f;
     margin: 0;
     font-weight: 500;
 }
 
-/* ブログ専用のTips */
+/* コンテンツ用のTips（ブログ・記事共通） */
+.content-tip,
 .blog-tip {
     background: linear-gradient(135deg, #ecfdf5, #d1fae5);
     border-left: 4px solid #10b981;
@@ -1698,12 +1665,14 @@ a:hover {
     border-radius: 0 8px 8px 0;
 }
 
+.content-tip h4,
 .blog-tip h4 {
     color: #065f46;
     margin: 0 0 8px 0;
     font-size: 1rem;
 }
 
+.content-tip p,
 .blog-tip p {
     color: #047857;
     margin: 0;
