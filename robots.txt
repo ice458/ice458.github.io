@@ -1,0 +1,12 @@
+User-agent: *
+Allow: /
+
+# サイトマップの場所
+Sitemap: https://ice458.github.io/sitemap.xml
+
+# クロールしない可能性があるファイル
+Disallow: /__pycache__/
+Disallow: /*.py$
+Disallow: /*.bak$
+Disallow: /test_*.py$
+Disallow: /.git/
