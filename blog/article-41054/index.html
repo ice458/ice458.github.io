@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KORG M50の修理 - ice458の物置き</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <!-- ファビコン設定 -->
+    <link rel="icon" type="image/x-icon" href="../../favicon.ico">
+    <link rel="icon" type="image/png" sizes="16x16" href="../../favicon-16x16.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="../../favicon-32x32.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="../../favicon-180x180.png">
+    <link rel="manifest" href="../../site.webmanifest">
+
+    <!-- ブラウザ固有のメタタグ -->
+    <meta name="theme-color" content="#aaaeae">
+    <meta name="msapplication-TileColor" content="#aaaeae">
+    <meta name="msapplication-TileImage" content="../../favicon-180x180.png">
+</head>
+
+<body class="blog-article">
+    <header class="site-header">
+        <div class="site-branding">
+            <div class="site-logo">
+                <img src="../../logo.png" alt="ロゴ" class="logo-img">
+            </div>
+            <h1 class="site-title"><a href="../../index.html">ice458の物置き</a></h1>
+        </div>
+        <nav class="site-nav">
+            <a href="../../index.html" class="nav-link">プロジェクト</a>
+            <a href="../../blog.html" class="nav-link active">雑多なメモ等</a>
+        </nav>
+    </header>
+
+    <main class="site-main">
+        <article class="main-content">
+            <div class="article-header">
+                <h1 class="article-title">KORG M50の修理</h1>
+                <div class="article-meta">
+                    <div class="article-categories">
+                        <span class="category-tag">KORG M50</span>
+                        <span class="category-tag">楽器</span>
+                        <span class="category-tag">修理記</span>
+                    </div>
+                    <div class="article-date">作成日: 2024年10月21日</div>
+                </div>
+            </div>
+
+            <div class="article-content">
+                <div class="article-overview">
+                    <h2>概要</h2>
+                    <p>友人から修理依頼を受けて直したKORGのシンセサイザーについての記録を残します。</p>
+                </div>
+
+                <div class="article-section">
+                    <h2>症状</h2>
+                    <ul>
+                        <li>ヘッドホン出力を使うとき、マスターボリュームを最大付近にした状態でフォルテ気味に弾くと音が割れる。そもそも音量が小さい。</li>
+                        <li>モノラル出力（L/MONO、R）の音量が極端に小さい。たまに割れた音が大きく鳴る。</li>
+                    </ul>
+                </div>
+
+                <div class="article-section">
+                    <h2>故障ポイント</h2>
+                    <p>出力についているミューティングトランジスタ(Q1、Q2、Q5、Q7)のVbeを測ったところすべて0.66Vあり、常に導通していた。このためミュート制御の回路の故障と判断した。</p>
+                    
+                    <p>下に故障箇所周辺の写真と、基板から推測した回路図を示す。各ノードの電圧/電流は修理前に測定したものである。</p>
+
+                    <div class="image-row">
+                        <div class="image-item">
+                            <img src="img/img_7645.png" alt="電源&アナログ回路基板">
+                            <p class="image-caption">電源&アナログ回路基板</p>
+                        </div>
+                        <div class="image-item">
+                            <img src="img/img_7647.png" alt="劣化したコンデンサ">
+                            <p class="image-caption">劣化したコンデンサ</p>
+                        </div>
+                    </div>
+
+                    <div class="article-image">
+                        <img src="img/schematic.png" alt="基板から起こした回路図">
+                        <p class="image-caption">アンプ周辺は概略。部品の同定は間違っているかもしれない。</p>
+                    </div>
+
+                    <p>ミュート制御の回路のうち、時定数を作る電解コンデンサ(C93)の漏れ電流が大きく(6.4uA)なっていた。取り外して容量を測ったところ、5uFしかない状態だった。これによりQ4のPNPトランジスタがOFFにならず、常に中途半端なミュート状態になっていた。このためほとんど音量が出ず、非常に歪みの多い出力になってしまっていた。</p>
+                </div>
+
+                <div class="article-section">
+                    <h2>実施した補修</h2>
+                    <p>Q93を長寿命タイプの電解コンデンサに交換した。電解コンデンサではいつかは今回の故障モードで再び壊れると思われる。フィルムコンデンサや、直流バイアス特性に気を付ければ、積層セラミックコンデンサ等に交換しても良いかもしれない。</p>
+                </div>
+
+                <div class="article-section">
+                    <h2>修理の結果</h2>
+                    <p>すべての出力でカタログスペックを満たすようになった。歪みもなくきれいな音を鳴らせるようになった。</p>
+                    
+                    <div class="blog-tip">
+                        <h4>💡 Tips</h4>
+                        <p>電源&アナログ回路の基板は単体で電源を入れても問題ない模様。故障箇所の特定時には基板単体にACアダプタを接続して動作させた。この方が作業性が良い。</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="article-footer">
+                <div class="back-link">
+                    <a href="../../blog.html" class="back-button">← 雑多なメモ等に戻る</a>
+                </div>
+                <div class="article-info">
+                    <p>最終更新: 2024年10月21日</p>
+                </div>
+            </div>
+        </article>
+    </main>
+
+    <footer class="site-footer">
+        <div class="site-info">
+            <p>&copy; 2025 ice458の物置き</p>
+        </div>
+    </footer>
+</body>
+
+</html>

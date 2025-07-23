@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Raspberry Pi PicoのVS Code用拡張機能ではまった点 - ice458の物置き</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <!-- ファビコン設定 -->
+    <link rel="icon" type="image/x-icon" href="../../favicon.ico">
+    <link rel="icon" type="image/png" sizes="16x16" href="../../favicon-16x16.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="../../favicon-32x32.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="../../favicon-180x180.png">
+    <link rel="manifest" href="../../site.webmanifest">
+
+    <!-- ブラウザ固有のメタタグ -->
+    <meta name="theme-color" content="#aaaeae">
+    <meta name="msapplication-TileColor" content="#aaaeae">
+    <meta name="msapplication-TileImage" content="../../favicon-180x180.png">
+</head>
+
+<body class="blog-article">
+    <header class="site-header">
+        <div class="site-branding">
+            <div class="site-logo">
+                <img src="../../logo.png" alt="ロゴ" class="logo-img">
+            </div>
+            <h1 class="site-title"><a href="../../index.html">ice458の物置き</a></h1>
+        </div>
+        <nav class="site-nav">
+            <a href="../../index.html" class="nav-link">プロジェクト</a>
+            <a href="../../blog.html" class="nav-link active">雑多なメモ等</a>
+        </nav>
+    </header>
+
+    <main class="site-main">
+        <article class="main-content">
+            <div class="article-header">
+                <h1 class="article-title">Raspberry Pi PicoのVS Code用拡張機能ではまった点</h1>
+                <div class="article-meta">
+                    <div class="article-categories">
+                        <span class="category-tag">Raspberry Pi Pico</span>
+                        <span class="category-tag">備忘録</span>
+                    </div>
+                    <div class="article-date">作成日: 2024年10月03日</div>
+                </div>
+            </div>
+
+            <div class="article-content">
+                <div class="article-overview">
+                    <h2>概要</h2>
+                    <p>Raspberry Pi Pico 2が発売され、合わせてRaspberry Pi Pico SDK 2.0.0とそれを導入するためのVS Code用拡張機能が公開されましたが、導入ではまったところがあったので備忘録。</p>
+                </div>
+
+                <div class="article-section">
+                    <h2>環境</h2>
+                    <ul>
+                        <li>Windows 10/11</li>
+                        <li>Raspberry Pi Pico (VS Code 拡張機能) v0.16.2</li>
+                        <li>Raspberry Pi Pico SDK v2.0.0</li>
+                    </ul>
+                </div>
+
+                <div class="article-section">
+                    <h2>起きた現象</h2>
+                    <p>New C/C++ Project と Import Project、New Project From Exampleを選択して新規プロジェクトを作成しようとすると、"Could not create new project" と表示されて失敗する。</p>
+                </div>
+
+                <div class="article-section">
+                    <h2>原因</h2>
+                    <ol>
+                        <li>ほかの開発環境用の拡張機能と競合していた。</li>
+                        <li>Windowsのユーザーディレクトリ名に日本語(マルチバイト文字)が含まれていた。</li>
+                    </ol>
+                </div>
+
+                <div class="article-section">
+                    <h2>解決方法</h2>
+                    <ol>
+                        <li>VS Codeの拡張機能用に<a href="https://github.com/raspberrypi/pico-vscode/blob/main/scripts/Pico.code-profile" target="_blank" rel="noopener">新しいプロファイル</a>を作成する。</li>
+                        <li>新規に英字のみの名前を持つWindowsユーザーを作成した。</li>
+                    </ol>
+
+                    <div class="blog-notice">
+                        <h4>⚠️ 注意</h4>
+                        <p>1. については、VS Codeの拡張機能の<a href="https://github.com/raspberrypi/pico-vscode" target="_blank" rel="noopener">Readme</a>内には記載されていますが、公式のチュートリアル資料<a href="https://datasheets.raspberrypi.com/pico/getting-started-with-pico.pdf" target="_blank" rel="noopener">Getting started with Raspberry Pi Pico-series</a>(PDFにつき注意)には記載がないようです。</p>
+                    </div>
+
+                    <div class="blog-tip">
+                        <h4>💡 Tips</h4>
+                        <p>2. は、拡張機能によってツール群がユーザーディレクトリ直下の.pico-sdk内にインストールされるために起こります。別途インストール済みのツールのパスを設定することもできるようですが、今回は試していません。</p>
+                    </div>
+                </div>
+
+                <div class="article-section">
+                    <h2>まとめ</h2>
+                    <p>振り返ってみるとこの環境に特有の現象というより、コンピュータを触るうえでの常識的なものだったかもしれない……</p>
+                </div>
+            </div>
+
+            <div class="article-footer">
+                <div class="back-link">
+                    <a href="../../blog.html" class="back-button">← 雑多なメモ等に戻る</a>
+                </div>
+                <div class="article-info">
+                    <p>最終更新: 2024年10月03日</p>
+                </div>
+            </div>
+        </article>
+    </main>
+
+    <footer class="site-footer">
+        <div class="site-info">
+            <p>&copy; 2025 ice458の物置き</p>
+        </div>
+    </footer>
+</body>
+
+</html>
