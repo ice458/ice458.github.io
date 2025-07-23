@@ -38,27 +38,20 @@
                         <span class="category-tag">無線</span>
                         <span class="category-tag">電子工作</span>
                     </div>
-                    <div class="article-date">作成日: 2025年07月23日</div>
+                    <div class="article-date">公開: 2021年5月12日</div>
                 </div>
             </div>
 
             <div class="article-content">
-                <div class="article-overview">
-                    <h2>概要</h2>
-                    <p>いわゆるFM用ゲルマラジオ的なものです。</p>
+                <p>通信の本に載っていた FM 検波器の中に、スロープ検波という方式がありました。この検波方式の回路図が AM 用ゲルマラジオのそれとそっくりだったので、FM 用ゲルマ(?)ラジオを作ってみました。</p>
+                <div class="article-image">
+                    <img src="img/img_4320.png" alt="無電源FMラジオ">
+                    <p class="image-caption">無電源FMラジオ</p>
                 </div>
-
-                <div class="article-section">
-                    <h2>製作の背景</h2>
-                    <p>ここに製作の動機や背景を記述します。</p>
-                </div>
-
-                <!-- 動画がある場合のセクション（不要な場合は削除してください） -->
                 <div class="article-section">
                     <h2>動画</h2>
                     <div class="video-container">
-                        <iframe src="https://www.youtube.com/embed/VIDEO_ID_PLACEHOLDER"
-                            title="無電源FMラジオ" frameborder="0"
+                        <iframe src="https://www.youtube.com/embed/2Aqbx-WZ33o" title="無電源FMラジオ" frameborder="0"
                             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                             allowfullscreen>
                         </iframe>
@@ -66,115 +59,98 @@
                 </div>
 
                 <div class="article-section">
-                    <h2>仕様</h2>
-                    <ul class="spec-list">
-                        <li><strong>製作時期:</strong> 2025年07月23日</li>
-                        <li><strong>電源:</strong> 5V</li>
-                    </ul>
-                </div>
+                    <h2>回路図など</h2>
+                    <h3>ラジオの回路図</h3>
+                    <p>手書き失礼します。CADよりコイルを描くのが楽なので…</p>
 
-                <div class="article-section">
-                    <h2>設計・回路図</h2>
-                    <p>回路設計の詳細や回路図を掲載します。</p>
-
-                    <!-- 実際の画像がある場合 -->
-                    <!-- <div class="article-image">
-                        <img src="img/circuit.webp" alt="回路図">
-                        <p class="image-caption">回路図</p>
-                    </div> -->
-
-                    <!-- 画像がまだない場合のプレースホルダー -->
-                    <div class="image-placeholder">
-                        <p>📷 回路図の画像予定地</p>
-                    </div>
-                </div>
-
-
-                <div class="article-section">
-                    <h2>製作過程</h2>
-                    <div class="process-step">
-                        <h3>基板設計</h3>
-                        <p>基板の設計について説明します。</p>
-                        <div class="image-placeholder">
-                            <p>📷 基板設計の画像予定地</p>
-                        </div>
+                    <div class="article-image">
+                        <img src="img/aimg_4314.png" alt="無電源FMラジオの回路図">
+                        <p class="image-caption">無電源FMラジオの回路図</p>
                     </div>
 
-                    <div class="process-step">
-                        <h3>部品実装</h3>
-                        <p>部品の実装作業について説明します。</p>
-                        <div class="image-placeholder">
-                            <p>📷 実装作業の画像予定地</p>
-                        </div>
+                    <p>まさに AM ゲルマラジオ、といった感じの回路図ですがあくまで FM ラジオです。FM 用のバリコンは入手性が悪すぎるので、AM 用270pF のバリコンへ直列にコンデンサを入れて代用しました。
+                    </p>
+
+                    <p>アンテナの位置が変ですが、いろいろ試した中でここにつなぐのが一番強く受信できました。なぜアースにつなぐと感度が良くなるのかよくわからないので何かご存じの方は教えていただけるとありがたいです。
+                    </p>
+
+                    <p>検波用ダイオードは 1N60 などのゲルマニウムダイオードも試したのですが、手持ちでは BAT43 というショットキーバリアダイオードが一番感度良く受信できました。FM
+                        ゲルマラジオと名乗りたいのですが、これではショットキーラジオといったところでしょうか…</p>
+
+                    <p>このラジオは組み立てそのものは簡単なのですが、AM
+                        ゲルマラジオと違って扱う周波数が高いのでコイルの調整が異常に難しいです。同調周波数から中空コイルの巻き数、長さ、直径をあらかじめ算出してはいるのですが、そうそう計算通りにいかないので色々試す必要があります。今回は直径
+                        40mm 3回巻きと直径 15mm 2回巻きの組み合わせが選択度、感度ともに良好になりました。</p>
+
+                    <p>私の家は窪地にあり、まともにラジオの電波は飛んでこないので FM
+                        トランスミッタを使って調整しました。ごく弱い電波しか出ないので、結構近づける必要はありますがとてもよく鳴りました。好きな周波数で電波を飛ばせるので、強電界地域にお住まいでも FM
+                        トランスミッタがあったほうが調整は楽だと思います。</p>
+
+                    <p>このラジオで実際の放送も聞こえるか試したいのですが、送信所が近くに無くまだできていません。</p>
+
+                    <h3>検波について</h3>
+                    <p>前述した通りこのラジオはスロープ検波という方式で検波しています。これは、RC または RL
+                        のハイパスフィルタや、同調回路の周波数特性の直線部分を利用することで周波数を振幅に変換する方式です。…と言葉で書いてもピンとこないので簡単な図を書きました。</p>
+
+                    <div class="article-image">
+                        <img src="img/e382b9e383ade383bce38397e6a49ce6b3a2.png" alt="スロープ検波の原理図">
+                        <p class="image-caption">スロープ検波の原理図</p>
                     </div>
 
-                </div>
+                    <p>図のように、周波数特性の山の左側にある直線部分を利用し、周波数変化を振幅変化に変換することで FM 波を AM 波として検波しています。このため AM
+                        ゲルマラジオとほぼ同一の回路構成で検波できます。線形になる範囲はわずかであるため変調が深くなるほど歪が大きくなります。</p>
 
-                <div class="article-section">
-                    <h2>測定結果</h2>
-                    <p>実際の測定結果や性能について記述します。</p>
-                    <div class="measurement-table">
-                        <table class="results-table">
-                            <thead>
-                                <tr>
-                                    <th>項目</th>
-                                    <th>測定値</th>
-                                    <th>目標値</th>
-                                    <th>評価</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>精度</td>
-                                    <td>±0.1%</td>
-                                    <td>±0.5%</td>
-                                    <td>✓ 良好</td>
-                                </tr>
-                                <!-- 追加の測定項目をここに記述 -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <div class="article-section">
-                    <h2>改良点・今後の課題</h2>
-                    <ul>
-                        <li>精度の向上</li>
-                        <li>消費電力の削減</li>
-                        <li>小型化の検討</li>
-                    </ul>
-                </div>
-
-                <div class="article-section">
-                    <h2>部品リスト</h2>
+                    <h2>使用部品</h2>
                     <div class="parts-table">
                         <table class="parts-list">
                             <thead>
                                 <tr>
                                     <th>部品名</th>
-                                    <th>型番</th>
+                                    <th>仕様</th>
                                     <th>備考</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <tr>
-                                    <td>R1</td>
-                                    <td>1kΩ</td>
-                                    <td>1/4W カーボン抵抗</td>
+                                    <td>ポリバリコン</td>
+                                    <td>AM用 / 270pF</td>
+                                    <td>FM用代用</td>
                                 </tr>
-                                <!-- 追加の部品をここに記述 -->
+                                <tr>
+                                    <td>セラミックコンデンサ</td>
+                                    <td>8pF / 470pF</td>
+                                    <td>-</td>
+                                </tr>
+                                <tr>
+                                    <td>ショットキーバリアダイオード</td>
+                                    <td>BAT43</td>
+                                    <td>STマイクロ など</td>
+                                </tr>
+                                <tr>
+                                    <td>アウトプットトランス</td>
+                                    <td>ST-30A</td>
+                                    <td>橋本電気株式会社</td>
+                                </tr>
+                                <tr>
+                                    <td>ロッドアンテナ</td>
+                                    <td>7段 96cm</td>
+                                    <td>-</td>
+                                </tr>
+                                <tr>
+                                    <td>ポリウレタン線</td>
+                                    <td>直径 1.0mm</td>
+                                    <td>-</td>
+                                </tr>
+                                <tr>
+                                    <td>セラミックイヤホン</td>
+                                    <td>-</td>
+                                    <td>-</td>
+                                </tr>
                             </tbody>
                         </table>
                     </div>
-                </div>
 
-                <div class="article-section">
-                    <h2>参考資料</h2>
-                    <ul class="reference-list">
-                        <li><a href="#">データシート</a></li>
-                        <li><a href="#">参考文献</a></li>
-                        <li><a href="#">関連リンク</a></li>
-                    </ul>
+                    <p>部品点数も少なく、組み立ても簡単なのですが調整がシビアで、AM ゲルマラジオよりも再現性がかなり低いので工作教室的なものには向かないと思います。<br>しかし単純な回路なのに FM
+                        が聞けるというのはなかなか面白い題材なのではないかと思います。</p>
                 </div>
             </div>
 
@@ -183,7 +159,7 @@
                     <a href="../index.html" class="back-button">← 物置きに戻る</a>
                 </div>
                 <div class="article-info">
-                    <p>最終更新: 2025年07月23日</p>
+                    <p>最終更新: 2021年5月12日</p>
                 </div>
             </div>
         </article>

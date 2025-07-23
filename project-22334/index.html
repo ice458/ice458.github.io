@@ -38,154 +38,222 @@
                         <span class="category-tag">測定器</span>
                         <span class="category-tag">電子工作</span>
                     </div>
-                    <div class="article-date">作成日: 2025年07月23日</div>
+                    <div class="article-date">公開日: 2023年04月19日</div>
                 </div>
             </div>
 
             <div class="article-content">
-                <div class="article-overview">
-                    <h2>概要</h2>
-                    <p>PCからリモートで操作できる汎用電源装置です。</p>
-                </div>
+                <p>USB を使って PC からリモート操作可能な安定化電源装置を作りました。汎用の電子回路実験に便利です。</p>
 
-                <div class="article-section">
-                    <h2>製作の背景</h2>
-                    <p>ここに製作の動機や背景を記述します。</p>
-                </div>
-
-                <!-- 動画がある場合のセクション（不要な場合は削除してください） -->
-                <div class="article-section">
-                    <h2>動画</h2>
-                    <div class="video-container">
-                        <iframe src="https://www.youtube.com/embed/VIDEO_ID_PLACEHOLDER"
-                            title="USBインターフェース付きCVCC電源" frameborder="0"
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                            allowfullscreen>
-                        </iframe>
-                    </div>
+                <div class="article-image">
+                    <img src="img/p1.png" alt="製作したCVCC電源の外観">
+                    <p class="image-caption">製作したCVCC電源の外観</p>
                 </div>
 
                 <div class="article-section">
                     <h2>仕様</h2>
-                    <ul class="spec-list">
-                        <li><strong>製作時期:</strong> 2025年07月23日</li>
-                        <li><strong>電源:</strong> 5V</li>
-                    </ul>
-                </div>
-
-                <div class="article-section">
-                    <h2>設計・回路図</h2>
-                    <p>回路設計の詳細や回路図を掲載します。</p>
-
-                    <!-- 実際の画像がある場合 -->
-                    <!-- <div class="article-image">
-                        <img src="img/circuit.webp" alt="回路図">
-                        <p class="image-caption">回路図</p>
-                    </div> -->
-
-                    <!-- 画像がまだない場合のプレースホルダー -->
-                    <div class="image-placeholder">
-                        <p>📷 回路図の画像予定地</p>
-                    </div>
-                </div>
-
-
-                <div class="article-section">
-                    <h2>製作過程</h2>
-                    <div class="process-step">
-                        <h3>基板設計</h3>
-                        <p>基板の設計について説明します。</p>
-                        <div class="image-placeholder">
-                            <p>📷 基板設計の画像予定地</p>
-                        </div>
-                    </div>
-
-                    <div class="process-step">
-                        <h3>部品実装</h3>
-                        <p>部品の実装作業について説明します。</p>
-                        <div class="image-placeholder">
-                            <p>📷 実装作業の画像予定地</p>
-                        </div>
-                    </div>
-
-                </div>
-
-                <div class="article-section">
-                    <h2>測定結果</h2>
-                    <p>実際の測定結果や性能について記述します。</p>
-                    <div class="measurement-table">
-                        <table class="results-table">
-                            <thead>
-                                <tr>
-                                    <th>項目</th>
-                                    <th>測定値</th>
-                                    <th>目標値</th>
-                                    <th>評価</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>精度</td>
-                                    <td>±0.1%</td>
-                                    <td>±0.5%</td>
-                                    <td>✓ 良好</td>
-                                </tr>
-                                <!-- 追加の測定項目をここに記述 -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <div class="article-section">
-                    <h2>改良点・今後の課題</h2>
                     <ul>
-                        <li>精度の向上</li>
-                        <li>消費電力の削減</li>
-                        <li>小型化の検討</li>
+                        <li>定電圧出力：0～16.5V</li>
+                        <li>定電流出力：15mA～1.5A</li>
+                        <li>ロータリーエンコーダと DAC によるデジタル式出力電圧設定</li>
+                        <li>加熱保護</li>
+                        <li>USB (CDC) によるリモート操作</li>
                     </ul>
                 </div>
 
                 <div class="article-section">
-                    <h2>部品リスト</h2>
-                    <div class="parts-table">
-                        <table class="parts-list">
-                            <thead>
-                                <tr>
-                                    <th>部品名</th>
-                                    <th>型番</th>
-                                    <th>備考</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>R1</td>
-                                    <td>1kΩ</td>
-                                    <td>1/4W カーボン抵抗</td>
-                                </tr>
-                                <!-- 追加の部品をここに記述 -->
-                            </tbody>
-                        </table>
+                    <h2>回路構成</h2>
+
+                    <h3>全体制御部</h3>
+                    <div class="article-image">
+                        <img src="img/s1.png" alt="全体制御部の回路図">
+                        <p class="image-caption">全体制御部の回路図</p>
                     </div>
+
+                    <p>全体の制御は PIC18F27Q43 で行います。各種スイッチの状態の取得、電圧などの測定、DAC の制御、LCD の表示、リモートコマンドの解釈などを行っています。</p>
+
+                    <p>絶縁 DC-DC
+                        コンバータによって制御回路をフローティング状態にしています。制御回路のグランドは電源装置の出力に繋がれているので、出力電圧に追従するようになっています。このフローティング電源はアナログ回路の電源にも使うのでトランスで作りたいところですが、都合の良いトランスは見当たりません。複数のトランスを使うことも嫌だったので、絶縁
+                        DC-DC コンバータの出力にフィルタと三端子レギュレータを入れることにしました。</p>
+
+                    <p>大電流が必要なファンと LCD のバックライトには制御回路とは別の DC-DC コンバータを用意しています。</p>
+
+                    <p>今回の出力は15V、1.5A程度と電源装置としては控えめですが、これはDACの分解能の制約によるものです。使用部品した部品は電力面でかなり余裕があるので、出力電圧、出力電流はそれぞれ分圧抵抗の比を変えれば増大させることができます。しかし、採用した
+                        MCP4922 のような安価で手に入れやすい 12bit DAC で実用的な分解能を持たせるためにこのような仕様にしています。</p>
+
+                    <h3>電源制御部</h3>
+                    <div class="article-image">
+                        <img src="img/s2.png" alt="電源制御部の回路図">
+                        <p class="image-caption">電源制御部の回路図</p>
+                    </div>
+
+                    <p>定電圧モードでは U4A、定電流モードでは U4B で Q1 を制御します。制御の切り替えは、D7、D12 によって行います。出力電圧が低い方のオペアンプが FET
+                        の制御を行うことになります。また、二つのオペアンプの出力をコンパレータ U8B で比較することでモードの状態を検出することができます。</p>
+
+                    <p>Q2、Q3 はオペアンプの出力が飽和することを防ぐスイッチです。オペアンプが飽和状態から復帰する必要がなくなるので、CV / CC のモード切替を高速に行うことができるようになります。</p>
+
+                    <p>制御回路の電源がフローティング状態になっているので、CV と CC の回路構成を似たものにすることができます。特に CC
+                        の制御回路のオペアンプを１つにできるので、発振しにくい安定した回路になりやすいです。</p>
+
+                    <h3>USB/絶縁UART部</h3>
+                    <div class="article-image">
+                        <img src="img/s3.webp" alt="絶縁UARTの回路図">
+                        <p class="image-caption">絶縁UARTの回路図</p>
+                    </div>
+
+                    <p>メインの制御を行う PIC18F27Q43 は大地グランドを基準に動作していないので、PC との接続部分は絶縁する必要があります。ADuM121N によって UART
+                        信号を絶縁することでこの問題を解決しています。</p>
+
+                    <p>USB 通信は PIC16F1454 で行います。現在は CDC を用いて通信していますが、将来的に USBTMC を実装できないかと思い専用チップではなくマイコンにしました。</p>
                 </div>
 
                 <div class="article-section">
-                    <h2>参考資料</h2>
-                    <ul class="reference-list">
-                        <li><a href="#">データシート</a></li>
-                        <li><a href="#">参考文献</a></li>
-                        <li><a href="#">関連リンク</a></li>
-                    </ul>
-                </div>
-            </div>
+                    <h2>製作・実装</h2>
+                    <p>今回はプリント基板を発注しました。メイン基板は 2層、絶縁 UART 基板は 6層です。JLCPCB で異常に安かったので 6層にしましたが、内層は電源のベタしかありません。</p>
 
-            <div class="article-footer">
-                <div class="back-link">
-                    <a href="../index.html" class="back-button">← 物置きに戻る</a>
+                    <div class="article-image">
+                        <img src="img/img_6145.png" alt="発注した基板の写真">
+                        <p class="image-caption">発注した基板の写真</p>
+                    </div>
+
+                    <div class="article-image">
+                        <img src="img/p2.png" alt="CVCC電源の内部写真">
+                        <p class="image-caption">CVCC電源の内部写真</p>
+                    </div>
+
+                    <p>ところでこの 6層基板、ENIG にインピーダンスコントロールに Pad on Via とてんこ盛りだったのに 2ドル (5枚) でした。同じ条件の4層基板よりはるかに安いっ！なぜ！</p>
+
+                    <p>ケースは前に作った<a href="../project-58097/"
+                            target="_blank">デュアルトラッキング電源</a>と同じものを使いましたが、今回はヒートシンクを筐体の中に入れて、ファンで冷やす形にしました。サーミスタで温度を監視して、熱くなったら冷やします。
+                    </p>
+
+                    <p>基板を立てて実装しましたが、これだと重力の方向を考えた部品配置にするべきだったかもしれません。ショートすることはなさそうですが、足を浮かせた部品が下を向きそうでやや不安です。</p>
                 </div>
-                <div class="article-info">
-                    <p>最終更新: 2025年07月23日</p>
+
+                <div class="article-section">
+                    <h2>動作テスト</h2>
+                    <p>7.5V 出力で、無負荷→500mA の過渡応答です。</p>
+
+                    <div class="article-image">
+                        <img src="img/ds1z_quickprint1.png?w=800" alt="過渡応答の波形">
+                        <p class="image-caption">過渡応答の波形</p>
+                    </div>
+
+                    <p>1us 以内に定常状態へ戻っているので、なかなか速いのではないかと思います。致命的になるようなリンギングも無いようです。一方、ノイズは多めに見えます。20mVpp
+                        程度乗っているようですので、対策を考えたいところです。</p>
                 </div>
-            </div>
+
+                <div class="article-section">
+                    <h2>リモートコマンド</h2>
+                    <p>多くの計測器と同じようなコマンドで制御できるようにしました。必要最低限のコマンドのみ実装しています。校正用のコマンドのみ
+                        2つ目の引数があります。本来であれば複数の引数を並べる際はカンマで区切るべきですが、実装が楽だったのでスペース区切りにしています。</p>
+                    <p><s>ここにコマンドを載せても私以外が使うことは無いでしょうけれども……</s> </p>
+                    <table class="spec-table">
+                        <thead>
+                            <tr>
+                                <th>コマンド</th>
+                                <th>説明</th>
+                                <th>返答例</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>*IDN?</td>
+                                <td>識別文字列を返します</td>
+                                <td>ice458,PWR1615,001,v1.0</td>
+                            </tr>
+                            <tr>
+                                <td>VOLTage {&lt;voltage&gt;}</td>
+                                <td>出力電圧を設定します</td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td>VOLTage?</td>
+                                <td>設定されている出力電圧を返します</td>
+                                <td>5.200626</td>
+                            </tr>
+                            <tr>
+                                <td>CURRent {&lt;current&gt;}</td>
+                                <td>電流制限値を設定します</td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td>CURRent?</td>
+                                <td>設定されている電流制限値を返します</td>
+                                <td>0.399862</td>
+                            </tr>
+                            <tr>
+                                <td>OUTPut {ON|OFF}</td>
+                                <td>電源装置の出力を切り替えます</td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td>OUTPut?</td>
+                                <td>電源装置の出力の状態を返します</td>
+                                <td>ON</td>
+                            </tr>
+                            <tr>
+                                <td>MEASure:VOLTage?</td>
+                                <td>電圧計の値を返します</td>
+                                <td>5.197031</td>
+                            </tr>
+                            <tr>
+                                <td>MEASure:CURRent?</td>
+                                <td>電流計の値を返します</td>
+                                <td>0.399921</td>
+                            </tr>
+                            <tr>
+                                <td>MEASure:TEMPerature?</td>
+                                <td>メイントランジスタの取り付けられたヒートシンクの温度を返します</td>
+                                <td>35</td>
+                            </tr>
+                            <tr>
+                                <td>SYSTem:REMote</td>
+                                <td>パネル操作を無効にします</td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td>SYSTem:LOCal</td>
+                                <td>パネル操作を有効にします</td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td>SYSTem:ERRor?</td>
+                                <td>発生したエラーを返します</td>
+                                <td>out of range error</td>
+                            </tr>
+                            <tr>
+                                <td>LOCK?</td>
+                                <td>パネル操作が有効かどうかを返します</td>
+                                <td>ON</td>
+                            </tr>
+                            <tr>
+                                <td>CALibration:VOLTage {HIGH|LOW|DONE} {&lt;voltage&gt;}</td>
+                                <td>電圧の校正に使います</td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td>CALibration:CURRent {HIGH|LOW|DONE} {&lt;current&gt;}</td>
+                                <td>電流の校正に使います</td>
+                                <td></td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="article-image">
+                        <img src="img/ce.png" alt="PCに認識された電源を示す写真">
+                        <p class="image-caption">PCに認識された電源を示す写真</p>
+                    </div>
+
+                    <p>*IDN? の返答ができるようになると、Keysight の Connection Expert のようなソフトに認識されるようになります。地味にうれしい。</p>
+                    <div class="article-footer">
+                        <div class="back-link">
+                            <a href="../index.html" class="back-button">← 物置きに戻る</a>
+                        </div>
+                        <div class="article-info">
+                            <p>最終更新: 2023年04月19日</p>
+                        </div>
+                    </div>
         </article>
     </main>
 

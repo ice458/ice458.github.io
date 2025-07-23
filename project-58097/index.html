@@ -38,143 +38,204 @@
                         <span class="category-tag">測定器</span>
                         <span class="category-tag">電子工作</span>
                     </div>
-                    <div class="article-date">作成日: 2025年07月23日</div>
+                    <div class="article-date">作成日: 2021年9月6日</div>
                 </div>
             </div>
 
             <div class="article-content">
-                <div class="article-overview">
-                    <h2>概要</h2>
-                    <p>絶対値の等しい正負電圧を出力可能な電源装置です。</p>
+                <p>正負の出力電圧を、その比が等しい状態で可変できるデュアルトラッキング方式の安定化電源装置を作りました。オペアンプの実験などに便利です。</p>
+                <div class="article-image">
+                    <img src="img/img_4479.png" alt="完成写真">
+                    <p class="image-caption">完成写真</p>
                 </div>
-
-                <div class="article-section">
-                    <h2>製作の背景</h2>
-                    <p>ここに製作の動機や背景を記述します。</p>
-                </div>
-
-                <!-- 動画がある場合のセクション（不要な場合は削除してください） -->
-                <div class="article-section">
-                    <h2>動画</h2>
-                    <div class="video-container">
-                        <iframe src="https://www.youtube.com/embed/VIDEO_ID_PLACEHOLDER"
-                            title="デュアルトラッキング電源装置" frameborder="0"
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                            allowfullscreen>
-                        </iframe>
-                    </div>
-                </div>
-
                 <div class="article-section">
                     <h2>仕様</h2>
                     <ul class="spec-list">
-                        <li><strong>製作時期:</strong> 2025年07月23日</li>
-                        <li><strong>電源:</strong> 5V</li>
+                        <li><strong>出力電圧:</strong> ±0~15V 可変出力 (0.1V ステップ)</li>
+                        <li><strong>電圧設定:</strong> ロータリーエンコーダと DAC によるデジタル式</li>
+                        <li><strong>トラッキング:</strong> 正負の出力電圧の比は 1:1 で固定</li>
+                        <li><strong>最大出力:</strong> 全出力電圧範囲で最大 1.5A (±15V時 45W) 連続出力可能</li>
+                        <li><strong>保護機能:</strong> 過電流保護機能 (1.8A で遮断、即断式)、過熱保護機能</li>
                     </ul>
                 </div>
 
                 <div class="article-section">
-                    <h2>設計・回路図</h2>
-                    <p>回路設計の詳細や回路図を掲載します。</p>
-
-                    <!-- 実際の画像がある場合 -->
-                    <!-- <div class="article-image">
-                        <img src="img/circuit.webp" alt="回路図">
-                        <p class="image-caption">回路図</p>
-                    </div> -->
-
-                    <!-- 画像がまだない場合のプレースホルダー -->
-                    <div class="image-placeholder">
-                        <p>📷 回路図の画像予定地</p>
+                    <h2>回路図</h2>
+                    <h3>全体回路図</h3>
+                    <div class="article-image">
+                        <img src="img/a.png" alt="全体回路図">
+                        <p class="image-caption">全体回路図</p>
                     </div>
+
+                    <h3>AC入力と整流部分の回路図</h3>
+                    <div class="article-image">
+                        <img src="img/b.png" alt="AC入力と整流部分の回路">
+                        <p class="image-caption">AC入力と整流部分の回路</p>
+                    </div>
+                    <p>一次側にはノイズフィルタを入れてあります。よくある X コンデンサと Y コンデンサを使ったものではなく、X コンデンサのみのフィルタを採用しました。Y
+                        コンデンサは中点から電流を逃がせないと効果がありませんが、自宅の環境ではアースを取れず感電しそうなので使わないことにしました。</p>
+
+                    <h3>電源回路</h3>
+                    <div class="article-image">
+                        <img src="img/c.png" alt="電源回路">
+                        <p class="image-caption">電源回路</p>
+                    </div>
+                    <p>三端子レギュレータを使ってオペアンプやマイコンなどへの電源を用意します。三端子レギュレータで正負電源を作る際はラッチダウン防止用のダイオード (D18、D19)
+                        を入れます。無くても問題なく動作することのほうが多いと思いますが、万が一ラッチダウンしてしまうと素子を破壊しかねないので入れておきます。M78AR12は7800系の三端子レギュレータとピン互換のスイッチングレギュレータです。ある程度電流が必要なリレーとファンのために用意しました。
+                    </p>
+
+                    <h3>定電圧回路</h3>
+                    <div class="article-image">
+                        <img src="img/d.png" alt="定電圧回路">
+                        <p class="image-caption">定電圧回路</p>
+                    </div>
+                    <p>よくある NFB 型定電圧回路です。オペアンプで基準電圧と出力電圧を比較し、出力トランジスタを制御します。出力コンデンサに ESR が小さいものを選ぶと位相余裕がなくなり不安定になります。今回は
+                        ルビコン PK シリーズ の1000uF のものを使いました。R3 と R4 はアイドル電流を流すためのものです。</p>
+                    <p>今回はオペアンプの電源電圧よりも高い電圧も出力できるようにしたかったので、オペアンプの出力をツェナーダイオードでシフトしました。</p>
+                    <p>トラッキング動作は、負側の基準電圧を 0V にして正側と負側の出力の中点電圧と比較することで実現しています。このため正負の出力電圧の絶対値の比は常に 1:1 になります。</p>
+                    <p>出力電圧をデジタル的に設定したかったので、基準電圧ICである MCP1541 と、12bitDAC の MCP4726 で基準電圧を作りました。DAC の出力に MOSFET
+                        を付けていますが、これは過電流保護機能用です。後述しますが、PIC マイコンの CLC モジュールの出力で ON して基準電圧を GND に落とす動作をします。</p>
+                    <p>パワートランジスタは 2SA1943N / 2SC5200N のペアです。2SA1943 / 2SC5200
+                        より一回り小さいトランジスタです。どちらも特性は同じなようで、今回は持っていたヒートシンクのサイズに合わせて N 付きを選択しました。</p>
+                    <p>電流計測はシャント式です。分解能を上げるには差動増幅回路の抵抗の比率を R7 : R11 = R8 : R12
+                        にできるだけ近づける必要があります。固定抵抗と多回転半固定抵抗を組み合わせれば精度を上げられますが、今回は 1% 精度の固定抵抗のみを使いました。ペアをうまくそろえれば 10mA
+                        単位の測定には十分な分解能が出せます。</p>
+
+                    <h3>制御回路</h3>
+                    <div class="article-image">
+                        <img src="img/e.png" alt="制御回路">
+                        <p class="image-caption">制御回路</p>
+                    </div>
+                    <p>DAC の設定、出力の電圧と電流の計測や画面表示などの制御を PIC マイコンの PIC18F26Q84 で行っています。演算機能付き12bitADC
+                        や8bitDAC、コンパレータなどのアナログモジュールに、SPI/I2C、UART や CAN FD といったデジタルモジュールも充実している多機能なマイコンです。多くの周辺回路が CPU
+                        から独立して動作し、 DMA までついているので 8bit マイコンながらリアルタイム性のある制御が可能です。</p>
+                    <p>電源装置の保護機能もこの PIC が担っています。PIC18F26Q84 はごく小規模な PLD のような CLC
+                        というモジュールが乗っており、次のような論理回路を構成することで過電流保護と過熱保護の機能を持たせました。</p>
+                    <div class="article-image">
+                        <img src="img/img_4450.png" alt="CLC">
+                        <p class="image-caption">CLC</p>
+                    </div>
+                    <p>内蔵 DAC の出力と電流計測回路の出力電圧を内蔵コンパレータで比較し、設定した値以上の電流が流れると RS フリップフロップの出力がHiになります。CLC モジュールの出力端子は MOSFET
+                        (Q5) につながっているので、出力電圧を落とすことができます。CLC モジュールの入力には内蔵モジュールや入力ピンを選択することができますが、入力の Hi/Low
+                        を直接設定できるレジスタはないのでリセットと過熱保護入力はタイマの出力を利用しています。</p>
                 </div>
 
+                <div class="article-section">
+                    <h2>組み立てなど</h2>
+                    <div class="article-image">
+                        <img src="img/img_4452.png" alt="上からの写真">
+                        <p class="image-caption">上からの写真</p>
+                    </div>
+                    <div class="article-image">
+                        <img src="img/img_4454.png" alt="横からの写真">
+                        <p class="image-caption">横からの写真</p>
+                    </div>
+                    <p>ケースは 摂津金属工業 の UZ-3 です。あらゆる寸法が今回の作品にぴったりで、非常に安価なケースでした。</p>
+                    <p>ヒートシンクは Intel の Socket 478 用のものです。懐かしの Pentium4
+                        の頃のものです。付属のファンはさすがに不調気味だったので新品に取り換えました。ヒートシンクにはパワートランジスタ2つと、サーミスタを固定してあります。</p>
+                    <p>回路基板は3段構成にしました。一段目が整流・電源回路で、2段目が定電圧回路、3段目が制御回路の基板になっています。</p>
+                </div>
 
                 <div class="article-section">
-                    <h2>製作過程</h2>
-                    <div class="process-step">
-                        <h3>基板設計</h3>
-                        <p>基板の設計について説明します。</p>
-                        <div class="image-placeholder">
-                            <p>📷 基板設計の画像予定地</p>
+                    <h2>動作テスト</h2>
+                    <p>出力15V のとき、無負荷状態から15Ω の抵抗を接続し1A 流した時の過渡波形です。</p>
+                    <div class="image-row">
+                        <div class="image-item">
+                            <img src="img/ds1z_quickprint1.png" alt="測定結果">
+                            <p class="image-caption">測定結果</p>
+                        </div>
+                        <div class="image-item">
+                            <img src="img/ds1z_quickprint2.png" alt="拡大した波形">
+                            <p class="image-caption">拡大した波形</p>
                         </div>
                     </div>
+                    <p>約1usで定常状態に戻っています。波形を拡大すると、負荷変化時に3.7V
+                        ほど落ち込んでいるのが分かります。負荷接続前と比べて電圧がわずかに落ちていますが、配線の抵抗とリレーの接触抵抗による電圧降下です。</p>
 
-                    <div class="process-step">
-                        <h3>部品実装</h3>
-                        <p>部品の実装作業について説明します。</p>
-                        <div class="image-placeholder">
-                            <p>📷 実装作業の画像予定地</p>
+                    <p>次は出力5V のとき、無負荷状態から7.5Ω の抵抗を接続し0.67A 流した時の過渡波形です。</p>
+                    <div class="image-row">
+                        <div class="image-item">
+                            <img src="img/ds1z_quickprint3.png" alt="測定結果">
+                            <p class="image-caption">測定結果</p>
+                        </div>
+                        <div class="image-item">
+                            <img src="img/ds1z_quickprint4.png" alt="拡大した波形">
+                            <p class="image-caption">拡大した波形</p>
                         </div>
                     </div>
-
+                    <p>こちらは約1.5usで定常状態に戻っています。波形を拡大すると、負荷変化時に1.5V ほど落ち込んでいるのが分かります。負荷接続後は負荷接続前と比べて0.1V
+                        近く電圧が落ちていることが分かります。</p>
+                    <p>応答は十分速いようですが、リンギングが気になります。条件によっては発振しそうなので調整が必要かもしれません。</p>
+                    <p>配線抵抗による電圧降下はリモートセンシングを行うようにすれば解決します。しかし、出力スイッチ (今回はリレー) の ON 時と OFF
+                        時でセンシングをする場所を切り変える回路が必要になり、回路規模が大きくなってしまうので実装しませんでした。</p>
                 </div>
 
                 <div class="article-section">
-                    <h2>測定結果</h2>
-                    <p>実際の測定結果や性能について記述します。</p>
-                    <div class="measurement-table">
-                        <table class="results-table">
-                            <thead>
-                                <tr>
-                                    <th>項目</th>
-                                    <th>測定値</th>
-                                    <th>目標値</th>
-                                    <th>評価</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>精度</td>
-                                    <td>±0.1%</td>
-                                    <td>±0.5%</td>
-                                    <td>✓ 良好</td>
-                                </tr>
-                                <!-- 追加の測定項目をここに記述 -->
-                            </tbody>
-                        </table>
-                    </div>
+                    <h2>しばらく使用しての改善点</h2>
+                    <p>半年ほど使い続けてきて感じた改善点です。</p>
+                    <p>電流制限をフリップフロップ式にしたのは微妙でした。回路の突入電流が大きいと保護回路が働いてしまい、実験対象の回路に電源を入れることができませんでした。改善策としてソフトスタートをプログラムで実装しましたが、定電流動作ができたほうが使いやすそうです。
+                    </p>
+                    <p>電流計の安定性がいまいちです。校正用の多回転可変抵抗器に直列に固定抵抗を入れて調整しやすくするべきでした。現在の回路のままでも必要な分解能は出せますが、頻繁な校正が必要です。いっそのこと計装アンプを使うと楽だったかもしれません。
+                    </p>
+                    <p>大きな不便はありませんが、正負で電圧計の値の動き方が異なるのが微妙です。電圧計の負側もローパスフィルタになるように抵抗を入れるべきでした。</p>
+                    <p>電圧設定用のロータリーエンコーダにはノンクリックタイプを使用したのですが、この用途にはクリックがあった方が使いやすそうです。ノンクリックタイプでは、接点の切り替わりのところで回転を止めた時に出力が不安定になってしまいます。クリックタイプであればワンステップを確実に進めることができるのでこのようなことは起こりにくいはずです。
+                    </p>
+                    <p>肝心の定電圧出力は発振することもなく、オシロで見えるノイズもなく、非常に使いやすく感じています。</p>
                 </div>
 
                 <div class="article-section">
-                    <h2>改良点・今後の課題</h2>
-                    <ul>
-                        <li>精度の向上</li>
-                        <li>消費電力の削減</li>
-                        <li>小型化の検討</li>
-                    </ul>
-                </div>
-
-                <div class="article-section">
-                    <h2>部品リスト</h2>
+                    <h2>主な使用部品</h2>
                     <div class="parts-table">
                         <table class="parts-list">
                             <thead>
                                 <tr>
+                                    <th>カテゴリ</th>
                                     <th>部品名</th>
-                                    <th>型番</th>
-                                    <th>備考</th>
+                                    <th>メーカー</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <tr>
-                                    <td>R1</td>
-                                    <td>1kΩ</td>
-                                    <td>1/4W カーボン抵抗</td>
+                                    <td rowspan="2">オペアンプ</td>
+                                    <td>NJM8502R</td>
+                                    <td>新日本無線</td>
                                 </tr>
-                                <!-- 追加の部品をここに記述 -->
+                                <tr>
+                                    <td>NJM4580DD</td>
+                                    <td>新日本無線</td>
+                                </tr>
+                                <tr>
+                                    <td rowspan="2">パワートランジスタ</td>
+                                    <td>2SA1943N / 2SC5200N</td>
+                                    <td>東芝</td>
+                                </tr>
+                                <tr>
+                                    <td>2SA1015-Y / 2SC1815-Y</td>
+                                    <td>東芝</td>
+                                </tr>
+                                <tr>
+                                    <td>マイコン</td>
+                                    <td>PIC18F26Q84-E/SP</td>
+                                    <td>マイクロチップ</td>
+                                </tr>
+                                <tr>
+                                    <td>DAC</td>
+                                    <td>MCP4726</td>
+                                    <td>マイクロチップ</td>
+                                </tr>
+                                <tr>
+                                    <td>基準電圧IC</td>
+                                    <td>MCP1541</td>
+                                    <td>マイクロチップ</td>
+                                </tr>
+                                <tr>
+                                    <td>トランス</td>
+                                    <td>J-162W</td>
+                                    <td>東栄変成器</td>
+                                </tr>
                             </tbody>
                         </table>
                     </div>
-                </div>
-
-                <div class="article-section">
-                    <h2>参考資料</h2>
-                    <ul class="reference-list">
-                        <li><a href="#">データシート</a></li>
-                        <li><a href="#">参考文献</a></li>
-                        <li><a href="#">関連リンク</a></li>
-                    </ul>
                 </div>
             </div>
 
@@ -183,7 +244,7 @@
                     <a href="../index.html" class="back-button">← 物置きに戻る</a>
                 </div>
                 <div class="article-info">
-                    <p>最終更新: 2025年07月23日</p>
+                    <p>最終更新: 2021年9月6日</p>
                 </div>
             </div>
         </article>

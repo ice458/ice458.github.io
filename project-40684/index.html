@@ -39,143 +39,146 @@
                         <span class="category-tag">表示器</span>
                         <span class="category-tag">電子工作</span>
                     </div>
-                    <div class="article-date">作成日: 2025年07月23日</div>
+                    <div class="article-date">作成日: 2021年04月29日</div>
                 </div>
             </div>
 
             <div class="article-content">
-                <div class="article-overview">
-                    <h2>概要</h2>
-                    <p>専用ICで小さくまとめます。</p>
-                </div>
+                <p>自宅のジャンク箱から発掘したuPD848Cという専用ICを使ってVFD時計を作りました。結構簡単に作れるのでおすすめしたいのですが、手に入りにくい古いICなので新しくVFD時計を作ろうとしている人にはあまり参考にならないかもしれません。
+                </p>
+                <p>PICマイコンを使って作ったVFD時計は<a href="../project-45472/index.html">こちら</a>をご覧ください。</p>
 
                 <div class="article-section">
-                    <h2>製作の背景</h2>
-                    <p>ここに製作の動機や背景を記述します。</p>
-                </div>
+                    <h2>uPD848Cとは</h2>
+                    <p>NEC製の車載用ワンチップ時計ICです。VFDを直接駆動することができます。ダイナミック点灯はできないので配線は多くなりますが、バッファを挟むことなくVFDにつなげられるのでマイコンで制御するより部品点数を減らすことができます。
+                    </p>
 
-                <!-- 動画がある場合のセクション（不要な場合は削除してください） -->
-                <div class="article-section">
-                    <h2>動画</h2>
-                    <div class="video-container">
-                        <iframe src="https://www.youtube.com/embed/VIDEO_ID_PLACEHOLDER"
-                            title="シンプルなVFD時計" frameborder="0"
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                            allowfullscreen>
-                        </iframe>
+                    <div class="article-image">
+                        <img src="img/img_4306.png" alt="uPD848C">
+                        <p class="image-caption">uPD848C</p>
                     </div>
-                </div>
 
-                <div class="article-section">
-                    <h2>仕様</h2>
-                    <ul class="spec-list">
-                        <li><strong>製作時期:</strong> 2025年07月23日</li>
-                        <li><strong>電源:</strong> 5V</li>
+                    <p>このICの主な機能です。</p>
+                    <ul>
+                        <li>外付け水晶が基準信号</li>
+                        <li>4ケタのVFDを直接駆動</li>
+                        <li>12/24時間表示切り替え</li>
+                        <li>1Hz出力</li>
+                        <li>時/分、分/秒表示切り替え</li>
+                        <li>時報</li>
+                        <li>明るさコントロール（2段階）</li>
                     </ul>
+
+                    <p>このような時計専用LSIはマイコンが普遍的に使われるようになる前まで電子工作でもよく扱われていたようです。ニキシー管駆動用やLED駆動用、AC同期式のものなど、たくさんの種類のICを各社が出していたようです。今どき製品の時計をばらしてもCOB実装のチップが出てくることがほとんどなので、このような巨大な42ピンDIPのICは逆に新鮮に感じます。
+                    </p>
                 </div>
 
                 <div class="article-section">
                     <h2>設計・回路図</h2>
-                    <p>回路設計の詳細や回路図を掲載します。</p>
+                    <p>ほぼデータシート通りの回路構成です。使用したVFDはNECのLD8035で、古い管ですが共立エレショップなどで今でも簡単に手に入ります。</p>
 
-                    <!-- 実際の画像がある場合 -->
-                    <!-- <div class="article-image">
-                        <img src="img/circuit.webp" alt="回路図">
-                        <p class="image-caption">回路図</p>
-                    </div> -->
-
-                    <!-- 画像がまだない場合のプレースホルダー -->
-                    <div class="image-placeholder">
-                        <p>📷 回路図の画像予定地</p>
+                    <div class="article-image">
+                        <img src="img/e59b9ee8b7afe59bb3.png" alt="VFD時計の回路図">
+                        <p class="image-caption">VFD時計の回路図</p>
                     </div>
+
+                    <p>
+                        ほぼデータシート通りです。使用した VFD は NEC の LD8035 です。古い管ですが、共立エレショップなどで今でも簡単に手に入ります。
+
+                    <p> この VFD と uPD848C
+                        のために12Vの電源が必要なのですが、ヒーター用に低い電圧も用意する必要があります。抵抗器やシリーズレギュレータなどで作ってもよいのですが、発熱対策でスイッチングレギュレータ IC の
+                        LM2575T-ADJ を使ってみました。この IC で1.23Vを作っています。</p>
+
+                    <p>水晶に4.194304MHzという微妙に手に入りにくいものが必要です。特別高精度なものはほとんどないと思うので、トリマコンデンサで発振周波数を微調整できるようにしてあります。</p>
+
+                    <p>uPD848C の電源電圧は最大7Vなので、ツェナーで5.6V を作っています。また、Vssを5V ほど GND から浮かせることで VFD の直接駆動を可能にしています。</p>
+
+                    <p>今回は時報機能を使用していないのですが、32番ピンから1024Hzの信号が1秒間出力されるのでバッファを挟んでスピーカなどにつなげれば使えます。 </p>
                 </div>
 
 
                 <div class="article-section">
                     <h2>製作過程</h2>
-                    <div class="process-step">
-                        <h3>基板設計</h3>
-                        <p>基板の設計について説明します。</p>
-                        <div class="image-placeholder">
-                            <p>📷 基板設計の画像予定地</p>
-                        </div>
-                    </div>
 
-                    <div class="process-step">
-                        <h3>部品実装</h3>
-                        <p>部品の実装作業について説明します。</p>
-                        <div class="image-placeholder">
-                            <p>📷 実装作業の画像予定地</p>
-                        </div>
+                    <h3>基板設計・組み立て</h3>
+                    <p>小型に仕上げたかったので2段構造にしました。
+                    </p>
+                    <div class="article-image">
+                        <img src="img/img_4308.png" alt="完成したVFD時計">
+                        <p class="image-caption">完成したVFD時計</p>
                     </div>
+                    <p>42番ピンからテスト用の2048Hzが出力されるので、周波数がちょうどになるようにトリマコンデンサを調節します。スタティック点灯のせいで配線量がかなり多く、完成後では回しづらいので、今回のように小さく詰め込む場合には早い段階で調整したほうが良いでしょう。
+                    </p>
+                    <p>うまく小さくまとまったので良しとします。</p>
 
                 </div>
 
-                <div class="article-section">
-                    <h2>測定結果</h2>
-                    <p>実際の測定結果や性能について記述します。</p>
-                    <div class="measurement-table">
-                        <table class="results-table">
-                            <thead>
-                                <tr>
-                                    <th>項目</th>
-                                    <th>測定値</th>
-                                    <th>目標値</th>
-                                    <th>評価</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>精度</td>
-                                    <td>±0.1%</td>
-                                    <td>±0.5%</td>
-                                    <td>✓ 良好</td>
-                                </tr>
-                                <!-- 追加の測定項目をここに記述 -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
 
                 <div class="article-section">
-                    <h2>改良点・今後の課題</h2>
-                    <ul>
-                        <li>精度の向上</li>
-                        <li>消費電力の削減</li>
-                        <li>小型化の検討</li>
-                    </ul>
-                </div>
-
-                <div class="article-section">
-                    <h2>部品リスト</h2>
+                    <h2>主要部品リスト</h2>
                     <div class="parts-table">
                         <table class="parts-list">
                             <thead>
                                 <tr>
                                     <th>部品名</th>
-                                    <th>型番</th>
-                                    <th>備考</th>
+                                    <th>型番・仕様</th>
+                                    <th>メーカー・備考</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <tr>
-                                    <td>R1</td>
-                                    <td>1kΩ</td>
-                                    <td>1/4W カーボン抵抗</td>
+                                    <td>時計IC</td>
+                                    <td>uPD848C</td>
+                                    <td>NEC、42ピンDIP</td>
                                 </tr>
-                                <!-- 追加の部品をここに記述 -->
+                                <tr>
+                                    <td>VFD</td>
+                                    <td>LD8035</td>
+                                    <td>NEC、4桁表示</td>
+                                </tr>
+                                <tr>
+                                    <td>スイッチングレギュレータ</td>
+                                    <td>LM2575T-ADJ</td>
+                                    <td>Texas Instruments</td>
+                                </tr>
+                                <tr>
+                                    <td>水晶発振子</td>
+                                    <td>4.194304MHz</td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td>ツェナーダイオード</td>
+                                    <td>5.6V</td>
+                                    <td>IC電源用</td>
+                                </tr>
+                                <tr>
+                                    <td>出力コンデンサ</td>
+                                    <td>低ESR品</td>
+                                    <td>スイッチング電源用</td>
+                                </tr>
                             </tbody>
                         </table>
                     </div>
                 </div>
 
                 <div class="article-section">
-                    <h2>参考資料</h2>
-                    <ul class="reference-list">
-                        <li><a href="#">データシート</a></li>
-                        <li><a href="#">参考文献</a></li>
-                        <li><a href="#">関連リンク</a></li>
-                    </ul>
+                    <h2>＊2021/5/11追記</h2>
+                    <p>後日、ジャンク箱を整理していたら専用基板と思わしきモノが出てきました。NECのロゴが入っているので、どこかのお店のキットとかではないようです。評価基板のようなものだったのでしょうか？</p>
+
+                    <div class="image-row">
+                        <div class="image-item">
+                            <img src="img/img_4330.png" alt="専用基板の表面">
+                            <p class="image-caption">専用基板の表面</p>
+                        </div>
+                        <div class="image-item">
+                            <img src="img/img_4332.png" alt="専用基板の裏面">
+                            <p class="image-caption">専用基板の裏面</p>
+                        </div>
+                    </div>
+
+                    <p>uPD848Cのデータシートと同一の回路をこの基板上に組めるようです。データシート指定のLD8164というVFDを使うとこの基板上にすべて実装できるようです。電源やスイッチ、アラームなどの入出力は基板端の端子に引き出されています。
+                    </p>
+                    <p>LD8164は販売している店舗を見つけられなかったのでこちらの基板を使うことはできませんでしたが、入手できていれば使ってみるのも面白かったかもしれません。</p>
                 </div>
             </div>
 
@@ -184,7 +187,7 @@
                     <a href="../index.html" class="back-button">← 物置きに戻る</a>
                 </div>
                 <div class="article-info">
-                    <p>最終更新: 2025年07月23日</p>
+                    <p>最終更新: 2021年04月29日</p>
                 </div>
             </div>
         </article>

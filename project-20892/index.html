@@ -38,143 +38,65 @@
                         <span class="category-tag">測定器</span>
                         <span class="category-tag">電子工作</span>
                     </div>
-                    <div class="article-date">作成日: 2025年07月23日</div>
+                    <div class="article-date">作成日: 2021年7月21日</div>
                 </div>
             </div>
 
             <div class="article-content">
-                <div class="article-overview">
-                    <h2>概要</h2>
-                    <p>AD9833を使った簡易的なファンクションジェネレータです。</p>
+                <div class="article-image">
+                    <img src="img/img_4439.png" alt="AD9833を使った簡易ファンクションジェネレータ">
+                    <p class="image-caption">AD9833を使った簡易ファンクションジェネレータ</p>
                 </div>
+                
+                <p>アナログデバイセズの DDS チップである AD9833 を使って簡易的なファンクションジェネレータを作りました。ボタンスイッチで周波数の各桁、出力波形、出力の状態を選択して、ロータリーエンコーダで設定します。振幅は可変抵抗で設定します。正弦波、三角波、矩形波を出力でき、ちょっとした信号が欲しいときに便利です。</p>
 
                 <div class="article-section">
-                    <h2>製作の背景</h2>
-                    <p>ここに製作の動機や背景を記述します。</p>
-                </div>
-
-                <!-- 動画がある場合のセクション（不要な場合は削除してください） -->
-                <div class="article-section">
-                    <h2>動画</h2>
-                    <div class="video-container">
-                        <iframe src="https://www.youtube.com/embed/VIDEO_ID_PLACEHOLDER"
-                            title="簡易ファンクションジェネレータ" frameborder="0"
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                            allowfullscreen>
-                        </iframe>
+                    <h2>回路図</h2>
+                    <div class="article-image">
+                        <img src="img/e59b9ee8b7afe59bb3-1.png" alt="AD9833と周辺回路">
+                        <p class="image-caption">AD9833と周辺回路</p>
                     </div>
+                    <p>AD9833 を載せたモジュールが格安で販売されていますが、その多くはフィルタ回路が乗っていません。ごく低い周波数ではあまり問題になりませんが、数百k～数 MHz ほどの周波数が必要な際は注意が必要です。</p>
+                    <p>AD9833 は電源電圧に関係なく正側にオフセットを持った 約0.6Vp-p の信号を出力します。ただし、矩形波出力時のみ電源電圧付近まで振れるので、次段の回路の入力定格に気を付ける必要があります。上の回路に使用したオペアンプ AD8616 は入出力フルスイングなので定格的には問題ないのですが、矩形波出力時に大きく電圧が変わるのは不便なのでダイオードで 約1.2V 以上をクランプすることにしました。</p>
+                    <p>AD9833 の SPI 通信の動作モードは Mode 2 です。通信は16bit単位で最上位ビットから送ります。</p>
                 </div>
 
                 <div class="article-section">
-                    <h2>仕様</h2>
-                    <ul class="spec-list">
-                        <li><strong>製作時期:</strong> 2025年07月23日</li>
-                        <li><strong>電源:</strong> 5V</li>
-                    </ul>
-                </div>
-
-                <div class="article-section">
-                    <h2>設計・回路図</h2>
-                    <p>回路設計の詳細や回路図を掲載します。</p>
-
-                    <!-- 実際の画像がある場合 -->
-                    <!-- <div class="article-image">
-                        <img src="img/circuit.webp" alt="回路図">
-                        <p class="image-caption">回路図</p>
-                    </div> -->
-
-                    <!-- 画像がまだない場合のプレースホルダー -->
-                    <div class="image-placeholder">
-                        <p>📷 回路図の画像予定地</p>
-                    </div>
-                </div>
-
-
-                <div class="article-section">
-                    <h2>製作過程</h2>
-                    <div class="process-step">
-                        <h3>基板設計</h3>
-                        <p>基板の設計について説明します。</p>
-                        <div class="image-placeholder">
-                            <p>📷 基板設計の画像予定地</p>
+                    <h2>出力波形</h2>
+                    <div class="image-row">
+                        <div class="image-item">
+                            <img src="img/ds1z_quickprint1-1.png" alt="10kHz 正弦波">
+                            <p class="image-caption">10kHz 正弦波</p>
+                        </div>
+                        <div class="image-item">
+                            <img src="img/ds1z_quickprint2-1.png" alt="100kHz 正弦波">
+                            <p class="image-caption">100kHz 正弦波</p>
+                        </div>
+                        <div class="image-item">
+                            <img src="img/ds1z_quickprint3-1.png" alt="1MHz 正弦波">
+                            <p class="image-caption">1MHz 正弦波</p>
                         </div>
                     </div>
-
-                    <div class="process-step">
-                        <h3>部品実装</h3>
-                        <p>部品の実装作業について説明します。</p>
-                        <div class="image-placeholder">
-                            <p>📷 実装作業の画像予定地</p>
+                    <div class="image-row">
+                        <div class="image-item">
+                            <img src="img/ds1z_quickprint4-1.png" alt="10kHz 三角波">
+                            <p class="image-caption">10kHz 三角波</p>
+                        </div>
+                        <div class="image-item">
+                            <img src="img/ds1z_quickprint5.png" alt="10kHz 矩形波">
+                            <p class="image-caption">10kHz 矩形波</p>
                         </div>
                     </div>
-
+                    <p>正弦波と三角波はかなりきれいな形をしています。矩形波は、回路を簡単にするためにフィルタ回路をバイパスするようにはしていないので波形がなまっています。今回の回路構成では、正弦波と三角波は 0～2MHz、矩形波は 0～200kHz くらいが実用範囲といったところです。これよりも高い周波数を出そうとすると振幅低下や、波形が崩れるなどのことが起こります。</p>
+                    <p>どの波形でも周波数は非常に安定していますが、これは基準に使う発振器の精度によります。今回はセイコーエプソンの SG8002DC の 5V / 25MHz のものを使いました。</p>
                 </div>
 
                 <div class="article-section">
-                    <h2>測定結果</h2>
-                    <p>実際の測定結果や性能について記述します。</p>
-                    <div class="measurement-table">
-                        <table class="results-table">
-                            <thead>
-                                <tr>
-                                    <th>項目</th>
-                                    <th>測定値</th>
-                                    <th>目標値</th>
-                                    <th>評価</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>精度</td>
-                                    <td>±0.1%</td>
-                                    <td>±0.5%</td>
-                                    <td>✓ 良好</td>
-                                </tr>
-                                <!-- 追加の測定項目をここに記述 -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <div class="article-section">
-                    <h2>改良点・今後の課題</h2>
-                    <ul>
-                        <li>精度の向上</li>
-                        <li>消費電力の削減</li>
-                        <li>小型化の検討</li>
-                    </ul>
-                </div>
-
-                <div class="article-section">
-                    <h2>部品リスト</h2>
-                    <div class="parts-table">
-                        <table class="parts-list">
-                            <thead>
-                                <tr>
-                                    <th>部品名</th>
-                                    <th>型番</th>
-                                    <th>備考</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>R1</td>
-                                    <td>1kΩ</td>
-                                    <td>1/4W カーボン抵抗</td>
-                                </tr>
-                                <!-- 追加の部品をここに記述 -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <div class="article-section">
-                    <h2>参考資料</h2>
-                    <ul class="reference-list">
-                        <li><a href="#">データシート</a></li>
-                        <li><a href="#">参考文献</a></li>
-                        <li><a href="#">関連リンク</a></li>
-                    </ul>
+                    <h2>主な使用部品</h2>
+                    <p><strong>DDS</strong><br>AD9833BRMZ / アナログデバイセズ</p>
+                    <p><strong>オペアンプ</strong><br>AD8616ARMZ / アナログデバイセズ</p>
+                    <p><strong>発振器</strong><br>SG8002DC-25MHz-PHB / セイコーエプソン</p>
+                    <p>全部で2000円ほどで作ることができました。機能は必要十分で、正確な波形と周波数を簡単に実現でき、データシートも非常に読みやすいのでおすすめの IC です。</p>
                 </div>
             </div>
 

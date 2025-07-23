@@ -38,143 +38,91 @@
                         <span class="category-tag">表示器</span>
                         <span class="category-tag">電子工作</span>
                     </div>
-                    <div class="article-date">作成日: 2025年07月23日</div>
+                    <div class="article-date">作成日: 2023年09月23日</div>
                 </div>
             </div>
 
             <div class="article-content">
-                <div class="article-overview">
-                    <h2>概要</h2>
-                    <p>GL91ARというLEDをシリアル制御で動かす基板です。</p>
+                <p>7セグメント LED をシリアルデータで制御できるようにする基板です。GL91AR というレトロな LED と、DHVQFN パッケージのロジック IC を使って小さく作りました。</p>
+                
+                <div class="article-image">
+                    <img src="img/p8270005.webp" alt="8桁のGL91ARを制御する基板の写真">
+                    <p class="image-caption">8桁のGL91ARを制御する基板の写真</p>
+                </div>
+
+                <div class="article-section">
+                    <h2>回路図</h2>
+                    <div class="article-image">
+                        <img src="img/schematic.webp" alt="8桁のGL91ARを制御する基板の回路図">
+                        <p class="image-caption">8桁のGL91ARを制御する基板の回路図</p>
+                    </div>
+                    <p>74HC595 というシフトレジスタを桁数分直列に接続し、シリアルデータで各桁を独立に制御できるようにしています。また、マイコン側の負担を減らすために、発振回路とカウンタ、デコーダを使ってダイナミック駆動する回路を載せています。</p>
+                    <p>ロジック IC はすべて DHVQFN パッケージのものにしました。今回採用したのは Nexperia 製のもので、16個の側面パッドと裏面パッドがあります。裏面パッドはフローティングで構わない IC だったので、位置決めさえできれば手はんだでも実装可能でした。はんだ付けは B型の小手先を使って行いました。初めは D型を使っていたのですが、B型のほうがパッドと基板を同時に加熱しやすかったです。</p>
+                </div>
+
+                <div class="article-section">
+                    <h2>写真集</h2>
+                    <div class="article-image">
+                        <img src="img/p8270014.webp" alt="GL91ARの写真">
+                        <p class="image-caption">古い表示器には独特の魅力がありますね</p>
+                    </div>
+                    
+                    <div class="article-image">
+                        <img src="img/p8270015.webp" alt="基板表面の写真">
+                        <p class="image-caption">格安基板は加熱でレジストがはがれやすい気がする</p>
+                    </div>
+                    
+                    <div class="article-image">
+                        <img src="img/p8270012.webp" alt="基板裏面の写真">
+                        <p class="image-caption">全部のシフトレジスタを裏面にしたらもう少し小さくなったかも？</p>
+                    </div>
                 </div>
 
                 <div class="article-section">
                     <h2>製作の背景</h2>
-                    <p>ここに製作の動機や背景を記述します。</p>
-                </div>
-
-                <!-- 動画がある場合のセクション（不要な場合は削除してください） -->
-                <div class="article-section">
-                    <h2>動画</h2>
-                    <div class="video-container">
-                        <iframe src="https://www.youtube.com/embed/VIDEO_ID_PLACEHOLDER"
-                            title="8桁7セグLED駆動基板" frameborder="0"
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                            allowfullscreen>
-                        </iframe>
-                    </div>
+                    <p>シンプルで効率的な7セグメントLED表示制御基板を製作することを目的としました。特に、レトロなGL91AR LEDを使用することで、昔ながらの表示器の魅力を活かしつつ、最新のDHVQFNパッケージロジックICによる小型化を実現しました。</p>
+                    <p>マイコンのI/Oポートを節約しながら、多桁の表示を可能にするため、シフトレジスタを使用したシリアル制御方式を採用しています。さらに、マイコン側でのタイミング制御を不要にするため、オンボードでダイナミック駆動回路を構成しました。</p>
                 </div>
 
                 <div class="article-section">
                     <h2>仕様</h2>
                     <ul class="spec-list">
-                        <li><strong>製作時期:</strong> 2025年07月23日</li>
-                        <li><strong>電源:</strong> 5V</li>
+                        <li><strong>製作時期:</strong> 2023年09月</li>
+                        <li><strong>表示素子:</strong> GL91AR 7セグメントLED × 8桁</li>
+                        <li><strong>制御方式:</strong> シフトレジスタ（74HC595）によるシリアル制御</li>
+                        <li><strong>駆動方式:</strong> ダイナミック駆動（オンボード発振回路使用）</li>
+                        <li><strong>パッケージ:</strong> DHVQFNパッケージロジックIC使用</li>
+                        <li><strong>入力電圧:</strong> 5V</li>
+                        <li><strong>制御入力:</strong> SPI互換（CLK、DATA、LATCH）</li>
                     </ul>
                 </div>
 
                 <div class="article-section">
                     <h2>設計・回路図</h2>
-                    <p>回路設計の詳細や回路図を掲載します。</p>
-
-                    <!-- 実際の画像がある場合 -->
-                    <!-- <div class="article-image">
-                        <img src="img/circuit.webp" alt="回路図">
-                        <p class="image-caption">回路図</p>
-                    </div> -->
-
-                    <!-- 画像がまだない場合のプレースホルダー -->
-                    <div class="image-placeholder">
-                        <p>📷 回路図の画像予定地</p>
+                    <div class="article-image">
+                        <img src="img/schematic.webp" alt="8桁のGL91ARを制御する基板の回路図">
+                        <p class="image-caption">8桁のGL91ARを制御する基板の回路図</p>
                     </div>
-                </div>
-
-
-                <div class="article-section">
-                    <h2>製作過程</h2>
-                    <div class="process-step">
-                        <h3>基板設計</h3>
-                        <p>基板の設計について説明します。</p>
-                        <div class="image-placeholder">
-                            <p>📷 基板設計の画像予定地</p>
-                        </div>
-                    </div>
-
-                    <div class="process-step">
-                        <h3>部品実装</h3>
-                        <p>部品の実装作業について説明します。</p>
-                        <div class="image-placeholder">
-                            <p>📷 実装作業の画像予定地</p>
-                        </div>
-                    </div>
-
+                    <p>74HC595 というシフトレジスタを桁数分直列に接続し、シリアルデータで各桁を独立に制御できるようにしています。また、マイコン側の負担を減らすために、発振回路とカウンタ、デコーダを使ってダイナミック駆動する回路を載せています。</p>
+                    <p>ロジック IC はすべて DHVQFN パッケージのものにしました。今回採用したのは Nexperia 製のもので、16個の側面パッドと裏面パッドがあります。裏面パッドはフローティングで構わない IC だったので、位置決めさえできれば手はんだでも実装可能でした。はんだ付けは B型の小手先を使って行いました。初めは D型を使っていたのですが、B型のほうがパッドと基板を同時に加熱しやすかったです。</p>
                 </div>
 
                 <div class="article-section">
-                    <h2>測定結果</h2>
-                    <p>実際の測定結果や性能について記述します。</p>
-                    <div class="measurement-table">
-                        <table class="results-table">
-                            <thead>
-                                <tr>
-                                    <th>項目</th>
-                                    <th>測定値</th>
-                                    <th>目標値</th>
-                                    <th>評価</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>精度</td>
-                                    <td>±0.1%</td>
-                                    <td>±0.5%</td>
-                                    <td>✓ 良好</td>
-                                </tr>
-                                <!-- 追加の測定項目をここに記述 -->
-                            </tbody>
-                        </table>
+                    <h2>写真集</h2>
+                    <div class="article-image">
+                        <img src="img/p8270014.webp" alt="GL91ARの写真">
+                        <p class="image-caption">古い表示器には独特の魅力がありますね</p>
                     </div>
-                </div>
-
-                <div class="article-section">
-                    <h2>改良点・今後の課題</h2>
-                    <ul>
-                        <li>精度の向上</li>
-                        <li>消費電力の削減</li>
-                        <li>小型化の検討</li>
-                    </ul>
-                </div>
-
-                <div class="article-section">
-                    <h2>部品リスト</h2>
-                    <div class="parts-table">
-                        <table class="parts-list">
-                            <thead>
-                                <tr>
-                                    <th>部品名</th>
-                                    <th>型番</th>
-                                    <th>備考</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>R1</td>
-                                    <td>1kΩ</td>
-                                    <td>1/4W カーボン抵抗</td>
-                                </tr>
-                                <!-- 追加の部品をここに記述 -->
-                            </tbody>
-                        </table>
+                    
+                    <div class="article-image">
+                        <img src="img/p8270015.webp" alt="基板表面の写真">
+                        <p class="image-caption">格安基板は加熱でレジストがはがれやすい気がする</p>
                     </div>
-                </div>
-
-                <div class="article-section">
-                    <h2>参考資料</h2>
-                    <ul class="reference-list">
-                        <li><a href="#">データシート</a></li>
-                        <li><a href="#">参考文献</a></li>
-                        <li><a href="#">関連リンク</a></li>
-                    </ul>
+                    
+                    <div class="article-image">
+                        <img src="img/p8270012.webp" alt="基板裏面の写真">
+                        <p class="image-caption">全部のシフトレジスタを裏面にしたらもう少し小さくなったかも？</p>
+                    </div>
                 </div>
             </div>
 
@@ -183,7 +131,7 @@
                     <a href="../index.html" class="back-button">← 物置きに戻る</a>
                 </div>
                 <div class="article-info">
-                    <p>最終更新: 2025年07月23日</p>
+                    <p>最終更新: 2023年09月23日</p>
                 </div>
             </div>
         </article>

@@ -38,27 +38,24 @@
                         <span class="category-tag">測定器</span>
                         <span class="category-tag">電子工作</span>
                     </div>
-                    <div class="article-date">作成日: 2025年07月23日</div>
+                    <div class="article-date">作成日: 2022年08月03日</div>
                 </div>
             </div>
 
             <div class="article-content">
-                <div class="article-overview">
-                    <h2>概要</h2>
-                    <p>1チャンネルの心電図を見るための装置です。</p>
+                <p>（公開：2022/8/3）<br>ふと自分の心電図を見たくなったので心電計を作ってみました。1チャンネルのみの簡易的なものですが、なかなかうまく波形を出せたのではないかと思います。波形を眺めて楽しむためのものなので、もちろんホビー用途限定です。
+                </p>
+
+                <div class="article-image">
+                    <img src="img/img_5624-1.png" alt="心電計の完成写真">
+                    <p class="image-caption">心電計の完成写真</p>
                 </div>
 
-                <div class="article-section">
-                    <h2>製作の背景</h2>
-                    <p>ここに製作の動機や背景を記述します。</p>
-                </div>
-
-                <!-- 動画がある場合のセクション（不要な場合は削除してください） -->
+                <!-- 動画セクション -->
                 <div class="article-section">
                     <h2>動画</h2>
                     <div class="video-container">
-                        <iframe src="https://www.youtube.com/embed/VIDEO_ID_PLACEHOLDER"
-                            title="心電計" frameborder="0"
+                        <iframe src="https://www.youtube.com/embed/1IxIUhvpp_4" title="心電計" frameborder="0"
                             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                             allowfullscreen>
                         </iframe>
@@ -66,126 +63,176 @@
                 </div>
 
                 <div class="article-section">
-                    <h2>仕様</h2>
-                    <ul class="spec-list">
-                        <li><strong>製作時期:</strong> 2025年07月23日</li>
-                        <li><strong>電源:</strong> 5V</li>
-                    </ul>
-                </div>
+                    <h2>心電図</h2>
+                    <p>心電図は、心臓の活動によって体表に現れる電位の変化を記録したものです。なぜこの電圧が生まれるのかや具体的な読み方は専門の解説に譲りますが、ここでは心電図を眺めて楽しめるようになるための最低限の電子回路的な情報だけ記しておきます。
+                    </p>
 
-                <div class="article-section">
-                    <h2>設計・回路図</h2>
-                    <p>回路設計の詳細や回路図を掲載します。</p>
+                    <p>理想的な心電図の波形には、P波、Q波、R波、S波、T波と呼ばれる部分があります。心臓が一回脈打つとこれらの波形が生まれます。ピークであるR波の電圧は1mV程度で、全体としては1.5mVpp程度、帯域は0.05～100Hz程度とされています。心拍数を測るにはR波同士の間隔を見ればよいです。
+                    </p>
 
-                    <!-- 実際の画像がある場合 -->
-                    <!-- <div class="article-image">
-                        <img src="img/circuit.webp" alt="回路図">
-                        <p class="image-caption">回路図</p>
-                    </div> -->
+                    <div class="article-image">
+                        <img src="img/pqrst.png" alt="心電図の波形">
+                        <p class="image-caption">心電図の波形</p>
+                    </div>
 
-                    <!-- 画像がまだない場合のプレースホルダー -->
-                    <div class="image-placeholder">
-                        <p>📷 回路図の画像予定地</p>
+                    <p>最も一般的に用いられる心電図の検査方法は12誘導心電図というもので、四肢誘導と胸部誘導合わせて10個の電極を用いて12種の波形を得ます。12も波形を得ようとすると非常に大規模になってしまうので、今回の製作では1チャンネルのみの心電計にしました。
+                    </p>
+
+                    <p>四肢誘導の中のⅠ誘導は左室の側壁を見る誘導で、右腕側を正極にして観測したものです。左右の腕の電極を差動アンプで受ければこの誘導をとらえることができます。もちろん電極をつなぐ位置を変えればⅡ誘導、Ⅲ誘導も見ることができます。
+                    </p>
+
+                    <div class="article-image">
+                        <img src="img/e59b9be882a2e8aa98e5b08e.png" alt="四肢誘導の図">
+                        <p class="image-caption">四肢誘導</p>
                     </div>
                 </div>
 
+                    <div class="article-section">
+                        <h2>回路図</h2>
+                        <div class="article-image">
+                            <img src="img/e59b9ee8b7afe59bb3.png" alt="心電計の回路図">
+                            <p class="image-caption">心電計の回路図</p>
+                        </div>
 
-                <div class="article-section">
-                    <h2>製作過程</h2>
-                    <div class="process-step">
-                        <h3>基板設計</h3>
-                        <p>基板の設計について説明します。</p>
-                        <div class="image-placeholder">
-                            <p>📷 基板設計の画像予定地</p>
+                        <p>計装アンプ、LT1167のデータシートにある「Nerve Impulse
+                            Amplifier」を参考にしました。Ⅰ誘導を見る場合であれば、J2のターミナルには1に左手電極、2に右足電極（計測用グランド）、3に右手電極を取り付けます。計測用グランドは使わなくても心電図を得ることはできますが、ノイズ耐性が落ちるので使った方がよいです。
+                        </p>
+
+                        <p>基本的には、計装アンプで約10倍に増幅したのちに非反転増幅回路で301倍している回路です。回路全体で約3000倍の利得があるので、入力信号が1.5mVppであるとすると4.5Vppの信号となり、PICマイコンのADCのダイナミックレンジを大きく生かすことができます。なぜ二段で増幅しているかというと、電極から得た電位を計装アンプで増幅しただけではDCオフセットが大きくなってしまうからです。初段の増幅率は上げすぎると出力が飽和してしまうので、10～20倍程度にとどめておくのがよさそうです。直流成分の除去と、ADCのアンチエイリアスのためにカットオフ周波数0.3Hzのハイパスフィルタと、カットオフ周波数530Hzのローパスフィルタを形成しています。
+                        </p>
+
+                        <p>U1Bのオペアンプは、右足駆動回路やDRL回路（Driven-right-leg
+                            Circuit）と呼ばれる回路を形成しています。これはアクティブに計測用グランドを生成する回路で、コモンモード電圧のみを取り出してフィードバックすることでコモンモードノイズを打ち消す働きがあります。これを利用せずとも心電図はとれるのですが、使った方がノイズ耐性が上がります。
+                        </p>
+
+                        <p>回路の設計中に知ったのですが、上記を含む多くの回路機能を内蔵したアナログ・デバイセズのAD8232というチップがあり、これを乗せたモジュールも販売されているのでそちらを使うと非常に簡単に心電計が組めそうです。
+                        </p>
+
+                        <p>アナログ部で増幅した信号を、PIC18F27Q43のADCで取り込んでいます。PIC内でハムノイズの除去、基線動揺の除去（DCサーボ）、R波の検出、心拍数の算出を行い、128×160の液晶（ST7735S）に表示する処理を行っています。
+                        </p>
+                    </div>
+
+                    <div class="article-section">
+                        <h2>ノイズ対策</h2>
+                        <p>心電図のノイズ源はいくつかあります。その中でも特に目立つものを挙げると、</p>
+                        <ul>
+                            <li>① 50Hzないし60Hzのハムノイズ</li>
+                            <li>② 発汗による電位変動</li>
+                            <li>③ 電極と皮膚との圧力変動によるノイズ</li>
+                            <li>④ 筋電図の混入</li>
+                        </ul>
+                        <p>があります。一般家庭での実験の場合、最も目立つのはハムノイズになります。これはノッチフィルタで除去します。②と③は電極と皮膚との接触を工夫することで抑えられます。④の筋電図は比較的周波数が高いためローパスフィルタで除去します。また、これらに加えて基線動揺という長期的なレベル変動が起こります。これは被検者の呼吸などの動きに伴う変動で、DCサーボをかけることで除去します。
+                        </p>
+
+                        <p>ハムノイズはハムノイズ1周期分の長さをもつバッファの移動平均を求めることで除去します。今回はADCのサンプリングレートを1.6kHz、バッファの長さを32段としました。こうすることでバッファは20msec分のデータを蓄え、50Hzのハムノイズを1波形分収めることになります。ハムノイズは正弦波なので、1波形分を平均すればゼロになります。移動平均のアルゴリズムは以下の通りです。毎回全要素を足し合わせるのではなく、差分のみ合計することで演算量を抑えています。
+                        </p>
+
+                        <div class="code-block">
+                            <pre><code>adc_tmp = get_adc();
+sum = sum - adc_fifo[ptr] + adc_tmp;
+ave = sum / adc_fifo_length;
+ptr++;
+if (ptr == adc_fifo_length) ptr = 0;</code></pre>
+                        </div>
+
+                        <p>DCサーボは以下のように実現しています。係数0.01の部分で時定数の調整、定数1500の部分でDCオフセットの調整ができます。このプログラムでは長期的に見たときにdc_servoの値が1500で一定になるように動作します。
+                        </p>
+                        <div class="code-block">
+                            <pre><code>integrator = integrator + (Din - integrator) * 0.01;
+dc_servo = Din - integrator + 1500;</code></pre>
+                        </div>
+
+                        <p>電極には、ステンレス製の一文字繋手を曲げたものを使いました。ステンレスであれば、銅やアルミニウムなどよりは汗による影響を受けにくくなります。この電極をできるだけ接触面積が大きくなるようにゴムバンドなどで手足に固定します。接触直後はノイズが多いですが、時間がたち皮膚となじむとノイズが減ります。測定の際には全身の力を抜き、リラックスすることが重要です。どこかに力が入っていると筋電図が混入したり、DCサーボでも取り切れないオフセットが現れたりします。<br>実際の医療現場では導電性ゲルでできたものを使うことが多いようですが、高価なうえ個人で入手できるようなものでもなさそうです。
+                        </p>
+
+                        <div class="article-image">
+                            <img src="img/img_5619.png" alt="心電計の電極">
+                            <p class="image-caption">心電計の電極</p>
                         </div>
                     </div>
 
-                    <div class="process-step">
-                        <h3>部品実装</h3>
-                        <p>部品の実装作業について説明します。</p>
-                        <div class="image-placeholder">
-                            <p>📷 実装作業の画像予定地</p>
+                    <div class="article-section">
+                        <h2>R波の検出</h2>
+                        <p>心拍数を算出するために、R波の位置を正確に知る必要があります。単純な閾値によっても求まりそうに見えますが、心電図の波形は個人差が大きいうえに、同じ人でもR波の形は毎波形ごとに変わっていくのでなかなかうまく求まりません。R波を検出するアルゴリズムとして最も有名なものはPan–Tompkinsアルゴリズムと呼ばれるものです。これはバンドパスフィルタによって心電図のQRS群のみを誇張したのち、微分したものを二乗して閾値を設定してQRS群を検出するものです。古くから使われており、高い確度があるようですが8bitのPICに処理させるには重すぎます。そこで今回は矩形波相関フィルタというもので検出を行いました。
+                        </p>
+
+                        <div class="article-image">
+                            <img src="img/e79fa9e5bda2e6b3a2e8bf91e4bcbc.png" alt="矩形波相関フィルタのイメージ">
+                            <p class="image-caption">矩形波相関フィルタのイメージ</p>
+                        </div>
+
+                        <p>このフィルタは、QRS群を正負の符号をもち、1:2:1の時間幅を持つ矩形パルス窓を使って相関値を求めるものです。QRS群の波形が記録されると相関値が大きくなるので、相関値に閾値を設けたり最大値を検出すればR波の位置が分かります。
+                        </p>
+
+                        <div class="code-block">
+                            <pre><code>correlation = - (buf[0] + buf[1] +......+ buf[n/4-1])
+            + (buf[n/4] + buf[n/4+1] +......+ buf[3*n/4-1])
+            - (buf[3*n/4] + buf[3*n/4+1] +......+ buf[n])</code></pre>
+                        </div>
+
+                        <p>QRS群の長さは60～100msecほどが正常値のようですが、今回のサンプリング周波数は1.6kHzなのでバッファの長さを100とすれば窓の長さを62.5msecにできます。相関値を求める式の最後の項、buf[n]は、バッファの外を参照してしまうのでバッファの中身ではなく最新の波形データを使えばよいです。<br>今回の心電計での実装は以下の通りです。差分のみ計算することで計算量を抑えています。
+                        </p>
+
+                        <div class="code-block">
+                            <pre><code>// 初期化コード
+// FIFO
+uint32_t fifo[rr_buf_length] = {0};
+// 差分の合計
+int32_t correlation = 0;
+// FIFOのポインタ
+uint8_t ptr = 0;
+// 矩形波近似フィルタのポインタ
+uint8_t ptr1 = 0;
+uint8_t ptr2 = buf_length / 4;
+uint8_t ptr3 = 3 * buf_length / 4;</code></pre>
+                        </div>
+
+                        <div class="code-block">
+                            <pre><code>// 矩形波近似フィルタ
+correlation = correlation - fifo[ptr1] + 2 * fifo[ptr2] - 2 * fifo[ptr3] + newData;
+
+// FIFO操作
+fifo[ptr]=newData;
+if (ptr  == buf_length) ptr = 0;
+if (ptr1 == buf_length) ptr1 = 0;
+if (ptr2 == buf_length) ptr2 = 0;
+if (ptr3 == buf_length) ptr3 = 0;</code></pre>
                         </div>
                     </div>
 
-                </div>
 
-                <div class="article-section">
-                    <h2>測定結果</h2>
-                    <p>実際の測定結果や性能について記述します。</p>
-                    <div class="measurement-table">
-                        <table class="results-table">
-                            <thead>
-                                <tr>
-                                    <th>項目</th>
-                                    <th>測定値</th>
-                                    <th>目標値</th>
-                                    <th>評価</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>精度</td>
-                                    <td>±0.1%</td>
-                                    <td>±0.5%</td>
-                                    <td>✓ 良好</td>
-                                </tr>
-                                <!-- 追加の測定項目をここに記述 -->
-                            </tbody>
-                        </table>
+
+                    <div class="article-section">
+                        <h2>安全上の注意</h2>
+                        <div class="notice-box">
+                            <h4>⚠️ 重要な安全上の注意</h4>
+                            <p>直に体に電極を当てるので、万が一の時に体に電流が流れるようなことがないようにする必要があります。電源は電池や絶縁電源を使う必要があります。パソコンなどにシリアル通信等で計測データを送る場合にもフォトカプラなどで絶縁する必要があります。
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="article-section">
+                        <h2>参考にした資料等</h2>
+                        <ul class="reference-list">
+                            <li><a href="https://www.analog.com/jp/products/lt1167.html"
+                                    target="_blank">LT1167データシート</a> -
+                                アナログ・デバイセズ</li>
+                            <li><a href="https://www.analog.com/media/jp/technical-documentation/technical-articles/ms-2125_jp.pdf"
+                                    target="_blank">同相信号除去:ECGサブシステムとより優れた性能を得るために使用する技術に対する関連性 (MS2125)</a> -
+                                アナログ・デバイセズ
+                            </li>
+                        </ul>
                     </div>
                 </div>
 
-                <div class="article-section">
-                    <h2>改良点・今後の課題</h2>
-                    <ul>
-                        <li>精度の向上</li>
-                        <li>消費電力の削減</li>
-                        <li>小型化の検討</li>
-                    </ul>
-                </div>
-
-                <div class="article-section">
-                    <h2>部品リスト</h2>
-                    <div class="parts-table">
-                        <table class="parts-list">
-                            <thead>
-                                <tr>
-                                    <th>部品名</th>
-                                    <th>型番</th>
-                                    <th>備考</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>R1</td>
-                                    <td>1kΩ</td>
-                                    <td>1/4W カーボン抵抗</td>
-                                </tr>
-                                <!-- 追加の部品をここに記述 -->
-                            </tbody>
-                        </table>
+                <div class="article-footer">
+                    <div class="back-link">
+                        <a href="../index.html" class="back-button">← 物置きに戻る</a>
+                    </div>
+                    <div class="article-info">
+                        <p>最終更新: 2022年08月03日</p>
                     </div>
                 </div>
-
-                <div class="article-section">
-                    <h2>参考資料</h2>
-                    <ul class="reference-list">
-                        <li><a href="#">データシート</a></li>
-                        <li><a href="#">参考文献</a></li>
-                        <li><a href="#">関連リンク</a></li>
-                    </ul>
-                </div>
-            </div>
-
-            <div class="article-footer">
-                <div class="back-link">
-                    <a href="../index.html" class="back-button">← 物置きに戻る</a>
-                </div>
-                <div class="article-info">
-                    <p>最終更新: 2025年07月23日</p>
-                </div>
-            </div>
         </article>
     </main>
 

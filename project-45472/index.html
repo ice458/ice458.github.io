@@ -39,27 +39,18 @@
                         <span class="category-tag">表示器</span>
                         <span class="category-tag">電子工作</span>
                     </div>
-                    <div class="article-date">作成日: 2025年07月23日</div>
+                    <div class="article-date">公開日: 2021年10月10日</div>
                 </div>
             </div>
 
             <div class="article-content">
-                <div class="article-overview">
-                    <h2>概要</h2>
-                    <p>PICでダイナミック制御をします。</p>
-                </div>
+                <p>VFD (蛍光表示管) を使って実用的な時計を作りました。<a href="../project-40684/index.html">以前にも</a> VFD時計は作りましたが、今回は専用
+                    LSI を使うのではなく PIC マイコンで制御し、より実用的な機能を追加しています。</p>
 
                 <div class="article-section">
-                    <h2>製作の背景</h2>
-                    <p>ここに製作の動機や背景を記述します。</p>
-                </div>
-
-                <!-- 動画がある場合のセクション（不要な場合は削除してください） -->
-                <div class="article-section">
-                    <h2>動画</h2>
+                    <h2>動作動画</h2>
                     <div class="video-container">
-                        <iframe src="https://www.youtube.com/embed/VIDEO_ID_PLACEHOLDER"
-                            title="実用的なVFD時計" frameborder="0"
+                        <iframe src="https://www.youtube.com/embed/oCbgDiXMtrY" title="実用的なVFD時計" frameborder="0"
                             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                             allowfullscreen>
                         </iframe>
@@ -69,113 +60,110 @@
                 <div class="article-section">
                     <h2>仕様</h2>
                     <ul class="spec-list">
-                        <li><strong>製作時期:</strong> 2025年07月23日</li>
-                        <li><strong>電源:</strong> 5V</li>
+                        <li><strong>電源:</strong> 5V 約150mA</li>
+                        <li><strong>表示管:</strong> LD8036E (6桁VFD)</li>
+                        <li><strong>制御:</strong> PIC マイコン</li>
+                        <li><strong>時計精度:</strong> 月差 9秒相当 (RX8900 使用)</li>
                     </ul>
-                </div>
-
-                <div class="article-section">
-                    <h2>設計・回路図</h2>
-                    <p>回路設計の詳細や回路図を掲載します。</p>
-
-                    <!-- 実際の画像がある場合 -->
-                    <!-- <div class="article-image">
-                        <img src="img/circuit.webp" alt="回路図">
-                        <p class="image-caption">回路図</p>
-                    </div> -->
-
-                    <!-- 画像がまだない場合のプレースホルダー -->
-                    <div class="image-placeholder">
-                        <p>📷 回路図の画像予定地</p>
-                    </div>
-                </div>
-
-
-                <div class="article-section">
-                    <h2>製作過程</h2>
-                    <div class="process-step">
-                        <h3>基板設計</h3>
-                        <p>基板の設計について説明します。</p>
-                        <div class="image-placeholder">
-                            <p>📷 基板設計の画像予定地</p>
-                        </div>
-                    </div>
-
-                    <div class="process-step">
-                        <h3>部品実装</h3>
-                        <p>部品の実装作業について説明します。</p>
-                        <div class="image-placeholder">
-                            <p>📷 実装作業の画像予定地</p>
-                        </div>
-                    </div>
-
-                </div>
-
-                <div class="article-section">
-                    <h2>測定結果</h2>
-                    <p>実際の測定結果や性能について記述します。</p>
-                    <div class="measurement-table">
-                        <table class="results-table">
-                            <thead>
-                                <tr>
-                                    <th>項目</th>
-                                    <th>測定値</th>
-                                    <th>目標値</th>
-                                    <th>評価</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>精度</td>
-                                    <td>±0.1%</td>
-                                    <td>±0.5%</td>
-                                    <td>✓ 良好</td>
-                                </tr>
-                                <!-- 追加の測定項目をここに記述 -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <div class="article-section">
-                    <h2>改良点・今後の課題</h2>
                     <ul>
-                        <li>精度の向上</li>
-                        <li>消費電力の削減</li>
-                        <li>小型化の検討</li>
+                        <li>アラーム機能</li>
+                        <li>電気二重層コンデンサによるバックアップ機能</li>
+                        <li>夜間自動減光機能</li>
                     </ul>
+                </div>
+                <div class="article-section">
+                    <h2>回路図(表示器)</h2>
+                    <div class="article-image">
+                        <img src="img/2.png" alt="表示部分の回路図">
+                        <p class="image-caption">表示部分の回路図</p>
+                    </div>
+                    <p>6本の LD8035E をダイナミック駆動できるように配線しました。桁選択はグリッドで行います。</p>
+
+                    <p>VFD のフィラメントは白熱電球のフィラメントと同じく電流が流れて温度が上がると抵抗が大きくなります。どの程度変化するかは実験して確かめる必要があります。今回は 1.25V の電源で 39Ω
+                        の抵抗を直列に入れたところ 19mA ほど流れました。VFD のフィラメントには 0.5V ほどの電圧がかかっていることになります。</p>
+
+                    <p>共立電子の販売ページによると、フィラメントは 0.8V 26mA とのことでしたが、どういった値なのかよくわかりません。実際に 26mA
+                        流してみるとフィラメントが赤く光ってしまいましたので、これは最大定格なのではないかと思います。セグメントはフィラメントに電流を流すほど明るく光るのですが、寿命が短くなります。暗所では 20mA
+                        以上流すとかすかに赤くなるのが確認できました。</p>
+                    <h2>回路図(表示器)</h2>
+                    <div class="article-image">
+                        <img src="img/e59b9ee8b7afe59bb32.png" alt="制御・電源部分の回路図">
+                        <p class="image-caption">制御・電源部分の回路図</p>
+                    </div>
+                    <p>VFD の電源は2種類必要です。フィラメント用の低電圧と、グリッドとアノード用の高電圧です。今回はどちらも MC34063 による簡易スイッチング電源で作りました。低電圧側は 1.25V
+                        、高電圧側は 17V ほどになるように調整しました。本来 LD8035E は 12V
+                        の電圧をかけて使うもののようですが、ダイナミック駆動でも輝度を確保するために電圧を上げています。LD8035E
+                        はダイナミック駆動には向かない、というような記述もしばしば見かけますが、室内での使用には十分な明るさを確保できました。また、一般的に VFD
+                        のダイナミック駆動では、消灯時にグリッドをフィラメントより低い電位にすることで確実に消灯させるようですが、今回は特別工夫しなくても消灯できました。</p>
+
+                    <p>トランジスタアレイの出力にプルダウン抵抗を付けてありますが、これはアノードの電荷引き抜き用です。VFD
+                        のアノードには容量成分があるらしく、これがないと電圧を掛けるのをやめてもうっすら点灯してしまいます。</p>
+
+                    <p>ダイナミック駆動は 2kHz で行っています。管一つは 333Hz で点滅していることになります。この周波数ではちらつきもゴーストも現れませんでした。</p>
+
+                    <p>RTC には秋月電子通商の RX8900 DIP化モジュール (通販コード：K-13009) を使用しています。簡単にバックアップ回路を組むことができる便利で高精度な RTC です。</p>
                 </div>
 
                 <div class="article-section">
-                    <h2>部品リスト</h2>
-                    <div class="parts-table">
-                        <table class="parts-list">
-                            <thead>
-                                <tr>
-                                    <th>部品名</th>
-                                    <th>型番</th>
-                                    <th>備考</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>R1</td>
-                                    <td>1kΩ</td>
-                                    <td>1/4W カーボン抵抗</td>
-                                </tr>
-                                <!-- 追加の部品をここに記述 -->
-                            </tbody>
-                        </table>
+                    <h2>組み立て</h2>
+                    <p>今回は部品密度が高くなるので、プリント基板を発注して製作しました。二段重ねの基板構成とするため、実装する部品の高さに制約があります。標準的なピンヘッダとピンソケットを基板間の接続に用いたので、2枚の基板の間隔は
+                        11mm になり、部品の高さは 8mm 以下にする必要がありました。</p>
+
+                    <div class="article-image">
+                        <img src="img/img_4674.png" alt="プリント基板の写真">
+                        <p class="image-caption">プリント基板の写真</p>
+                    </div>
+
+
+                    <h3>部品選定</h3>
+                    <p>高さ制約のため以下の部品を選定しました：</p>
+                    <ul>
+                        <li><strong>C1、C2:</strong> ルビコンMH7 16V品</li>
+                        <li><strong>C6:</strong> ニチコンMF 35V品</li>
+                        <li><strong>C5:</strong> 村田製作所 ECASシリーズ (470μF、耐圧2V、表面実装品)</li>
+                        <li><strong>RV1:</strong> TSR-3296 シリーズ (Suntan、小型横型)</li>
+                    </ul>
+
+
+
+                    <h3>実装完成品</h3>
+                    <p>部品を実装した基板の写真です。二段構成により、コンパクトな形状を実現しています。</p>
+                    <div class="article-image">
+                        <img src="img/img_4676.png" alt="部品実装後の基板">
+                        <p class="image-caption">部品実装後の基板</p>
+                    </div>
+                    <div class="article-image">
+                        <img src="img/img_4677.png" alt="後方からの写真">
+                        <p class="image-caption">後方からの写真</p>
+                    </div>
+
+                </div>
+
+                <div class="article-section">
+                    <h2>VFD管の特性と注意点</h2>
+                    <p>LD8035E
+                        は製造後からかなり時間がたっているので個体差が大きいです。小さな輝度の違いなら明るく点灯させることでごまかせますが、まれに非常に暗くしか点灯しない管もあります。そういった管はどんなに頑張っても明るくは点灯しません。
+                    </p>
+
+                    <p>今回は写真の個体を含め 2台作成したのですが、多めに購入した 16本の管のうち
+                        1本が非常に暗くしか点灯できない個体でした。また、ロットによって頭の塗装が赤、青、白などと微妙に差があります。明るさのむらを小さくしたり、見た目を統一したりしたい場合は多めに購入して選別する必要があります。
+                    </p>
+
+                    <div class="notice-box">
+                        <h4>⚠️ 取り扱い注意</h4>
+                        <p>
+                            VFD
+                            は一般の真空管と同じく、中に空気が入ってしまうと全く使い物にならなくなってしまいます。管の足の付け根を曲げすぎたり、衝撃を与えたりすると簡単にダメになります。特に管の頭は弱いので裸ではなくケースに入れるなどして保護する必要がありそうです。写真では裸ですが動画では天板を付けてみました。
+                        </p>
                     </div>
                 </div>
 
                 <div class="article-section">
-                    <h2>参考資料</h2>
-                    <ul class="reference-list">
-                        <li><a href="#">データシート</a></li>
-                        <li><a href="#">参考文献</a></li>
-                        <li><a href="#">関連リンク</a></li>
-                    </ul>
+                    <h2>設計データ公開</h2>
+                    <p><strong>追記（2024/05/19）:</strong>
+                        <a href="https://github.com/ice458/VFD-Clock/" target="_blank"
+                            rel="noopener">設計データ</a>をGitHubで公開しました。
+                    </p>
                 </div>
             </div>
 
@@ -184,7 +172,7 @@
                     <a href="../index.html" class="back-button">← 物置きに戻る</a>
                 </div>
                 <div class="article-info">
-                    <p>最終更新: 2025年07月23日</p>
+                    <p>最終更新: 2021年10月10日</p>
                 </div>
             </div>
         </article>
@@ -192,7 +180,7 @@
 
     <footer class="site-footer">
         <div class="site-info">
-            <p>&copy; 2025 ice458の物置き</p>
+            <p>&copy; 2021 ice458の物置き</p>
         </div>
     </footer>
 </body>

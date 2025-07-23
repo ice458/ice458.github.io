@@ -38,143 +38,116 @@
                         <span class="category-tag">電子工作</span>
                         <span class="category-tag">原理理解</span>
                     </div>
-                    <div class="article-date">作成日: 2025年07月23日</div>
+                    <div class="article-date">作成日: 2022年11月27日</div>
                 </div>
             </div>
 
             <div class="article-content">
-                <div class="article-overview">
-                    <h2>概要</h2>
-                    <p>標準ロジックICで作る4bitのSAR ADCです。</p>
+                <p>4bit の逐次比較型 ADC (SAR ADC) を作りました。専用の ADC を用いずに標準ロジック IC で製作することで、SAR ADC のロジックを理解することが目的です。</p>
+
+                <div class="article-image">
+                    <img src="img/img_5832.png" alt="完成写真">
+                    <p class="image-caption">完成写真</p>
                 </div>
 
                 <div class="article-section">
-                    <h2>製作の背景</h2>
-                    <p>ここに製作の動機や背景を記述します。</p>
+                    <h2>SAR ADC について</h2>
+                    <p>SAR ADC は、以下のブロック図の構成をしています。</p>
+
+                  <div class="article-image">
+                    <img src="img/sar-adc-block.webp" alt="ブロック図">
+                    <p class="image-caption">ブロック図</p>
                 </div>
 
-                <!-- 動画がある場合のセクション（不要な場合は削除してください） -->
-                <div class="article-section">
-                    <h2>動画</h2>
-                    <div class="video-container">
-                        <iframe src="https://www.youtube.com/embed/VIDEO_ID_PLACEHOLDER"
-                            title="逐次比較型ADC" frameborder="0"
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                            allowfullscreen>
-                        </iframe>
+                    <p>入力信号と DAC の出力を比較し、バイナリサーチによって上位ビットから順に変換結果を確定していく動作を行います。<br>変換の初めには、DAC に Vref
+                        の半分の電圧を発生させておきます。それ以降の電圧は、次の式で表されます。</p>
+
+                    <div class="article-image">
+                        <img src="img/m1-2.png" alt="DAC電圧式">
+                        <p class="image-caption">DAC電圧式</p>
                     </div>
+
+                    <p>この式をもとに設計した ADC のタイミングチャートと、Simulink のブロック図です。</p>
+
+                    <div class="image-row">
+                        <div class="image-item">
+                            <img src="img/timing.png" alt="タイミングチャート">
+                            <p class="image-caption">タイミングチャート</p>
+                        </div>
+                        <div class="image-item">
+                            <img src="img/matlab.png" alt="Simulinkブロック図">
+                            <p class="image-caption">Simulinkブロック図</p>
+                        </div>
+                    </div>
+
+                    <p>今回はコンパレータの出力に応じて足し引きする数値を変えることで逐次比較のロジックを実現しました。</p>
                 </div>
 
                 <div class="article-section">
-                    <h2>仕様</h2>
-                    <ul class="spec-list">
-                        <li><strong>製作時期:</strong> 2025年07月23日</li>
-                        <li><strong>電源:</strong> 5V</li>
-                    </ul>
-                </div>
+                    <h2>回路</h2>
+                    <p>Simulink 上で設計したブロック図を基に、回路を起こしました。</p>
 
-                <div class="article-section">
-                    <h2>設計・回路図</h2>
-                    <p>回路設計の詳細や回路図を掲載します。</p>
-
-                    <!-- 実際の画像がある場合 -->
-                    <!-- <div class="article-image">
-                        <img src="img/circuit.webp" alt="回路図">
+                    <div class="article-image">
+                        <img src="img/e59b9ee8b7afe59bb3-1.png" alt="回路図">
                         <p class="image-caption">回路図</p>
-                    </div> -->
-
-                    <!-- 画像がまだない場合のプレースホルダー -->
-                    <div class="image-placeholder">
-                        <p>📷 回路図の画像予定地</p>
                     </div>
+
+                    <p>JK フリップフロップの 74HC73
+                        で同期カウンタを構成し、その出力をもとに各ブロックのタイミングを生成しています。非同期カウンタにするとカウンタ出力のビットごとの遅れにより、意図しないタイミングでハザードが発生する原因になります。
+                    </p>
+
+                    <p>Simulink のブロック図上で ROM と記載されていたブロックは、74HC238 とその周辺の AND と OR によって実現しています。今回の回路ではロジック IC
+                        数削減のため、ダイオードによるワイヤード OR を使用しています。</p>
+
+                    <p>74HC86 と、74HC283 で 4bit 全加算 / 減算器を構成しています。全加算器の片方の入力を EXOR でビット反転し、1 を加えてから加算を行うことで減算を実現します。</p>
+
+                    <p>逐次比較レジスタ (SAR Reg) である U11 の 74HC173 は、変換動作の初めに 0b1000
+                        にリセットする必要がありますが、レジスタの中身をリセットするのではなく出力を置き換える形にしています。こうすることで必要な論理回路の規模を小さくすることができます。</p>
+
+                    <p>DAC には R-2R のラダーを用いたものを組みました。量子化誤差を ±0.5LSB の範囲に収めるには、DAC の出力範囲を +0.5LSB
+                        分オフセットする必要がありますが、今回はDACではなく入力電圧のオフセットを調整する形にしました。このオフセットは U16A
+                        のオペアンプとその周辺回路で調節します。<s>単電源で動作できるようにしたかったのですが、前述のオフセットを調節するために加算回路を用いようとするとどうしても負電源が必要になってしまうので、チャージポンプ電源を組み込みました。</s>
+                        ……この記事をここまで書いた時に、オフセット調整回路を無駄に大規模にしてしまったことに気づきました。トランジスタ 1石か
+                        2石でも要件を満たすオフセット調整回路を組めますね。負電源もいりませんでしたorz</p>
+
+                    <p>サンプルホールド回路には、アナログスイッチを並列に用いることで ON 抵抗を低くすることを狙いました。また、U14A、U14B それぞれの両端にかかる電圧差をなくすことでスイッチ OFF
+                        時のコンデンサからの漏れ電流を抑え、ホールド時の電圧誤差を減らす工夫をしています。</p>
                 </div>
 
-
                 <div class="article-section">
-                    <h2>製作過程</h2>
-                    <div class="process-step">
-                        <h3>基板設計</h3>
-                        <p>基板の設計について説明します。</p>
-                        <div class="image-placeholder">
-                            <p>📷 基板設計の画像予定地</p>
+                    <h2>性能測定</h2>
+                    <p>入出力特性、DNL、INL は以下のようになりました。</p>
+
+                    <div class="article-image">
+                        <img src="img/e585a5e587bae58a9b-1-edited.png" alt="入出力特性グラフ">
+                        <p class="image-caption">入出力特性グラフ</p>
+                    </div>
+
+                    <div class="image-row">
+                        <div class="article-image">
+                            <img src="img/dnl.png" alt="DNLグラフ">
+                            <p class="image-caption">DNLグラフ</p>
+                        </div>
+                        <div class="article-image">
+                            <img src="img/inl.png" alt="INLグラフ">
+                            <p class="image-caption">INLグラフ</p>
                         </div>
                     </div>
 
-                    <div class="process-step">
-                        <h3>部品実装</h3>
-                        <p>部品の実装作業について説明します。</p>
-                        <div class="image-placeholder">
-                            <p>📷 実装作業の画像予定地</p>
-                        </div>
-                    </div>
+                    <p>これらの誤差の原因のうち最も影響力があるのは DAC の精度です。今回は DAC の R-2R ラダーに 1%
+                        精度の金属皮膜抵抗を用いたのですが、さらに精度を上げるにはここの抵抗の相対精度を上げる必要がありそうです。</p>
 
+                    <p>サンプリングレートは 50kHz 程度まで上げることができました。これ以上上げるにはDAC の応答を速くする必要がありますが、安定性とのトレードオフになります。市販の 8bit DAC IC
+                        を使えば、精度と速度を楽に改善できそうです。</p>
                 </div>
 
                 <div class="article-section">
-                    <h2>測定結果</h2>
-                    <p>実際の測定結果や性能について記述します。</p>
-                    <div class="measurement-table">
-                        <table class="results-table">
-                            <thead>
-                                <tr>
-                                    <th>項目</th>
-                                    <th>測定値</th>
-                                    <th>目標値</th>
-                                    <th>評価</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>精度</td>
-                                    <td>±0.1%</td>
-                                    <td>±0.5%</td>
-                                    <td>✓ 良好</td>
-                                </tr>
-                                <!-- 追加の測定項目をここに記述 -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+                    <h2>バイナリサーチ</h2>
+                    <p>最後に、サイン波を入力したときにサンプリングされた電圧と DAC の出力波形を示します。SAR ADC の肝であるバイナリサーチの様子がよくわかります。</p>
 
-                <div class="article-section">
-                    <h2>改良点・今後の課題</h2>
-                    <ul>
-                        <li>精度の向上</li>
-                        <li>消費電力の削減</li>
-                        <li>小型化の検討</li>
-                    </ul>
-                </div>
-
-                <div class="article-section">
-                    <h2>部品リスト</h2>
-                    <div class="parts-table">
-                        <table class="parts-list">
-                            <thead>
-                                <tr>
-                                    <th>部品名</th>
-                                    <th>型番</th>
-                                    <th>備考</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>R1</td>
-                                    <td>1kΩ</td>
-                                    <td>1/4W カーボン抵抗</td>
-                                </tr>
-                                <!-- 追加の部品をここに記述 -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <div class="article-section">
-                    <h2>参考資料</h2>
-                    <ul class="reference-list">
-                        <li><a href="#">データシート</a></li>
-                        <li><a href="#">参考文献</a></li>
-                        <li><a href="#">関連リンク</a></li>
-                    </ul>
+                    <div class="article-image">
+                        <img src="img/ani.gif" alt="バイナリサーチの様子">
+                        <p class="image-caption">バイナリサーチの様子</p>
                 </div>
             </div>
 

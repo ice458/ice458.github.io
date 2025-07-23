@@ -38,154 +38,143 @@
                         <span class="category-tag">電子工作</span>
                         <span class="category-tag">電卓</span>
                     </div>
-                    <div class="article-date">作成日: 2025年07月23日</div>
+                    <div class="article-date">作成日: 2024年06月29日</div>
                 </div>
             </div>
 
             <div class="article-content">
-                <div class="article-overview">
-                    <h2>概要</h2>
-                    <p>逆ポーランド記法の関数電卓です。</p>
+                <p>HP-42s を再現した電卓ソフト Free42 を使っているうちに、RPN電卓の魅力に取りつかれてしまい、実機が欲しくなりました。しかし、現在入手可能な
+                    RPN電卓は機種が非常に限られています。そのほとんどが HP製 RPN電卓の中古品や、それを元にして作られた電卓ですが、あまりにも多機能&高価であるため、程よい機能を持つ関数電卓を自作しました。
+                </p>
+                <div class="article-image">
+                    <img src="https://i0.wp.com/ice458.wordpress.com/wp-content/uploads/2024/06/calc.png"
+                        alt="自作した逆ポーランド式(RPN)関数電卓の写真">
+                    <p class="image-caption">自作したRPN関数電卓</p>
                 </div>
-
-                <div class="article-section">
-                    <h2>製作の背景</h2>
-                    <p>ここに製作の動機や背景を記述します。</p>
-                </div>
-
-                <!-- 動画がある場合のセクション（不要な場合は削除してください） -->
-                <div class="article-section">
-                    <h2>動画</h2>
-                    <div class="video-container">
-                        <iframe src="https://www.youtube.com/embed/VIDEO_ID_PLACEHOLDER"
-                            title="RPN関数電卓" frameborder="0"
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                            allowfullscreen>
-                        </iframe>
-                    </div>
-                </div>
-
                 <div class="article-section">
                     <h2>仕様</h2>
                     <ul class="spec-list">
-                        <li><strong>製作時期:</strong> 2025年07月23日</li>
-                        <li><strong>電源:</strong> 5V</li>
+                        <li><strong>桁数:</strong> 表示 10桁、内部計算 18桁</li>
+                        <li><strong>計算範囲:</strong> ±1E-99 ～ ±9.999999999E99 と 0</li>
+                        <li><strong>関数:</strong> 22種</li>
+                        <li><strong>スタック数:</strong> 4段 (X、Y、Z、T)</li>
+                        <li><strong>表示方法:</strong> 科学的表記、工学的表記</li>
+                        <li><strong>角度単位:</strong> 度数法、弧度法</li>
+                        <li><strong>サイズ (奥行×幅×高さ):</strong> 100×62×10 mm (電池を除く)</li>
+                        <li><strong>電源:</strong> 単4電池 1本</li>
+                        <li><strong>自動電源オフ:</strong> 10分</li>
                     </ul>
+
+                    <p>自作電卓は、ほしい機能を自由に作れることが最大の良さです。電子回路でよく使う、並列抵抗演算 (x×y)÷(x+y)
+                        やRC、LCフィルタのカットオフ周波数を出せる関数を用意しました。あまりにも便利！</p>
                 </div>
-
                 <div class="article-section">
-                    <h2>設計・回路図</h2>
-                    <p>回路設計の詳細や回路図を掲載します。</p>
-
-                    <!-- 実際の画像がある場合 -->
-                    <!-- <div class="article-image">
-                        <img src="img/circuit.webp" alt="回路図">
-                        <p class="image-caption">回路図</p>
-                    </div> -->
-
-                    <!-- 画像がまだない場合のプレースホルダー -->
-                    <div class="image-placeholder">
-                        <p>📷 回路図の画像予定地</p>
+                    <h2>RPN電卓について</h2>
+                    <p>RPN電卓 (逆ポーランド記法) は、普通の電卓 (中置記法) と違い、演算子を数値の後に置く記法で入力する電卓です。1+2=2 を計算する際、普通の電卓では [1][+][2][=]
+                        と入力して計算するのに対し、RPN電卓では [1][Enter][2][+] と入力します。簡単な計算で
+                        RPN電卓の良さを感じることは多くありませんが、複雑な計算になるほどにその良さが現れます。例えば、(1+2)×(3-4)
+                        といった計算を行う際、普通の電卓ではカッコの入力が必要なので、11回のキーの押下が必要です。一方 RPN電卓では [1][Enter][2][+][3][Enter][4][-][×]
+                        となり、9回の押下で済みます。
+                        RPN電卓の良さは単にキーの押下が少なくなることだけではありません。「1に2を足して、3から4を引いて、その二つを掛ける」というように日本語の文型と似た形で入力でき、脳になじむ感覚があります。一度RPN電卓に慣れてしまうと中点記法の電卓に戻れなくなるほどの魅力があります。
+                    </p>
+                    <p>RPN電卓はコンピュータで実装する際、スタックを使って実装します。アルゴリズムそのものは非常に簡潔なので、限られたハードウェア資源上でも実装することができます。多くの
+                        RPN電卓はスタックのデータをプッシュ/ポップするだけでなく、全体をロールしたり特定のデータをスワップできる機能などがあり、様々な計算や使い方ができるようになっています。
+                    </p>
+                </div>
+                <div class="article-section">
+                    <h2>二進浮動小数点数演算の問題</h2>
+                    <p>電卓をコンピュータプログラムで実装しようとする際、通常の二進浮動小数点数では問題が生じることがあります。例えば、float型 や double型
+                        では数値を二進数で表現しているため、十進数で正確に表現できる値が二進数では循環小数となり、正確に表現できなくなることがあります。十進数での0.1は、二進数では
+                        0.000110011001100…
+                        と無限に続く循環小数となります。コンピュータで扱えるのは有限桁の数なので、これを完全に表現することはできません。これにより、入力した数値とコンピュータ内部で保持されている数値の間に差が生じてしまい、意図した計算ができなくなることがあります。例えば、連続する計算を行った場合に内部での誤差が累積し、結果が期待通りでなくなることがあります。有名どころでは
+                        Excel で <span class="inline-code">=(100.01-100)*100-1</span> を計算すると結果が0にならない現象が挙げられます。</p>
+                </div>
+                <div class="article-section">
+                    <h2>十進浮動小数点数演算</h2>
+                    <p>前項の問題を解決するには、コンピュータ内部でも十進数で計算する必要があります。例えば、二進化十進数 (BCD) を使って計算することは、その解決策の一つです。BCD
+                        は各桁を十進数として直接表現するため、十進数の値を正確に保持できます。これにより、0.1のような数値も誤差なく表現できます。(ただし十進で循環小数となる値を表現する際には同じ問題を抱えることになる)
+                        BCD を使って浮動小数点数を表現するために、今回は次のような構造体を考えました。</p>
+                    
+                    <div class="code-container">
+                        <div class="code-header">C</div>
+                        <div class="code-block">
+                            <pre><code>typedef struct
+{
+    // 例：
+    // [0][1,0,0][0]→1.0E0
+    // [0][3,1,4][-1]→3.14E-1
+    // [1][3,1,4][2]→-3.14E2
+    uint8_t sign;          // 符号
+    uint8_t mantissa[3];   // 仮数部
+    int16_t exponent;      // 指数部
+} df_t;</code></pre>
+                        </div>
                     </div>
+                    
+                    <p>このコードでは、3桁の十進浮動小数点数を表現する構造体を示しています。四則演算は筆算を基本に実装します。四則演算ができるようになれば、テイラー展開やニュートン法などを使って、数学関数機能も実装することができます。今回は
+                        18桁の十進浮動小数点数で計算するライブラリを自作して、それを電卓のコアとしました 。</p>
                 </div>
-
-
                 <div class="article-section">
-                    <h2>製作過程</h2>
-                    <div class="process-step">
-                        <h3>基板設計</h3>
-                        <p>基板の設計について説明します。</p>
-                        <div class="image-placeholder">
-                            <p>📷 基板設計の画像予定地</p>
+                    <h2>ハードウェア</h2>
+                    <p>ハードウェアはマイコンにスイッチを付けただけではありますが、電卓らしい動作にするための工夫をしました。</p>
+
+                    <p>市販の電卓では、モーメンタリスイッチ(キー)による電源ONと、時間経過や別なスイッチ(キー)による電源OFFができることが多いです。この動作を実現するために、次のような回路を考えてみました。
+                    </p>
+                    <div class="article-image">
+                        <img src="img/p_sw.png" alt="電源回りの回路図">
+                        <p class="image-caption">電源回りの回路図</p>
+                    </div>
+                    <p>PMOS を電源スイッチとし、そのゲート電圧をモーメンタリスイッチと NMOS の OR で制御できるようにした回路です。SW29 が押されると DCDC
+                        コンバータが起動し、その負荷であるマイコンが起動します。マイコンは起動直後に NMOS のゲート電圧 (power_en) を High にすることで電源 ON
+                        状態を維持できるようにします。電源 OFF は、マイコンで NMOS のゲート電圧を Low にすることで可能です。特定キーの押下や時間経過など任意のタイミングでこれを行えば、 PMOS が
+                        OFF し、回路全体の電源を切ることができます。この回路で注意する必要があるのは PMOS の Vth です。今回は電源に単4アルカリ電池を1本のみ使用しているため、最低電圧である 0.9V
+                        程度の VGS でも PMOS が ON する必要があります。今回はこの PMOS に Alpha and Omega Semiconductor の AO3415A
+                        というトランジスタを採用しました。このトランジスタは、Vthが -0.3～-0.9V と非常に低く、今回のような用途に最適と考えます。</p>
+
+
+                    <div class="article-section">
+                        <h2>開発の経緯</h2>
+                        <div class="process-step">
+                            <h3>初回試作</h3>
+                            <p>初回の試作では、PIC18F27Q43 と XCL103 を使いました。使い慣れたマイコンと DCDC
+                                で組んでみたのですが、結果的に演算能力と消費電力に難がありました。このマイコンでは十進浮動小数点数による関数演算 (三角関数や対数等) に最大
+                                3秒程度かかってしまい、電卓としてのレスポンスが非常に悪くなってしまいました。アルゴリズムの最適化で高速にできるかもしれませんが、消費電力が 30mW
+                                と大きかったこともあり、PIC32CM2532LE00048 と XC9140 を採用した改良版を作ることにしました。</p>
+                       <div class="image-row">
+                        <div class="image-item">
+                            <img src="img/img_7557-1-edited.png" alt="試作版の表">
+                            <p class="image-caption">試作版の表</p>
+                        </div>
+                        <div class="image-item">
+                            <img src="img/img_7558-edited.png" alt="試作版の裏">
+                            <p class="image-caption">試作版の裏</p>
+                        </div>
+                    </div>
+                        </div>
+
+                        <div class="process-step">
+                            <h3>改良版</h3>
+                            <p>改良版で採用したPIC32CM Lx ファミリは、低消費電力な Arm Cortex-M23 コアのマイコンです。PIC32 なのに Arm コアですが、これは SAM
+                                ファミリベースに開発されたシリーズだからということのようです。豊富なクロック設定や、スイッチングレギュレータによるコア電圧生成など、低消費電力を実現する機能が多くあります。今回は動的なクロック周波数変更によって、待機時
+                                1mW、計算時 9mW 程度の消費電力を実現できました。</p>
                         </div>
                     </div>
 
-                    <div class="process-step">
-                        <h3>部品実装</h3>
-                        <p>部品の実装作業について説明します。</p>
-                        <div class="image-placeholder">
-                            <p>📷 実装作業の画像予定地</p>
-                        </div>
-                    </div>
-
-                </div>
-
-                <div class="article-section">
-                    <h2>測定結果</h2>
-                    <p>実際の測定結果や性能について記述します。</p>
-                    <div class="measurement-table">
-                        <table class="results-table">
-                            <thead>
-                                <tr>
-                                    <th>項目</th>
-                                    <th>測定値</th>
-                                    <th>目標値</th>
-                                    <th>評価</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>精度</td>
-                                    <td>±0.1%</td>
-                                    <td>±0.5%</td>
-                                    <td>✓ 良好</td>
-                                </tr>
-                                <!-- 追加の測定項目をここに記述 -->
-                            </tbody>
-                        </table>
+                    <div class="article-section">
+                        <h2>設計データ</h2>
+                        <p>設計データは<a href="https://github.com/ice458/RPN_Scientific_Calc" target="_blank"
+                                rel="noopener">GitHub</a>で公開しています。
                     </div>
                 </div>
 
-                <div class="article-section">
-                    <h2>改良点・今後の課題</h2>
-                    <ul>
-                        <li>精度の向上</li>
-                        <li>消費電力の削減</li>
-                        <li>小型化の検討</li>
-                    </ul>
-                </div>
-
-                <div class="article-section">
-                    <h2>部品リスト</h2>
-                    <div class="parts-table">
-                        <table class="parts-list">
-                            <thead>
-                                <tr>
-                                    <th>部品名</th>
-                                    <th>型番</th>
-                                    <th>備考</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>R1</td>
-                                    <td>1kΩ</td>
-                                    <td>1/4W カーボン抵抗</td>
-                                </tr>
-                                <!-- 追加の部品をここに記述 -->
-                            </tbody>
-                        </table>
+                <div class="article-footer">
+                    <div class="back-link">
+                        <a href="../index.html" class="back-button">← 物置きに戻る</a>
+                    </div>
+                    <div class="article-info">
+                        <p>最終更新: 2024年06月29日</p>
                     </div>
                 </div>
-
-                <div class="article-section">
-                    <h2>参考資料</h2>
-                    <ul class="reference-list">
-                        <li><a href="#">データシート</a></li>
-                        <li><a href="#">参考文献</a></li>
-                        <li><a href="#">関連リンク</a></li>
-                    </ul>
-                </div>
-            </div>
-
-            <div class="article-footer">
-                <div class="back-link">
-                    <a href="../index.html" class="back-button">← 物置きに戻る</a>
-                </div>
-                <div class="article-info">
-                    <p>最終更新: 2025年07月23日</p>
-                </div>
-            </div>
         </article>
     </main>
 
