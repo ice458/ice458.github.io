@@ -44,9 +44,9 @@
 
             <div class="article-content">
                 <p>7セグメント LED をシリアルデータで制御できるようにする基板です。GL91AR というレトロな LED と、DHVQFN パッケージのロジック IC を使って小さく作りました。</p>
-                
+
                 <div class="article-image">
-                    <img src="img/p8270005.webp" alt="8桁のGL91ARを制御する基板の写真">
+                    <img src="img/p8270005.png" alt="8桁のGL91ARを制御する基板の写真">
                     <p class="image-caption">8桁のGL91ARを制御する基板の写真</p>
                 </div>
 
@@ -56,74 +56,32 @@
                         <img src="img/schematic.webp" alt="8桁のGL91ARを制御する基板の回路図">
                         <p class="image-caption">8桁のGL91ARを制御する基板の回路図</p>
                     </div>
-                    <p>74HC595 というシフトレジスタを桁数分直列に接続し、シリアルデータで各桁を独立に制御できるようにしています。また、マイコン側の負担を減らすために、発振回路とカウンタ、デコーダを使ってダイナミック駆動する回路を載せています。</p>
-                    <p>ロジック IC はすべて DHVQFN パッケージのものにしました。今回採用したのは Nexperia 製のもので、16個の側面パッドと裏面パッドがあります。裏面パッドはフローティングで構わない IC だったので、位置決めさえできれば手はんだでも実装可能でした。はんだ付けは B型の小手先を使って行いました。初めは D型を使っていたのですが、B型のほうがパッドと基板を同時に加熱しやすかったです。</p>
+                    <p>74HC595
+                        というシフトレジスタを桁数分直列に接続し、シリアルデータで各桁を独立に制御できるようにしています。また、マイコン側の負担を減らすために、発振回路とカウンタ、デコーダを使ってダイナミック駆動する回路を載せています。
+                    </p>
+                    <p>ロジック IC はすべて DHVQFN パッケージのものにしました。今回採用したのは Nexperia 製のもので、16個の側面パッドと裏面パッドがあります。裏面パッドはフローティングで構わない
+                        IC だったので、位置決めさえできれば手はんだでも実装可能でした。はんだ付けは B型の小手先を使って行いました。初めは
+                        D型を使っていたのですが、B型のほうがパッドと基板を同時に加熱しやすかったです。</p>
                 </div>
 
                 <div class="article-section">
                     <h2>写真集</h2>
                     <div class="article-image">
-                        <img src="img/p8270014.webp" alt="GL91ARの写真">
+                        <img src="img/p8270014.png" alt="GL91ARの写真">
                         <p class="image-caption">古い表示器には独特の魅力がありますね</p>
                     </div>
-                    
+
                     <div class="article-image">
-                        <img src="img/p8270015.webp" alt="基板表面の写真">
+                        <img src="img/p8270015.png" alt="基板表面の写真">
                         <p class="image-caption">格安基板は加熱でレジストがはがれやすい気がする</p>
                     </div>
-                    
+
                     <div class="article-image">
-                        <img src="img/p8270012.webp" alt="基板裏面の写真">
+                        <img src="img/p8270012.png" alt="基板裏面の写真">
                         <p class="image-caption">全部のシフトレジスタを裏面にしたらもう少し小さくなったかも？</p>
                     </div>
                 </div>
 
-                <div class="article-section">
-                    <h2>製作の背景</h2>
-                    <p>シンプルで効率的な7セグメントLED表示制御基板を製作することを目的としました。特に、レトロなGL91AR LEDを使用することで、昔ながらの表示器の魅力を活かしつつ、最新のDHVQFNパッケージロジックICによる小型化を実現しました。</p>
-                    <p>マイコンのI/Oポートを節約しながら、多桁の表示を可能にするため、シフトレジスタを使用したシリアル制御方式を採用しています。さらに、マイコン側でのタイミング制御を不要にするため、オンボードでダイナミック駆動回路を構成しました。</p>
-                </div>
-
-                <div class="article-section">
-                    <h2>仕様</h2>
-                    <ul class="spec-list">
-                        <li><strong>製作時期:</strong> 2023年09月</li>
-                        <li><strong>表示素子:</strong> GL91AR 7セグメントLED × 8桁</li>
-                        <li><strong>制御方式:</strong> シフトレジスタ（74HC595）によるシリアル制御</li>
-                        <li><strong>駆動方式:</strong> ダイナミック駆動（オンボード発振回路使用）</li>
-                        <li><strong>パッケージ:</strong> DHVQFNパッケージロジックIC使用</li>
-                        <li><strong>入力電圧:</strong> 5V</li>
-                        <li><strong>制御入力:</strong> SPI互換（CLK、DATA、LATCH）</li>
-                    </ul>
-                </div>
-
-                <div class="article-section">
-                    <h2>設計・回路図</h2>
-                    <div class="article-image">
-                        <img src="img/schematic.webp" alt="8桁のGL91ARを制御する基板の回路図">
-                        <p class="image-caption">8桁のGL91ARを制御する基板の回路図</p>
-                    </div>
-                    <p>74HC595 というシフトレジスタを桁数分直列に接続し、シリアルデータで各桁を独立に制御できるようにしています。また、マイコン側の負担を減らすために、発振回路とカウンタ、デコーダを使ってダイナミック駆動する回路を載せています。</p>
-                    <p>ロジック IC はすべて DHVQFN パッケージのものにしました。今回採用したのは Nexperia 製のもので、16個の側面パッドと裏面パッドがあります。裏面パッドはフローティングで構わない IC だったので、位置決めさえできれば手はんだでも実装可能でした。はんだ付けは B型の小手先を使って行いました。初めは D型を使っていたのですが、B型のほうがパッドと基板を同時に加熱しやすかったです。</p>
-                </div>
-
-                <div class="article-section">
-                    <h2>写真集</h2>
-                    <div class="article-image">
-                        <img src="img/p8270014.webp" alt="GL91ARの写真">
-                        <p class="image-caption">古い表示器には独特の魅力がありますね</p>
-                    </div>
-                    
-                    <div class="article-image">
-                        <img src="img/p8270015.webp" alt="基板表面の写真">
-                        <p class="image-caption">格安基板は加熱でレジストがはがれやすい気がする</p>
-                    </div>
-                    
-                    <div class="article-image">
-                        <img src="img/p8270012.webp" alt="基板裏面の写真">
-                        <p class="image-caption">全部のシフトレジスタを裏面にしたらもう少し小さくなったかも？</p>
-                    </div>
-                </div>
             </div>
 
             <div class="article-footer">
