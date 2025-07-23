@@ -15,9 +15,9 @@ validate_*.py
 # ===============================
 # テンプレートファイル
 # ===============================
-templates/
-article_template.html
-article.css
+# templates/
+# article_template.html
+# article.css
 
 # ===============================
 # バックアップ・一時ファイル

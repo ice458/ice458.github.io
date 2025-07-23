@@ -150,14 +150,28 @@ class BlogManager:
             with open(self.html_file, 'r', encoding='utf-8') as f:
                 content = f.read()
 
-            # 記事カードを抽出する正規表現パターン
-            pattern = r'<div class="article-card" data-categories="([^"]*)" data-date="([^"]*)">\s*<div class="article-meta">\s*<div class="article-date">([^<]*)</div>\s*<div class="article-categories">(.*?)</div>\s*</div>\s*<h2 class="article-title"><a href="([^"]*)">(.*?)</a></h2>\s*<p class="article-summary">(.*?)</p>\s*</div>'
+            # 記事カードを抽出する正規表現パターン（data-search属性も含める）
+            # 新しいフォーマット（data-search属性あり）を最初に試す
+            pattern_new = r'<div class="article-card" data-categories="([^"]*)" data-date="([^"]*)" data-search="([^"]*)">\s*<div class="article-meta">\s*<div class="article-date">([^<]*)</div>\s*<div class="article-categories">(.*?)</div>\s*</div>\s*<h2 class="article-title"><a href="([^"]*)">(.*?)</a></h2>\s*<p class="article-summary">(.*?)</p>\s*</div>'
 
-            matches = re.findall(pattern, content, re.DOTALL)
+            # 古いフォーマット（data-search属性なし）にも対応
+            pattern_old = r'<div class="article-card" data-categories="([^"]*)" data-date="([^"]*)">\s*<div class="article-meta">\s*<div class="article-date">([^<]*)</div>\s*<div class="article-categories">(.*?)</div>\s*</div>\s*<h2 class="article-title"><a href="([^"]*)">(.*?)</a></h2>\s*<p class="article-summary">(.*?)</p>\s*</div>'
+
+            # 新しいフォーマットを最初に試す
+            matches = re.findall(pattern_new, content, re.DOTALL)
+
+            # 新しいフォーマットがなければ古いフォーマットを試す
+            if not matches:
+                matches_old = re.findall(pattern_old, content, re.DOTALL)
+                # 古いフォーマットの場合はsearch_termsを空文字列に設定
+                matches = []
+                for match in matches_old:
+                    categories_str, date_attr, date_display, category_html, link, title, summary = match
+                    matches.append((categories_str, date_attr, '', date_display, category_html, link, title, summary))
 
             self.articles.clear()
             for i, match in enumerate(matches):
-                categories_str, date_attr, date_display, category_html, link, title, summary = match
+                categories_str, date_attr, search_terms, date_display, category_html, link, title, summary = match
 
                 # カテゴリタグからカテゴリ名を抽出
                 category_tags = re.findall(r'<span class="category-tag">([^<]*)</span>', category_html)
@@ -167,7 +181,8 @@ class BlogManager:
                     'date': date_display.strip(),
                     'categories': categories_str.split(',') if categories_str else [],
                     'summary': summary.strip(),
-                    'link': link.strip()
+                    'link': link.strip(),
+                    'search_terms': search_terms.strip()
                 }
                 self.articles.append(article)
 
@@ -339,7 +354,10 @@ class BlogManager:
                 # データ属性用のカテゴリ文字列
                 data_categories = ','.join([cat.strip() for cat in article['categories']])
 
-                card = f'''                    <div class="article-card" data-categories="{data_categories}" data-date="{article['date']}">
+                # 検索用キーワード（search_termsがない場合は空文字列）
+                search_terms = article.get('search_terms', '')
+
+                card = f'''                    <div class="article-card" data-categories="{data_categories}" data-date="{article['date']}" data-search="{search_terms}">
                         <div class="article-meta">
                             <div class="article-date">{article['date']}</div>
                             <div class="article-categories">
@@ -586,6 +604,21 @@ class ArticleDialog:
         hint_label.grid(row=1, column=0, sticky=tk.W)
         row += 1
 
+        # 検索キーワード
+        ttk.Label(main_frame, text="検索キーワード:").grid(row=row, column=0, sticky=tk.W, pady=5)
+        search_frame = ttk.Frame(main_frame)
+        search_frame.grid(row=row, column=1, sticky=(tk.W, tk.E), pady=5)
+        search_frame.columnconfigure(0, weight=1)
+
+        self.search_terms_var = tk.StringVar()
+        ttk.Entry(search_frame, textvariable=self.search_terms_var, width=40).grid(row=0, column=0, sticky=(tk.W, tk.E))
+
+        # 検索キーワードのヒントラベルを追加
+        search_hint_label = ttk.Label(search_frame, text="検索で使用されるキーワード（スペース区切り）",
+                              font=("Arial", 8), foreground="gray")
+        search_hint_label.grid(row=1, column=0, sticky=tk.W)
+        row += 1
+
         # 概要
         ttk.Label(main_frame, text="概要:").grid(row=row, column=0, sticky=(tk.W, tk.N), pady=5)
         text_frame = ttk.Frame(main_frame)
@@ -624,6 +657,9 @@ class ArticleDialog:
         self.date_var.set(article['date'])
         self.link_var.set(article['link'])
         self.summary_text.insert(1.0, article['summary'])
+
+        # 検索キーワードを設定
+        self.search_terms_var.set(article.get('search_terms', ''))
 
         # カテゴリを設定
         for category in article['categories']:
@@ -669,7 +705,8 @@ class ArticleDialog:
             'date': date,
             'link': self.link_var.get().strip() or f"#{title.lower().replace(' ', '-')}",
             'categories': categories,
-            'summary': self.summary_text.get(1.0, tk.END).strip()
+            'summary': self.summary_text.get(1.0, tk.END).strip(),
+            'search_terms': self.search_terms_var.get().strip()
         }
 
         self.dialog.destroy()

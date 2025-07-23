@@ -424,9 +424,179 @@ a:hover {
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
+/* ページネーション */
+.pagination-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 24px 0;
+    padding: 16px 20px;
+    background-color: rgba(255, 255, 255, 0.9);
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.pagination-info {
+    color: #64748b;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.pagination {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.pagination-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border: 1px solid #e2e8f0;
+    background-color: #fff;
+    color: #64748b;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.pagination-btn:hover:not(:disabled) {
+    border-color: #2563eb;
+    color: #2563eb;
+    background-color: #f8fafc;
+}
+
+.pagination-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.pagination-numbers {
+    display: flex;
+    gap: 4px;
+}
+
+.pagination-number {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border: 1px solid #e2e8f0;
+    background-color: #fff;
+    color: #374151;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.pagination-number:hover {
+    border-color: #2563eb;
+    color: #2563eb;
+    background-color: #f8fafc;
+}
+
+.pagination-number.active {
+    background-color: #2563eb;
+    border-color: #2563eb;
+    color: white;
+}
+
+.pagination-ellipsis {
+    display: flex;
+    align-items: center;
+    padding: 0 8px;
+    color: #64748b;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.pagination-size {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #64748b;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.page-size-select {
+    padding: 6px 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    background-color: #fff;
+    color: #374151;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: border-color 0.2s ease;
+}
+
+.page-size-select:focus {
+    outline: none;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+/* レスポンシブ対応 */
+@media (max-width: 768px) {
+    .pagination-container {
+        flex-direction: column;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 16px;
+    }
+    
+    .pagination-info {
+        order: 1;
+    }
+    
+    .pagination {
+        order: 2;
+        gap: 6px;
+    }
+    
+    .pagination-btn,
+    .pagination-number {
+        width: 32px;
+        height: 32px;
+        font-size: 13px;
+    }
+    
+    .pagination-size {
+        order: 3;
+        font-size: 0.8rem;
+    }
+    
+    .page-size-select {
+        font-size: 0.8rem;
+        padding: 4px 8px;
+    }
+}
+
+@media (max-width: 480px) {
+    .pagination-numbers {
+        gap: 2px;
+    }
+    
+    .pagination-btn,
+    .pagination-number {
+        width: 28px;
+        height: 28px;
+        font-size: 12px;
+    }
+}
+
 /* ソーシャルリンクセクション */
 .social-links-section {
-    margin: 48px 0 32px 0;
+    margin: 24px 0 32px 0;
     text-align: center;
     padding: 24px;
 }
@@ -572,7 +742,7 @@ a:hover {
 
 @media (max-width: 480px) {
     .social-links-section {
-        margin: 32px 0 24px 0;
+        margin: 20px 0 24px 0;
         padding: 20px 16px;
     }
 
@@ -1795,7 +1965,7 @@ a:hover {
 
 /* リンク集セクション（ホームページ用） */
 .links-section {
-    margin: 40px 0;
+    margin: 32px 0 16px 0;
     padding: 24px;
 }
 

@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{TITLE}} - ice458の物置き</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <!-- ファビコン設定 -->
+    <link rel="icon" type="image/x-icon" href="../../favicon.ico">
+    <link rel="icon" type="image/png" sizes="16x16" href="../../favicon-16x16.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="../../favicon-32x32.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="../../favicon-180x180.png">
+    <link rel="manifest" href="../../site.webmanifest">
+
+    <!-- ブラウザ固有のメタタグ -->
+    <meta name="theme-color" content="#aaaeae">
+    <meta name="msapplication-TileColor" content="#aaaeae">
+    <meta name="msapplication-TileImage" content="../../favicon-180x180.png">
+</head>
+
+<body class="blog-article">
+    <header class="site-header">
+        <div class="site-branding">
+            <div class="site-logo">
+                <img src="../../logo.png" alt="ロゴ" class="logo-img">
+            </div>
+            <h1 class="site-title"><a href="../../index.html">ice458の物置き</a></h1>
+        </div>
+        <nav class="site-nav">
+            <a href="../../index.html" class="nav-link">プロジェクト</a>
+            <a href="../../blog.html" class="nav-link active">雑多なメモ等</a>
+        </nav>
+    </header>
+
+    <main class="site-main">
+        <article class="main-content">
+            <!-- パンくずリスト -->
+            <nav class="breadcrumb" aria-label="パンくずリスト">
+                <ol class="breadcrumb-list">
+                    <li class="breadcrumb-item">
+                        <a href="../../index.html" class="breadcrumb-link">ホーム</a>
+                    </li>
+                    <li class="breadcrumb-item">
+                        <a href="../../blog.html" class="breadcrumb-link">雑多なメモ等</a>
+                    </li>
+                    <li class="breadcrumb-item">
+                        <span class="breadcrumb-current">{{TITLE}}</span>
+                    </li>
+                </ol>
+            </nav>
+
+            <div class="article-header">
+                <h1 class="article-title">{{TITLE}}</h1>
+                <div class="article-meta">
+                    <div class="article-categories">
+                        {{CATEGORY_TAGS}}
+                    </div>
+                    <div class="article-date">作成日: {{DATE}}</div>
+                </div>
+            </div>
+
+            <div class="article-content">
+                <div class="article-overview">
+                    <h2>概要</h2>
+                    <p>{{SUMMARY}}</p>
+                </div>
+
+                <div class="article-section">
+                    <h2>はじめに</h2>
+                    <p>ここに記事の内容を記述してください。</p>
+                    
+                    <!-- 雑多なメモ等用のTipsボックス例 -->
+                    <div class="blog-tip">
+                        <h4>💡 Tips</h4>
+                        <p>便利な情報やコツをここに記載します。</p>
+                    </div>
+
+                    <!-- 雑多なメモ等用の注意ボックス例 -->
+                    <div class="blog-notice">
+                        <h4>⚠️ 注意</h4>
+                        <p>重要な注意事項をここに記載します。</p>
+                    </div>
+                </div>
+
+                <div class="article-section">
+                    <h2>詳細</h2>
+                    <p>詳細な内容をここに記述してください。</p>
+                    
+                    <!-- 画像の例 -->
+                    <!--
+                    <div class="article-image">
+                        <img src="img/example.png" alt="説明">
+                        <p class="image-caption">画像の説明</p>
+                    </div>
+                    -->
+
+                    <!-- 横並び画像の例 -->
+                    <!--
+                    <div class="image-row">
+                        <div class="image-item">
+                            <img src="img/example1.png" alt="説明1">
+                            <p class="image-caption">画像1の説明</p>
+                        </div>
+                        <div class="image-item">
+                            <img src="img/example2.png" alt="説明2">
+                            <p class="image-caption">画像2の説明</p>
+                        </div>
+                    </div>
+                    -->
+
+                    <!-- コードブロックの例 -->
+                    <!--
+                    <div class="code-container">
+                        <div class="code-header">Python</div>
+                        <div class="code-block">
+                            <pre><code>def hello_world():
+    print("Hello, World!")
+
+hello_world()</code></pre>
+                        </div>
+                    </div>
+                    -->
+                </div>
+
+                <div class="article-section">
+                    <h2>まとめ</h2>
+                    <p>記事のまとめをここに記述してください。</p>
+                </div>
+
+                <!-- 参考資料の例 -->
+                <!--
+                <div class="article-section">
+                    <h2>参考資料</h2>
+                    <ul class="reference-list">
+                        <li><a href="https://example.com" target="_blank" rel="noopener">参考サイト1</a></li>
+                        <li><a href="https://example.com" target="_blank" rel="noopener">参考サイト2</a></li>
+                    </ul>
+                </div>
+                -->
+            </div>
+
+            <div class="article-footer">
+                <div class="back-link">
+                    <a href="../../blog.html" class="back-button">← 雑多なメモ等に戻る</a>
+                </div>
+                <div class="article-info">
+                    <p>最終更新: {{DATE}}</p>
+                </div>
+            </div>
+        </article>
+    </main>
+
+    <footer class="site-footer">
+        <div class="site-info">
+            <p>&copy; 2025 ice458の物置き</p>
+        </div>
+    </footer>
+</body>
+
+</html>

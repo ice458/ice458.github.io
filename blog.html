@@ -59,36 +59,41 @@
             </div>
 
             <div class="blog-filters">
-                <div class="filter-buttons">
-
+                <!-- 検索機能 -->
+                <div class="search-controls">
+                    <div class="search-box">
+                        <input type="text" id="searchInput" class="search-input" placeholder="記事を検索...">
+                        <button id="clearSearch" class="clear-search">×</button>
+                    </div>
+                    <div class="filter-buttons">
+                        
                     
                     <button class="filter-btn active" data-category="all">全て</button>
-                    <button class="filter-btn" data-category="KORG M50">KORG M50</button>
                     <button class="filter-btn" data-category="Raspberry Pi Pico">Raspberry Pi Pico</button>
                     <button class="filter-btn" data-category="修理記">修理記</button>
                     <button class="filter-btn" data-category="備忘録">備忘録</button>
                     <button class="filter-btn" data-category="楽器">楽器</button>
 
 
+                    </div>
                 </div>
             </div>
 
             <div class="blog-content">
                 <div class="articles-grid">
 
-                    <div class="article-card" data-categories="KORG M50,楽器,修理記" data-date="2024年10月21日">
+                    <div class="article-card" data-categories="修理記,楽器" data-date="2024年10月21日" data-search="KORG M50 修理 シンセサイザー 楽器">
                         <div class="article-meta">
                             <div class="article-date">2024年10月21日</div>
                                 <div class="article-categories">
-                                <span class="category-tag">KORG M50</span>
-                                <span class="category-tag">楽器</span>
                                 <span class="category-tag">修理記</span>
+                                <span class="category-tag">楽器</span>
                             </div>
                         </div>
                         <h2 class="article-title"><a href="blog/article-41054/index.html">KORG M50の修理</a></h2>
                         <p class="article-summary">友人から修理依頼を受けて直したKORGのシンセサイザーについての記録を残します。</p>
                     </div>
-                    <div class="article-card" data-categories="Raspberry Pi Pico,備忘録" data-date="2024年10月03日">
+                    <div class="article-card" data-categories="Raspberry Pi Pico,備忘録" data-date="2024年10月03日" data-search="Raspberry Pi Pico VS Code 拡張機能 SDK">
                         <div class="article-meta">
                             <div class="article-date">2024年10月03日</div>
                                 <div class="article-categories">
@@ -116,33 +121,6 @@
     </footer>
 
     <script src="script.js"></script>
-    <script>
-        // 雑多なメモ等用のフィルタリング機能
-        document.addEventListener('DOMContentLoaded', function() {
-            const filterButtons = document.querySelectorAll('.filter-btn');
-            const articles = document.querySelectorAll('.article-card');
-
-            filterButtons.forEach(button => {
-                button.addEventListener('click', function() {
-                    const category = this.getAttribute('data-category');
-                    
-                    // ボタンの状態を更新
-                    filterButtons.forEach(btn => btn.classList.remove('active'));
-                    this.classList.add('active');
-                    
-                    // 記事をフィルタリング
-                    articles.forEach(article => {
-                        const articleCategories = article.getAttribute('data-categories');
-                        if (category === 'all' || articleCategories.includes(category)) {
-                            article.style.display = 'block';
-                        } else {
-                            article.style.display = 'none';
-                        }
-                    });
-                });
-            });
-        });
-    </script>
 </body>
 
 </html>

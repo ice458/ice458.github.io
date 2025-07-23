@@ -1,12 +1,40 @@
-// 検索・フィルタ機能
+// 検索・フィルタ・ページネーション統合機能
 document.addEventListener('DOMContentLoaded', function() {
+    // ページ判定
+    const isProjectPage = document.querySelector('.projects-table') !== null;
+    const isBlogPage = document.querySelector('.articles-grid') !== null;
+    
+    // 基本要素の取得
     const searchInput = document.getElementById('searchInput');
     const clearSearchBtn = document.getElementById('clearSearch');
     const filterBtns = document.querySelectorAll('.filter-btn');
-    const projectRows = document.querySelectorAll('.project-row');
     
+    // ページに応じて対象要素を取得
+    let targetItems;
+    if (isProjectPage) {
+        targetItems = document.querySelectorAll('.project-row');
+    } else if (isBlogPage) {
+        targetItems = document.querySelectorAll('.article-card');
+    } else {
+        return; // 対象ページでない場合は終了
+    }
+    
+    // ページネーション要素
+    const paginationContainer = document.querySelector('.pagination-container');
+    const paginationInfo = document.getElementById('paginationInfo');
+    const paginationNumbers = document.getElementById('paginationNumbers');
+    const prevPageBtn = document.getElementById('prevPage');
+    const nextPageBtn = document.getElementById('nextPage');
+    const pageSizeSelect = document.getElementById('pageSize');
+    
+    // 状態管理
     let currentFilter = 'all';
     let currentSearchTerm = '';
+    let currentPage = 1;
+    let pageSize = 10;
+    
+    // ページネーション機能が利用可能かチェック
+    const paginationEnabled = !!(paginationContainer && paginationInfo && paginationNumbers);
     
     // 検索履歴管理
     let searchHistory = JSON.parse(localStorage.getItem('searchHistory') || '[]');
@@ -32,8 +60,13 @@ document.addEventListener('DOMContentLoaded', function() {
     function assignCategoryColors() {
         // 全カテゴリを収集
         const allCategories = new Set();
-        projectRows.forEach(row => {
-            const categories = row.getAttribute('data-category').split(',');
+        targetItems.forEach(item => {
+            let categories;
+            if (isProjectPage) {
+                categories = item.getAttribute('data-category').split(',');
+            } else if (isBlogPage) {
+                categories = item.getAttribute('data-categories').split(',');
+            }
             categories.forEach(cat => allCategories.add(cat.trim()));
         });
         
@@ -46,9 +79,9 @@ document.addEventListener('DOMContentLoaded', function() {
             categoryColorMap[category] = categoryColors[index % categoryColors.length];
         });
         
-        // 各プロジェクト行の色を設定
-        projectRows.forEach(row => {
-            const tags = row.querySelectorAll('.category-tag');
+        // 各アイテムの色を設定
+        targetItems.forEach(item => {
+            const tags = item.querySelectorAll('.category-tag');
             tags.forEach(tag => {
                 const categoryName = tag.textContent.trim();
                 if (categoryColorMap[categoryName]) {
@@ -63,87 +96,244 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('検出されたカテゴリ:', sortedCategories);
     }
     
-    // ページ読み込み時に色を設定
-    assignCategoryColors();
-
-    // カテゴリタグのクリックリスナーを追加
-    addCategoryTagListeners();
-
-    // 検索機能
-    searchInput.addEventListener('input', function() {
-        currentSearchTerm = this.value.toLowerCase().trim();
-        filterProjects();
-        toggleClearButton();
-        showSuggestions();
-    });
-
-    // Enterキーで検索履歴に追加
-    searchInput.addEventListener('keydown', function(e) {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            const searchTerm = this.value.trim();
-            if (searchTerm && !searchHistory.includes(searchTerm)) {
-                searchHistory.unshift(searchTerm);
-                if (searchHistory.length > maxHistoryItems) {
-                    searchHistory = searchHistory.slice(0, maxHistoryItems);
-                }
-                localStorage.setItem('searchHistory', JSON.stringify(searchHistory));
-            }
-            hideSuggestions();
-        } else if (e.key === 'Escape') {
-            hideSuggestions();
-            this.blur();
-        } else if (e.key === 'ArrowDown') {
-            e.preventDefault();
-            navigateSuggestions('down');
-        } else if (e.key === 'ArrowUp') {
-            e.preventDefault();
-            navigateSuggestions('up');
-        }
-    });
-
-    // フォーカス時に履歴表示
-    searchInput.addEventListener('focus', function() {
-        if (searchHistory.length > 0) {
-            showHistoryDropdown();
-        }
-    });
-
-    // フォーカス外した時に履歴非表示
-    document.addEventListener('click', function(e) {
-        if (!e.target.closest('.search-box')) {
-            hideSuggestions();
-        }
-    });
-
-    // 検索クリアボタン
-    clearSearchBtn.addEventListener('click', function() {
-        searchInput.value = '';
-        currentSearchTerm = '';
-        filterProjects();
-        toggleClearButton();
-        hideSuggestions();
-        searchInput.focus();
-    });
-
-    // クリアボタンの表示/非表示
-    function toggleClearButton() {
-        clearSearchBtn.style.display = currentSearchTerm ? 'block' : 'none';
-    }
-
-    // カテゴリフィルタ
-    filterBtns.forEach(btn => {
-        btn.addEventListener('click', function() {
-            // アクティブボタンの切り替え
-            filterBtns.forEach(b => b.classList.remove('active'));
-            this.classList.add('active');
+    // フィルタされた行を取得
+    function getFilteredRows() {
+        return Array.from(targetItems).filter(item => {
+            let categories, searchData, titleElement, descriptionElement;
             
-            currentFilter = this.getAttribute('data-category');
-            filterProjects();
+            if (isProjectPage) {
+                categories = item.getAttribute('data-category').split(',');
+                searchData = item.getAttribute('data-search');
+                titleElement = item.querySelector('td:first-child a');
+                descriptionElement = item.querySelector('td:last-child');
+            } else if (isBlogPage) {
+                categories = item.getAttribute('data-categories').split(',');
+                searchData = item.getAttribute('data-search');
+                titleElement = item.querySelector('.article-title a');
+                descriptionElement = item.querySelector('.article-summary');
+            }
+            
+            // カテゴリフィルタのチェック（複数カテゴリに対応）
+            const categoryMatch = currentFilter === 'all' || 
+                categories.some(cat => cat.trim() === currentFilter);
+            
+            // 拡張された検索フィルタのチェック
+            let searchMatch = currentSearchTerm === '';
+            if (currentSearchTerm !== '') {
+                const titleText = titleElement ? titleElement.textContent.toLowerCase() : '';
+                const descriptionText = descriptionElement ? descriptionElement.textContent.toLowerCase() : '';
+                const categoryText = categories.join(' ').toLowerCase();
+                const searchDataText = searchData ? searchData.toLowerCase() : '';
+                
+                searchMatch = titleText.includes(currentSearchTerm) ||
+                             descriptionText.includes(currentSearchTerm) ||
+                             categoryText.includes(currentSearchTerm) ||
+                             searchDataText.includes(currentSearchTerm);
+            }
+            
+            return categoryMatch && searchMatch;
         });
-    });
-
-    // カテゴリタグクリック機能
+    }
+    
+    // プロジェクト表示の更新
+    function updateProjectDisplay() {
+        const filteredRows = getFilteredRows();
+        const totalItems = filteredRows.length;
+        
+        // 全アイテムをまず非表示にする
+        targetItems.forEach(item => {
+            item.style.display = 'none';
+        });
+        
+        if (paginationEnabled && totalItems > 0) {
+            // ページネーション有効時
+            const totalPages = Math.ceil(totalItems / pageSize);
+            
+            // ページ数の調整
+            if (currentPage > totalPages && totalPages > 0) {
+                currentPage = totalPages;
+            }
+            if (currentPage < 1) {
+                currentPage = 1;
+            }
+            
+            // 現在ページのアイテムを表示
+            const startIndex = (currentPage - 1) * pageSize;
+            const endIndex = Math.min(startIndex + pageSize, totalItems);
+            
+            for (let i = startIndex; i < endIndex; i++) {
+                if (filteredRows[i]) {
+                    filteredRows[i].style.display = '';
+                    filteredRows[i].style.animation = 'fadeIn 0.3s ease-in';
+                }
+            }
+            
+            // ページネーション更新
+            updatePaginationInfo(totalItems);
+            updatePaginationControls(totalPages);
+            
+            // ページネーションコンテナの表示制御を改善
+            // 常にページネーションコンテナは表示し、個別要素の表示を制御
+            paginationContainer.style.display = 'flex';
+            
+            // ページ制御部分（番号、前後ボタン）の表示制御
+            const paginationControls = paginationContainer.querySelector('.pagination');
+            if (paginationControls) {
+                if (totalPages <= 1) {
+                    paginationControls.style.display = 'none';
+                } else {
+                    paginationControls.style.display = 'flex';
+                }
+            }
+        } else if (paginationEnabled) {
+            // ページネーション有効だが項目がない場合
+            filteredRows.forEach(item => {
+                item.style.display = '';
+                item.style.animation = 'fadeIn 0.3s ease-in';
+            });
+            
+            // ページネーションコンテナは表示し、制御部分のみ非表示
+            paginationContainer.style.display = 'flex';
+            const paginationControls = paginationContainer.querySelector('.pagination');
+            if (paginationControls) {
+                paginationControls.style.display = 'none';
+            }
+            
+            updatePaginationInfo(totalItems);
+        } else {
+            // ページネーション無効時は全て表示
+            filteredRows.forEach(item => {
+                item.style.display = '';
+                item.style.animation = 'fadeIn 0.3s ease-in';
+            });
+        }
+        
+        // 結果表示の更新
+        updateResultsInfo(totalItems);
+    }
+    
+    // ページネーション情報を更新
+    function updatePaginationInfo(totalItems) {
+        if (!paginationInfo) return;
+        
+        if (totalItems === 0) {
+            paginationInfo.textContent = '0件';
+            return;
+        }
+        
+        if (totalItems <= pageSize) {
+            // 全件表示の場合
+            paginationInfo.textContent = `全 ${totalItems}件`;
+        } else {
+            // ページ分割表示の場合
+            const startItem = (currentPage - 1) * pageSize + 1;
+            const endItem = Math.min(currentPage * pageSize, totalItems);
+            paginationInfo.textContent = `${startItem}-${endItem} / ${totalItems}件`;
+        }
+    }
+    
+    // ページネーション制御の更新
+    function updatePaginationControls(totalPages) {
+        if (!paginationNumbers) return;
+        
+        // ページ番号をクリア
+        paginationNumbers.innerHTML = '';
+        
+        // 前後ボタンとページ番号の表示制御
+        const paginationDiv = paginationContainer.querySelector('.pagination');
+        
+        if (totalPages <= 1) {
+            // ページ数が1以下の場合は制御ボタンを非表示
+            if (paginationDiv) {
+                paginationDiv.style.display = 'none';
+            }
+            if (prevPageBtn) prevPageBtn.disabled = true;
+            if (nextPageBtn) nextPageBtn.disabled = true;
+            return;
+        }
+        
+        // ページ制御ボタンを表示
+        if (paginationDiv) {
+            paginationDiv.style.display = 'flex';
+        }
+        
+        const maxVisiblePages = 5;
+        let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+        let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+        
+        // 表示ページ数が足りない場合の調整
+        if (endPage - startPage + 1 < maxVisiblePages) {
+            startPage = Math.max(1, endPage - maxVisiblePages + 1);
+        }
+        
+        // 最初のページ
+        if (startPage > 1) {
+            const firstBtn = createPageButton(1);
+            paginationNumbers.appendChild(firstBtn);
+            
+            if (startPage > 2) {
+                const ellipsis = document.createElement('span');
+                ellipsis.textContent = '...';
+                ellipsis.className = 'pagination-ellipsis';
+                paginationNumbers.appendChild(ellipsis);
+            }
+        }
+        
+        // メインのページ番号
+        for (let i = startPage; i <= endPage; i++) {
+            const pageBtn = createPageButton(i);
+            paginationNumbers.appendChild(pageBtn);
+        }
+        
+        // 最後のページ
+        if (endPage < totalPages) {
+            if (endPage < totalPages - 1) {
+                const ellipsis = document.createElement('span');
+                ellipsis.textContent = '...';
+                ellipsis.className = 'pagination-ellipsis';
+                paginationNumbers.appendChild(ellipsis);
+            }
+            
+            const lastBtn = createPageButton(totalPages);
+            paginationNumbers.appendChild(lastBtn);
+        }
+        
+        // 前後ボタンの状態更新
+        if (prevPageBtn) {
+            prevPageBtn.disabled = currentPage <= 1;
+        }
+        if (nextPageBtn) {
+            nextPageBtn.disabled = currentPage >= totalPages;
+        }
+    }
+    
+    // ページボタンを作成
+    function createPageButton(pageNumber) {
+        const btn = document.createElement('button');
+        btn.className = 'pagination-number';
+        btn.textContent = pageNumber;
+        btn.setAttribute('data-page', pageNumber);
+        
+        if (pageNumber === currentPage) {
+            btn.classList.add('active');
+        }
+        
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            goToPage(pageNumber);
+        });
+        
+        return btn;
+    }
+    
+    // 指定ページに移動
+    function goToPage(pageNumber) {
+        currentPage = pageNumber;
+        updateProjectDisplay();
+    }
+    
+    // カテゴリタグのクリックリスナーを追加
     function addCategoryTagListeners() {
         const categoryTags = document.querySelectorAll('.category-tag');
         categoryTags.forEach(tag => {
@@ -178,7 +368,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
                 
                 currentFilter = categoryName;
-                filterProjects();
+                currentPage = 1; // フィルタ変更時は1ページ目に戻る
+                updateProjectDisplay();
                 
                 // 検索フィールドをクリア（オプション）
                 if (currentSearchTerm) {
@@ -189,66 +380,43 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
     }
-
-    // プロジェクトのフィルタリング（複数カテゴリ対応）
-    function filterProjects() {
-        let visibleCount = 0;
-        
-        projectRows.forEach(row => {
-            const categories = row.getAttribute('data-category').split(','); // カンマで分割
-            const searchData = row.getAttribute('data-search');
-            const titleElement = row.querySelector('td:first-child a');
-            const descriptionElement = row.querySelector('td:last-child');
-            
-            // カテゴリフィルタのチェック（複数カテゴリに対応）
-            const categoryMatch = currentFilter === 'all' || 
-                categories.some(cat => cat.trim() === currentFilter);
-            
-            // 拡張された検索フィルタのチェック
-            let searchMatch = currentSearchTerm === '';
-            if (currentSearchTerm !== '') {
-                const titleText = titleElement ? titleElement.textContent.toLowerCase() : '';
-                const descriptionText = descriptionElement ? descriptionElement.textContent.toLowerCase() : '';
-                const categoryText = categories.join(' ').toLowerCase();
-                const searchDataText = searchData.toLowerCase();
-                
-                searchMatch = titleText.includes(currentSearchTerm) ||
-                             descriptionText.includes(currentSearchTerm) ||
-                             categoryText.includes(currentSearchTerm) ||
-                             searchDataText.includes(currentSearchTerm);
-            }
-            
-            if (categoryMatch && searchMatch) {
-                row.style.display = '';
-                visibleCount++;
-                // アニメーション効果
-                row.style.animation = 'fadeIn 0.3s ease-in';
-            } else {
-                row.style.display = 'none';
-            }
-        });
-
-        // 結果表示の更新
-        updateResultsInfo(visibleCount);
-    }
-
+    
     // 検索結果情報の表示
     function updateResultsInfo(count) {
         let infoElement = document.querySelector('.results-info');
         if (!infoElement) {
             infoElement = document.createElement('div');
             infoElement.className = 'results-info';
-            document.querySelector('.projects-table').insertBefore(infoElement, document.querySelector('.projects-list'));
+            
+            if (isProjectPage) {
+                const projectsTable = document.querySelector('.projects-table');
+                if (projectsTable) {
+                    projectsTable.insertBefore(infoElement, document.querySelector('.projects-list'));
+                }
+            } else if (isBlogPage) {
+                const blogContent = document.querySelector('.blog-content');
+                if (blogContent) {
+                    blogContent.insertBefore(infoElement, document.querySelector('.articles-grid'));
+                }
+            }
         }
 
         if (currentSearchTerm || currentFilter !== 'all') {
-            infoElement.textContent = `${count} 件の製作物が見つかりました`;
+            const itemType = isProjectPage ? '製作物' : 'ブログ記事';
+            infoElement.textContent = `${count} 件の${itemType}が見つかりました`;
             infoElement.style.display = 'block';
         } else {
             infoElement.style.display = 'none';
         }
     }
-
+    
+    // クリアボタンの表示/非表示
+    function toggleClearButton() {
+        if (clearSearchBtn) {
+            clearSearchBtn.style.display = currentSearchTerm ? 'block' : 'none';
+        }
+    }
+    
     // 検索候補表示
     function showSuggestions() {
         const searchTerm = searchInput.value.toLowerCase().trim();
@@ -272,7 +440,7 @@ document.addEventListener('DOMContentLoaded', function() {
             hideSuggestions();
         }
     }
-
+    
     // 履歴ドロップダウン表示
     function showHistoryDropdown() {
         const recentHistory = searchHistory.slice(0, 5);
@@ -285,10 +453,18 @@ document.addEventListener('DOMContentLoaded', function() {
     function generateSuggestions(searchTerm) {
         const suggestions = new Set();
         
-        projectRows.forEach(row => {
-            const titleElement = row.querySelector('td:first-child a');
-            const descriptionElement = row.querySelector('td:last-child');
-            const categories = row.getAttribute('data-category').split(',');
+        targetItems.forEach(item => {
+            let titleElement, descriptionElement, categories;
+            
+            if (isProjectPage) {
+                titleElement = item.querySelector('td:first-child a');
+                descriptionElement = item.querySelector('td:last-child');
+                categories = item.getAttribute('data-category').split(',');
+            } else if (isBlogPage) {
+                titleElement = item.querySelector('.article-title a');
+                descriptionElement = item.querySelector('.article-summary');
+                categories = item.getAttribute('data-categories').split(',');
+            }
             
             if (titleElement) {
                 const title = titleElement.textContent.toLowerCase();
@@ -339,7 +515,8 @@ document.addEventListener('DOMContentLoaded', function() {
             item.addEventListener('click', function() {
                 searchInput.value = suggestion;
                 currentSearchTerm = suggestion.toLowerCase().trim();
-                filterProjects();
+                currentPage = 1; // 検索時は1ページ目に戻る
+                updateProjectDisplay();
                 toggleClearButton();
                 hideSuggestions();
                 
@@ -356,7 +533,10 @@ document.addEventListener('DOMContentLoaded', function() {
             dropdown.appendChild(item);
         });
         
-        document.querySelector('.search-box').appendChild(dropdown);
+        const searchBox = document.querySelector('.search-box');
+        if (searchBox) {
+            searchBox.appendChild(dropdown);
+        }
     }
 
     // 候補非表示
@@ -396,21 +576,137 @@ document.addEventListener('DOMContentLoaded', function() {
         // 選択されたアイテムを検索フィールドにプレビュー
         searchInput.value = items[selectedSuggestionIndex].textContent;
     }
+    
+    // イベントリスナーの設定
+    
+    // 検索機能
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            currentSearchTerm = this.value.toLowerCase().trim();
+            currentPage = 1; // 検索時は1ページ目に戻る
+            updateProjectDisplay();
+            toggleClearButton();
+            showSuggestions();
+        });
 
-    // 初期状態でクリアボタンを非表示
-    toggleClearButton();
+        // Enterキーで検索履歴に追加
+        searchInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const searchTerm = this.value.trim();
+                if (searchTerm && !searchHistory.includes(searchTerm)) {
+                    searchHistory.unshift(searchTerm);
+                    if (searchHistory.length > maxHistoryItems) {
+                        searchHistory = searchHistory.slice(0, maxHistoryItems);
+                    }
+                    localStorage.setItem('searchHistory', JSON.stringify(searchHistory));
+                }
+                hideSuggestions();
+            } else if (e.key === 'Escape') {
+                hideSuggestions();
+                this.blur();
+            } else if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                navigateSuggestions('down');
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                navigateSuggestions('up');
+            }
+        });
+
+        // フォーカス時に履歴表示
+        searchInput.addEventListener('focus', function() {
+            if (searchHistory.length > 0) {
+                showHistoryDropdown();
+            }
+        });
+    }
+    
+    // 検索クリアボタン
+    if (clearSearchBtn) {
+        clearSearchBtn.addEventListener('click', function() {
+            searchInput.value = '';
+            currentSearchTerm = '';
+            currentPage = 1;
+            updateProjectDisplay();
+            toggleClearButton();
+            hideSuggestions();
+            searchInput.focus();
+        });
+    }
+
+    // カテゴリフィルタ
+    filterBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            // アクティブボタンの切り替え
+            filterBtns.forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            
+            currentFilter = this.getAttribute('data-category');
+            currentPage = 1; // フィルタ変更時は1ページ目に戻る
+            updateProjectDisplay();
+        });
+    });
+    
+    // ページネーションのイベントリスナー
+    if (paginationEnabled) {
+        // 前のページボタン
+        if (prevPageBtn) {
+            prevPageBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                if (currentPage > 1) {
+                    goToPage(currentPage - 1);
+                }
+            });
+        }
+        
+        // 次のページボタン
+        if (nextPageBtn) {
+            nextPageBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                const filteredRows = getFilteredRows();
+                const totalPages = Math.ceil(filteredRows.length / pageSize);
+                if (currentPage < totalPages) {
+                    goToPage(currentPage + 1);
+                }
+            });
+        }
+        
+        // ページサイズ選択
+        if (pageSizeSelect) {
+            pageSize = parseInt(pageSizeSelect.value || 10);
+            pageSizeSelect.addEventListener('change', function() {
+                pageSize = parseInt(this.value);
+                currentPage = 1; // ページサイズ変更時は1ページ目に戻る
+                updateProjectDisplay();
+            });
+        }
+    }
+    
+    // フォーカス外した時に履歴非表示
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.search-box')) {
+            hideSuggestions();
+        }
+    });
 
     // キーボードショートカット
     document.addEventListener('keydown', function(e) {
         // Ctrl+F または Cmd+F で検索フォーカス
         if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
             e.preventDefault();
-            searchInput.focus();
+            if (searchInput) {
+                searchInput.focus();
+            }
         }
         
         // Escape で検索クリア
         if (e.key === 'Escape' && document.activeElement === searchInput) {
-            clearSearchBtn.click();
+            if (clearSearchBtn) {
+                clearSearchBtn.click();
+            }
         }
     });
 
@@ -427,4 +723,14 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
+    
+    // 初期化
+    assignCategoryColors();
+    addCategoryTagListeners();
+    toggleClearButton();
+    
+    // 初期表示の更新
+    setTimeout(function() {
+        updateProjectDisplay();
+    }, 100);
 });
