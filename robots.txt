@@ -4,7 +4,7 @@ Allow: /
 # サイトマップの場所
 Sitemap: https://ice458.github.io/sitemap.xml
 
-# クロールしない可能性があるファイル (セキュリティ対策)
+# クロールしない可能性があるファイル
 Disallow: /__pycache__/
 Disallow: /*.py$
 Disallow: /*.bat$
