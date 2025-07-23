@@ -47,7 +47,7 @@ body {
 
 /* メインコンテンツ */
 .site-main {
-    max-width: 800px;
+    max-width: 1000px;
     margin: 0 auto;
     padding: 32px 16px;
     background-color: #aaaeae;
@@ -1902,7 +1902,7 @@ a:hover {
 /* ブログ記事ページ用の追加スタイル */
 .blog-article .article-content {
     /* 記事ページのコンテンツ幅を少し広げる */
-    max-width: 900px;
+    max-width: 1000px;
     margin: 0 auto;
 }
 
