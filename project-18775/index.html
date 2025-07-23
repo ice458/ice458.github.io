@@ -94,7 +94,7 @@
                     <p>前項の問題を解決するには、コンピュータ内部でも十進数で計算する必要があります。例えば、二進化十進数 (BCD) を使って計算することは、その解決策の一つです。BCD
                         は各桁を十進数として直接表現するため、十進数の値を正確に保持できます。これにより、0.1のような数値も誤差なく表現できます。(ただし十進で循環小数となる値を表現する際には同じ問題を抱えることになる)
                         BCD を使って浮動小数点数を表現するために、今回は次のような構造体を考えました。</p>
-                    
+
                     <div class="code-container">
                         <div class="code-header">C</div>
                         <div class="code-block">
@@ -110,7 +110,7 @@
 } df_t;</code></pre>
                         </div>
                     </div>
-                    
+
                     <p>このコードでは、3桁の十進浮動小数点数を表現する構造体を示しています。四則演算は筆算を基本に実装します。四則演算ができるようになれば、テイラー展開やニュートン法などを使って、数学関数機能も実装することができます。今回は
                         18桁の十進浮動小数点数で計算するライブラリを自作して、それを電卓のコアとしました 。</p>
                 </div>
@@ -140,16 +140,16 @@
                                 で組んでみたのですが、結果的に演算能力と消費電力に難がありました。このマイコンでは十進浮動小数点数による関数演算 (三角関数や対数等) に最大
                                 3秒程度かかってしまい、電卓としてのレスポンスが非常に悪くなってしまいました。アルゴリズムの最適化で高速にできるかもしれませんが、消費電力が 30mW
                                 と大きかったこともあり、PIC32CM2532LE00048 と XC9140 を採用した改良版を作ることにしました。</p>
-                       <div class="image-row">
-                        <div class="image-item">
-                            <img src="img/img_7557-1-edited.png" alt="試作版の表">
-                            <p class="image-caption">試作版の表</p>
-                        </div>
-                        <div class="image-item">
-                            <img src="img/img_7558-edited.png" alt="試作版の裏">
-                            <p class="image-caption">試作版の裏</p>
-                        </div>
-                    </div>
+                            <div class="image-row">
+                                <div class="image-item">
+                                    <img src="img/img_7557-1-edited.png" alt="試作版の表">
+                                    <p class="image-caption">試作版の表</p>
+                                </div>
+                                <div class="image-item">
+                                    <img src="img/img_7558-edited.png" alt="試作版の裏">
+                                    <p class="image-caption">試作版の裏</p>
+                                </div>
+                            </div>
                         </div>
 
                         <div class="process-step">
