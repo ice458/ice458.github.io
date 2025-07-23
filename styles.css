@@ -73,6 +73,10 @@ body {
     margin-bottom: 32px;
     color: #333;
     padding: 12px 16px;
+    /* 長いURL対応 */
+    word-wrap: break-word;
+    word-break: break-word;
+    overflow-wrap: break-word;
 }
 
 /* 検索・フィルタ機能 */
@@ -2088,6 +2092,10 @@ a:hover {
     margin-bottom: 8px;
     color: #666;
     line-height: 1.6;
+    /* 長いURL対応 */
+    word-wrap: break-word;
+    word-break: break-word;
+    overflow-wrap: break-word;
 }
 
 .banner-description p:last-child {
@@ -2152,6 +2160,11 @@ a:hover {
     color: #666;
     line-height: 1.4;
     margin: 0;
+    /* 長いURL対応 */
+    word-wrap: break-word;
+    word-break: break-word;
+    overflow-wrap: break-word;
+    hyphens: auto;
 }
 
 /* モバイル対応 */
@@ -2193,5 +2206,10 @@ a:hover {
     
     .banner-text {
         font-size: 0.75rem;
+        /* 長いURL対応（モバイル） */
+        word-wrap: break-word;
+        word-break: break-word;
+        overflow-wrap: break-word;
+        hyphens: auto;
     }
 }
