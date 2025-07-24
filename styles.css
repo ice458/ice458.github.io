@@ -1340,6 +1340,9 @@ a:hover {
 .article-image {
     margin: 24px 0;
     text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
 .article-image img {
@@ -1365,8 +1368,14 @@ a:hover {
     height: auto;
     border-radius: 8px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    margin: 16px 0;
+    margin: 16px auto;
     display: block;
+}
+
+/* 小さい画像の中央配置を強化 */
+.article-content img:not([style*="width"]) {
+    margin-left: auto !important;
+    margin-right: auto !important;
 }
 
 /* 横並び画像用のスタイル */
@@ -1548,10 +1557,14 @@ a:hover {
     /* 画像のモバイル対応 */
     .article-image {
         margin: 16px 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
     }
 
     .article-image img {
         border-radius: 6px;
+        margin: 0 auto;
     }
 
     /* 動画のモバイル対応 */
