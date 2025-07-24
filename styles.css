@@ -442,6 +442,16 @@ a:hover {
     gap: 16px;
 }
 
+/* 上部ページネーション用のスタイル */
+.pagination-container.pagination-top {
+    margin: 16px 0 20px 0;
+}
+
+/* 下部ページネーション用のスタイル */
+.pagination-container.pagination-bottom {
+    margin: 20px 0 16px 0;
+}
+
 .pagination-info {
     color: #64748b;
     font-size: 0.9rem;
@@ -558,6 +568,15 @@ a:hover {
         padding: 12px 16px;
     }
     
+    /* 上下ページネーションで異なるマージンを適用 */
+    .pagination-container.pagination-top {
+        margin: 12px 0 16px 0;
+    }
+    
+    .pagination-container.pagination-bottom {
+        margin: 16px 0 12px 0;
+    }
+    
     .pagination-info {
         order: 1;
     }
@@ -577,6 +596,11 @@ a:hover {
     .pagination-size {
         order: 3;
         font-size: 0.8rem;
+    }
+    
+    /* モバイルではページサイズ選択を簡略化 */
+    .pagination-size label {
+        display: none;
     }
     
     .page-size-select {

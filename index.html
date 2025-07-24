@@ -104,6 +104,35 @@
                     </div>
                 </div>
 
+                <!-- ページネーション（上部） -->
+                <div class="pagination-container pagination-top">
+                    <div class="pagination-info">
+                        <span id="paginationInfoTop">1-10 / 15件</span>
+                    </div>
+                    <div class="pagination">
+                        <button id="prevPageTop" class="pagination-btn" disabled>
+                            <span>‹</span>
+                        </button>
+                        <div class="pagination-numbers" id="paginationNumbersTop">
+                            <button class="pagination-number active" data-page="1">1</button>
+                            <button class="pagination-number" data-page="2">2</button>
+                        </div>
+                        <button id="nextPageTop" class="pagination-btn">
+                            <span>›</span>
+                        </button>
+                    </div>
+                    <div class="pagination-size">
+                        <label for="pageSizeTop">表示件数:</label>
+                        <select id="pageSizeTop" class="page-size-select">
+                            <option value="5">5件</option>
+                            <option value="10" selected>10件</option>
+                            <option value="15">15件</option>
+                            <option value="25">25件</option>
+                            <option value="50">50件</option>
+                        </select>
+                    </div>
+                </div>
+
                 <div class="projects-table">
                     <table class="projects-list">
                         <thead>
@@ -241,26 +270,26 @@
                     </table>
                 </div>
 
-                <!-- ページネーション -->
-                <div class="pagination-container">
+                <!-- ページネーション（下部） -->
+                <div class="pagination-container pagination-bottom">
                     <div class="pagination-info">
-                        <span id="paginationInfo">1-10 / 15件</span>
+                        <span id="paginationInfoBottom">1-10 / 15件</span>
                     </div>
                     <div class="pagination">
-                        <button id="prevPage" class="pagination-btn" disabled>
+                        <button id="prevPageBottom" class="pagination-btn" disabled>
                             <span>‹</span>
                         </button>
-                        <div class="pagination-numbers" id="paginationNumbers">
+                        <div class="pagination-numbers" id="paginationNumbersBottom">
                             <button class="pagination-number active" data-page="1">1</button>
                             <button class="pagination-number" data-page="2">2</button>
                         </div>
-                        <button id="nextPage" class="pagination-btn">
+                        <button id="nextPageBottom" class="pagination-btn">
                             <span>›</span>
                         </button>
                     </div>
                     <div class="pagination-size">
-                        <label for="pageSize">表示件数:</label>
-                        <select id="pageSize" class="page-size-select">
+                        <label for="pageSizeBottom">表示件数:</label>
+                        <select id="pageSizeBottom" class="page-size-select">
                             <option value="5">5件</option>
                             <option value="10" selected>10件</option>
                             <option value="15">15件</option>
