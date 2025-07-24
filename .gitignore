@@ -5,6 +5,7 @@
 project_manager.py
 blog_manager.py
 generate_sitemap.py
+add_canonical_urls.py
 
 # バッチファイル
 *.bat

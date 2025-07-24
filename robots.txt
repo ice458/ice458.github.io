@@ -14,4 +14,7 @@ Disallow: /.git/
 Disallow: /project_manager.py
 Disallow: /blog_manager.py
 Disallow: /generate_sitemap.py
+Disallow: /add_canonical_urls.py
 Disallow: /README_manager.md
+Disallow: /templates/
+Disallow: /bp/
