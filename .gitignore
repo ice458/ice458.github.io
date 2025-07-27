@@ -8,7 +8,7 @@ generate_sitemap.py
 add_canonical_urls.py
 add_seo_meta_tags.py
 fix_project_layout.py
-
+*.py
 # バッチファイル
 *.bat
 run_manager.bat
