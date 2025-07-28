@@ -1,35 +1,13 @@
 # ===============================
 # 管理ツール関連
 # ===============================
-# 管理ツール本体
-project_manager.py
-blog_manager.py
-generate_sitemap.py
-add_canonical_urls.py
-add_seo_meta_tags.py
-fix_project_layout.py
 *.py
 # バッチファイル
 *.bat
-run_manager.bat
-update_sitemap.bat
 
 # 管理用ドキュメント
 README_manager.md
 
-# ===============================
-# テスト・開発用ファイル
-# ===============================
-test_*.py
-generate_test_*.py
-validate_*.py
-
-# ===============================
-# テンプレートファイル
-# ===============================
-# templates/
-# article_template.html
-# article.css
 
 # ===============================
 # バックアップ・一時ファイル
