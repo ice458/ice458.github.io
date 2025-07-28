@@ -1,2 +1,36 @@
 plugins:
   - jekyll-sitemap
+
+# GitHub Pages Jekyll設定
+title: ice458の物置き
+description: ice458の電子工作や製作物を紹介するサイトです
+url: https://ice458.github.io
+
+# 除外設定（サイトマップから除外）
+exclude:
+  - README.md
+  - "*.py"
+  - "*.bat"
+  - __pycache__/
+  - templates/
+  - bp/
+  - fix_*.py
+  - test_*.py
+
+# ビルド設定
+markdown: kramdown
+highlighter: rouge
+
+# パーマリンク設定（重要: ディレクトリ形式URL対応）
+permalink: pretty
+
+# SEO設定
+lang: ja
+author: ice458
+
+# サイトマップ設定
+sitemap:
+  exclude:
+    - "/templates/"
+    - "/bp/"
+    - "/__pycache__/"
