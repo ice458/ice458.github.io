@@ -16,6 +16,9 @@ exclude:
   - bp/
   - fix_*.py
   - test_*.py
+  - "*.md"
+  - verify_jekyll_support.py
+  - JEKYLL_INTEGRATION_REPORT.md
 
 # ビルド設定
 markdown: kramdown
@@ -28,9 +31,4 @@ permalink: pretty
 lang: ja
 author: ice458
 
-# サイトマップ設定
-sitemap:
-  exclude:
-    - "/templates/"
-    - "/bp/"
-    - "/__pycache__/"
+# サイトマップ設定は不要（excludeで十分）
