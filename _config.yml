@@ -5,6 +5,7 @@ plugins:
 title: ice458の物置き
 description: ice458の電子工作や製作物を紹介するサイトです
 url: https://ice458.github.io
+baseurl: ""
 
 # 除外設定（サイトマップから除外）
 exclude:
@@ -18,6 +19,7 @@ exclude:
   - test_*.py
   - "*.md"
   - verify_jekyll_support.py
+  - diagnose_sitemap.py
   - JEKYLL_INTEGRATION_REPORT.md
 
 # ビルド設定
@@ -31,4 +33,11 @@ permalink: pretty
 lang: ja
 author: ice458
 
-# サイトマップ設定は不要（excludeで十分）
+# デフォルト設定
+defaults:
+  - scope:
+      path: ""
+      type: "pages"
+    values:
+      layout: null
+      sitemap: true
