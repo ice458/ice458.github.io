@@ -4,18 +4,4 @@ Allow: /
 # サイトマップの場所
 Sitemap: https://ice458.github.io/sitemap.xml
 
-# クロールしない可能性があるファイル
-Disallow: /__pycache__/
-Disallow: /*.py$
-Disallow: /*.bat$
-Disallow: /*.bak$
-Disallow: /test_*.py$
-Disallow: /.git/
-Disallow: /project_manager.py
-Disallow: /blog_manager.py
-Disallow: /generate_sitemap.py
-Disallow: /add_canonical_urls.py
-Disallow: /add_seo_meta_tags.py
-Disallow: /README_manager.md
-Disallow: /templates/
-Disallow: /bp/
+
