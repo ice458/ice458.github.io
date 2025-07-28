@@ -1,12 +1,9 @@
 User-agent: *
 Allow: /
 
-# 管理ツール等をクロール除外
+# クロール除外
 Disallow: /templates/
-Disallow: /bp/
-Disallow: /__pycache__/
-Disallow: /*.py$
-Disallow: /*.bat$
+
 
 # サイトマップの場所（Jekyll自動生成）
 Sitemap: https://ice458.github.io/sitemap.xml

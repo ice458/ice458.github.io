@@ -3,7 +3,7 @@ plugins:
 
 # GitHub Pages Jekyll設定
 title: ice458の物置き
-description: ice458の電子工作や製作物を紹介するサイトです
+description: ice458の製作物等を紹介するサイトです
 url: https://ice458.github.io
 baseurl: ""
 
@@ -14,13 +14,7 @@ exclude:
   - "*.bat"
   - __pycache__/
   - templates/
-  - bp/
-  - fix_*.py
-  - test_*.py
   - "*.md"
-  - verify_jekyll_support.py
-  - diagnose_sitemap.py
-  - JEKYLL_INTEGRATION_REPORT.md
 
 # ビルド設定
 markdown: kramdown
