@@ -1181,6 +1181,29 @@ a:hover {
 .article-section p {
     margin-bottom: 16px;
     color: #374151;
+    text-indent: 1em; /* 段落の字下げ */
+    line-height: 1.8; /* 行間を少し広げる */
+}
+
+/* 段落内でbrタグ後の行は字下げしない */
+.article-section p br + * {
+    text-indent: 0;
+}
+
+/* 最初の段落や画像直後の段落は字下げする */
+.article-section p:first-of-type {
+    text-indent: 1em;
+}
+
+/* リスト直後の段落も字下げする */
+.article-section ul + p,
+.article-section ol + p {
+    text-indent: 1em;
+}
+
+/* 画像直後の段落も字下げする */
+.article-image + p {
+    text-indent: 1em;
 }
 
 .article-section ul,
@@ -1208,6 +1231,11 @@ a:hover {
     border-bottom: 2px solid #0ea5e9;
 }
 
+/* 概要セクション内の段落は字下げしない */
+.article-overview p {
+    text-indent: 0;
+}
+
 /* 注意ボックス */
 .notice-box {
     background-color: #fef2f2;
@@ -1228,6 +1256,7 @@ a:hover {
     margin: 0;
     color: #7f1d1d;
     font-weight: 500;
+    text-indent: 0; /* 注意ボックス内は字下げしない */
 }
 
 /* 仕様リスト */
@@ -1360,6 +1389,7 @@ a:hover {
     color: #64748b;
     font-style: italic;
     text-align: center;
+    text-indent: 0; /* 画像キャプションは字下げしない */
 }
 
 /* 記事内画像の自動調整（汎用） */
@@ -1941,6 +1971,19 @@ a:hover {
     /* 記事ページのコンテンツ幅を少し広げる */
     max-width: 1000px;
     margin: 0 auto;
+}
+
+/* ブログ記事の段落スタイル */
+.blog-article .article-section p {
+    margin-bottom: 16px;
+    color: #374151;
+    text-indent: 1em; /* 段落の字下げ */
+    line-height: 1.8; /* 行間を少し広げる */
+}
+
+/* ブログ記事の概要部分は字下げしない */
+.blog-article .article-overview p {
+    text-indent: 0;
 }
 
 /* ブログ専用のコードブロック */

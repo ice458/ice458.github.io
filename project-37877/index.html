@@ -1,0 +1,252 @@
+---
+layout: null
+permalink: /project-37877/
+sitemap:
+priority: 0.7
+changefreq: monthly
+---
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>低クロストークヘッドホンアンプ - ice458の物置き</title>
+    <meta name="description" content="アンバランスかつレールスプリッタを用いながらも非常に低いクロストークを実現しました。">
+    <meta name="keywords" content="オーディオ,電子工作,電子工作,製作物,DIY,ice458">
+    <meta name="author" content="ice458">
+
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://ice458.github.io/project-37877/">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://ice458.github.io/project-37877/">
+    <meta property="og:title" content="低クロストークヘッドホンアンプ - ice458の物置き">
+    <meta property="og:description" content="アンバランスかつレールスプリッタを用いながらも非常に低いクロストークを実現しました。">
+    <meta property="og:image" content="https://ice458.github.io/logo.png">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://ice458.github.io/project-37877/">
+    <meta property="twitter:title" content="低クロストークヘッドホンアンプ - ice458の物置き">
+    <meta property="twitter:description" content="アンバランスかつレールスプリッタを用いながらも非常に低いクロストークを実現しました。">
+    <meta property="twitter:image" content="https://ice458.github.io/logo.png">
+
+    <link rel="stylesheet" href="../styles.css">
+    <!-- ファビコン設定 -->
+    <link rel="icon" type="image/x-icon" href="../favicon.ico">
+    <link rel="icon" type="image/png" sizes="16x16" href="../favicon-16x16.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="../favicon-32x32.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="../favicon-180x180.png">
+    <link rel="manifest" href="../site.webmanifest">
+
+    <!-- ブラウザ固有のメタタグ -->
+    <meta name="theme-color" content="#aaaeae">
+    <meta name="msapplication-TileColor" content="#aaaeae">
+    <meta name="msapplication-TileImage" content="../favicon-180x180.png">
+
+    <!-- MathJax for mathematical expressions -->
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+
+<body>
+    <header class="site-header">
+        <div class="site-branding">
+            <div class="site-logo">
+                <img src="../logo.png" alt="ロゴ" class="logo-img">
+            </div>
+            <h1 class="site-title"><a href="../index.html">ice458の物置き</a></h1>
+        </div>
+        <nav class="site-nav">
+            <a href="../index.html" class="nav-link active">プロジェクト</a>
+            <a href="../blog.html" class="nav-link">雑多なメモ等</a>
+        </nav>
+    </header>
+
+    <main class="site-main">
+        <!-- パンくずリスト -->
+        <nav class="breadcrumb" aria-label="パンくずリスト">
+            <ol class="breadcrumb-list">
+                <li class="breadcrumb-item">
+                    <a href="../index.html" class="breadcrumb-link">ホーム</a>
+                </li>
+                <li class="breadcrumb-item">
+                    <a href="../index.html#projects" class="breadcrumb-link">プロジェクト</a>
+                </li>
+                <li class="breadcrumb-item">
+                    <span class="breadcrumb-current">低クロストークヘッドホンアンプ</span>
+                </li>
+            </ol>
+        </nav>
+
+        <article class="main-content">
+            <div class="article-header">
+                <h1 class="article-title">低クロストークヘッドホンアンプ</h1>
+                <div class="article-meta">
+                    <div class="article-categories">
+                        <span class="category-tag">オーディオ</span>
+                        <span class="category-tag">電子工作</span>
+                    </div>
+                    <div class="article-date">作成日: 2025年08月25日</div>
+                </div>
+            </div>
+
+            <div class="article-content">
+                <p>とにかく低クロストークになることを目指したヘッドホンアンプを作りました。入出力アンバランス・レールスプリッタを用いたGND生成にもかかわらず全可聴帯域でクロストークを-80dB以下に抑えています。</p>
+
+                <div class="article-image">
+                    <img src="img/IMG_8600.png" alt="制作したアンプの写真">
+                    <p class="image-caption">制作したアンプ</p>
+                </div>
+
+                <div class="article-section">
+                    <h2>仕様</h2>
+                    <ul class="spec-list">
+                        <li><strong>電源電圧:</strong>9V(006P、DCジャック)</li>
+                        <li><strong>クロストーク:</strong>-80dB以下(20kHz以下)</li>
+                        <li><strong>最大出力電流:</strong>60mA</li>
+                        <li><strong>出力:</strong>100mW @60Ω負荷</li>
+                    </ul>
+                </div>
+
+                <div class="article-section">
+                    <h2>回路図</h2>
+                    <p>レールスプリッタ部分です。</p>
+
+                    <!-- 実際の画像がある場合 -->
+                    <div class="article-image">
+                        <img src="img/sch2.png" alt="電源の回路図">
+                        <p class="image-caption">電源の回路図</p>
+                    </div>
+                    <p>
+                        電源電圧をR17とR15で分圧し、2並列にしたオペアンプのバッファを用いてGND(基準電位)を生成する回路です。
+                    </p>
+                    <p>
+                        C3とC19は、それより上流からやってくるノイズや電圧変動を抑える役割があります。C20とC18は、分圧抵抗から発生する熱雑音を抑える役割があります。
+                    </p>
+                    <p>
+                        R16は、電源投入時にオペアンプの入力端子間にあるダイオードを保護するためのものです。
+                    </p>
+                    <p>
+                        R1、R2は、2つのオペアンプのバランスをとるためと、安定性を確保するためのものです。一般的にこの抵抗が大きいとクロストークが悪化しますが、今回は後述の工夫によりそれを抑制できるため、10Ωでも問題ありません。<br><br>
+                    </p>
+                    <p>次にアンプ部分です。</p>
+                    <div class="article-image">
+                        <img src="img/sch1.png" alt="アンプの回路図">
+                        <p class="image-caption">アンプの回路図</p>
+                    </div>
+                    <p>
+                        入力にR10とR11で構成される0.5倍のアッテネータを入れています。これにより、初段オペアンプの2つ入力端子から見たインピーダンスの差が小さくなりつつ変動しにくくなり、ボリューム位置にかかわらずクロストークを発生しにくくすることができます。全体的な利得は1.7倍(4.6dB)と小さく設定しました。
+                    </p>
+                    <p>
+                        今回の回路で特徴的なのは2段目です。減算回路を用いることで、共通インピーダンスによるクロストークの発生を大幅に抑制できます。減算回路のオフセット入力(RN3Bの2番ピン)を出力コネクタのコモン端子に接続することで、クロストークが発生した際にそれを打ち消すように出力が変化します。
+                    </p>
+                </div>
+
+
+                <div class="article-section">
+                    <h2>クロストークについて</h2>
+                    <p>
+                        クロストークの主な発生メカニズム(Lch→Rch)を以下に示します。
+                    </p>
+                    <div class="article-image">
+                        <img src="img/sch3.png" alt="クロストークの発生メカニズム">
+                        <p class="image-caption">クロストークの発生メカニズム</p>
+                    </div>
+                    <p>
+                        Zcmは共通インピーダンス、Zloadは負荷インピーダンス、iRとiLはそれぞれRchとLchに流れる電流です。</p>
+                    <p>
+                        負荷から戻ってきた電流iR+iLが、共通インピーダンスZcmによって電圧Vcrossに変換されることが発生の主要因です。Vcrossが発生することで、もう一方のチャンネルに意図した電圧と異なる電圧が印加されることになり、これがクロストークとして観測されます。位相は反転しています。この量は次の式で概算できます。
+                    </p>
+                    $$
+                    Crosstalk(dB) \approx 20 \log_{10}\left(\frac{Z_{cm}}{Z_{load}}\right)
+                    $$
+                    <p>
+                        実際のヘッドホンアンプを考えると、Zcmにはレールスプリッタの出力インピーダンス、基板のパターンインピーダンス、コネクタの接触抵抗、ケーブルの共通インピーダンスなどが含まれます。</p>
+                    <p>
+                        それぞれの値を現実的なところで考えてみましょう。
+                        レールスプリッタ専用ICとして有名なTLE2426の出力抵抗は7.5mΩ、コネクタの接触抵抗はどんなに良くても数mΩ程度です。つまり、基板のパターン設計を非常に良いものにできたとしても、Zcmが10mΩを下回ることは非常に難しいでしょう。
+                        一方、ヘッドホンの負荷インピーダンスZloadは一般的に32Ω、60Ω、300Ω、600Ωなどが多いです。Zcmが10mΩ、Zloadが60Ωの場合、クロストークは約-75.6dBとなります。つまり、アンバランス型ヘッドホンアンプでクロストークを-80dB以下に抑えようとする場合、回路の根本的な工夫が必要になるといえます。
+                    </p>
+                    <p>
+                        今回制作したアンプは2段目を減算回路にしています。これにより、レールスプリッタの出力インピーダンス、基板のパターンインピーダンスの2つをループゲイン分の1まで小さく見せることができます。つまり、事実上、コネクタの接触抵抗とケーブルの共通インピーダンスのみがZcmに寄与することになります。
+                    </p>
+                    <p>
+                        ここまでで触れた以外にも、オペアンプの入力容量とそこにつながるインピーダンスの差や、PSRR、CMRRの不完全性、基板のパターンによる結合などがクロストークの発生に寄与します。
+                    </p>
+
+                </div>
+
+                <div class="article-section">
+                    <h2>測定結果</h2>
+                    <p>両チャンネルに51Ωの抵抗負荷を接続し、出力が1Vrmsとなる正弦波を入れた時のクロストークの周波数特性を測定しました。</p>
+                    <div class="article-image">
+                        <img src="img/crosstalk.png" alt="クロストークの測定結果">
+                        <p class="image-caption">クロストークの測定結果</p>
+                    </div>
+                    <p>
+                        全可聴帯域で-80dB以下に抑えられていることがわかります。また、50Hzにおけるクロストークは-90dB以下と非常に小さく抑えることができています。高い周波数でクロストークが悪化しているのは、ループゲインが低下することでクロストーク抑制効果が弱くなるのと、パターンによる結合の効果が見えてくるためと考えられます。
+                    </p>
+                </div>
+
+
+                <div class="article-section">
+                    <h2>設計データ</h2>
+                    <p>設計データ(KiCad)を以下に公開します。(MITライセンス)</p>
+                    <ul class="reference-list">
+                        <li><a href="./HPアンプ2.zip">KiCadプロジェクトファイル(ZIP)</a></li>
+                    </ul>
+                    <p>
+                        <s>
+                            歪率やノイズなども測りたいけど機材がないのでだれか作って測ってほしい。
+                        </s>
+                    </p>
+                </div>
+                                
+                <div class="article-section">
+                    <h2>音質</h2>
+                    <p>とても良い音です。</p>
+                </div>
+
+                <div class="article-section">
+                    <h2>写真集</h2>
+                    <p>ケースはタカチのMX2-7-9です。付属のねじを用いず、独自にM3のタップを立てました。</p>
+                    <div class="image-row">
+                        <div class="image-item
+">
+                            <img src="img/IMG_8579.png" alt="パネル基板の写真">
+                            <p class="image-caption">パネル基板の写真</p>
+
+                        </div>
+                        <div class="image-item">
+                            <img src="img/IMG_8596.png" alt="実装した基板の写真">
+                            <p class="image-caption">実装した基板の写真</p>
+                        </div>
+                        <div class="image-item">
+                            <img src="img/IMG_8598.png" alt="アンプ後ろ側の写真">
+                            <p class="image-caption">アンプ後ろ側の写真</p>
+                        </div>
+                    </div>
+
+                    <div class="article-footer">
+                        <div class="back-link">
+                            <a href="../index.html" class="back-button">← 物置きに戻る</a>
+                        </div>
+                        <div class="article-info">
+                            <p>最終更新: 2025年08月25日</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </article>
+    </main>
+
+    <footer class="site-footer">
+        <div class="site-info">
+            <p>&copy; 2025 ice458の物置き</p>
+        </div>
+    </footer>
+</body>
+
+</html>
