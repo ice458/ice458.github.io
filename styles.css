@@ -2203,6 +2203,12 @@ a:hover {
     min-height: 120px;
 }
 
+/* カード全体をリンクにした場合でも装飾を崩さない */
+a.banner-item {
+    text-decoration: none;
+    color: inherit;
+}
+
 .banner-item:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
@@ -2216,6 +2222,11 @@ a:hover {
     border-radius: 4px;
     transition: opacity 0.2s ease;
     margin-bottom: 8px;
+}
+
+/* 特定のカードだけ高さを自動にして縦横比を維持したい場合 */
+.banner-img-auto {
+    height: auto;
 }
 
 .banner-item:hover .banner-img {

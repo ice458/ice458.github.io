@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LCD Char Display Generator</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header>
+    <h1>LCD Char Display Generator</h1>
+    <p>5×8ドットのLCDキャラクタ表示を再現する画像ジェネレータ</p>
+  </header>
+
+  <main class="container">
+    <section class="controls">
+
+  <nav class="top-nav" aria-label="ページ内ナビゲーション">
+    <a class="link-button" href="../../index.html">ホームへ</a>
+    <a class="link-button" href="../../tools.html">Webツール一覧へ</a>
+  </nav>
+      <div class="field-group">
+        <label>
+          行(rows)
+          <input type="number" id="rows" min="1" value="2" />
+        </label>
+        <label>
+          列(cols)
+          <input type="number" id="cols" min="1" value="16" />
+        </label>
+      </div>
+
+      <div class="field-group">
+        <label>
+          ドットサイズ(px)
+          <input type="number" id="dotSize" min="1" value="10" />
+        </label>
+        <label>
+          文字間ギャップX(px)
+          <input type="number" id="charGapX" min="0" value="10" />
+        </label>
+        <label>
+          文字間ギャップY(px)
+          <input type="number" id="charGapY" min="0" value="20" />
+        </label>
+      </div>
+
+      <div class="field-group">
+        <label>
+          キャンバス幅
+          <input type="number" id="canvasWidth" min="10" value="990" />
+        </label>
+        <label>
+          キャンバス高
+          <input type="number" id="canvasHeight" min="10" value="330" />
+        </label>
+        <label class="checkbox">
+          <input type="checkbox" id="centerDisplay" checked />
+          中央配置
+        </label>
+      </div>
+
+      <div class="field-group">
+        <label>
+          背景色
+          <input type="color" id="bgColor" value="#639978" />
+        </label>
+        <label>
+          点灯色
+          <input type="color" id="dotOnColor" value="#1E2E24" />
+        </label>
+        <label>
+          消灯色
+          <input type="color" id="dotOffColor" value="#598F6E" />
+        </label>
+      </div>
+
+      <div class="field-group vertical">
+        <label for="textArea">テキスト（行ごとに改行）</label>
+        <textarea id="textArea" rows="4" spellcheck="false">LCD Character
+Display</textarea>
+      </div>
+
+      <div class="buttons">
+        <button id="btnRender">描画</button>
+        <button id="btnPreset">プリセット</button>
+        <button id="btnDownload">PNG保存</button>
+      </div>
+
+      <div id="status" role="status" aria-live="polite" style="margin-top:8px;font-size:12px;color:#57606a;"></div>
+
+      <div class="hints" role="note" aria-label="ヒント">
+        <div class="hints-title">ヒント</div>
+        <ul>
+          <li>未定義の文字はスペース扱いになります。</li>
+          <li>行数(rows)より多い行はカット、足りない行は空白で埋めます。</li>
+          <li>保存は現在のキャンバスをPNGで保存します。</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="preview">
+      <canvas id="canvas" width="990" height="330"></canvas>
+    </section>
+  </main>
+
+
+  <script src="font5x8.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
