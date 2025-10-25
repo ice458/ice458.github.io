@@ -22,13 +22,13 @@
 
   function draw() {
     try {
-      const rows = parseInt($("rows").value, 10) || 2;
-      const cols = parseInt($("cols").value, 10) || 16;
-      const dotSize = Math.max(1, parseInt($("dotSize").value, 10) || 10);
-      const charGapX = Math.max(0, parseInt($("charGapX").value, 10) || 0);
-      const charGapY = Math.max(0, parseInt($("charGapY").value, 10) || 0);
-      const canvasWidth = Math.max(10, parseInt($("canvasWidth").value, 10) || 300);
-      const canvasHeight = Math.max(10, parseInt($("canvasHeight").value, 10) || 150);
+      const rows = Math.max(1, Math.min(100, parseInt($("rows").value, 10) || 2));
+      const cols = Math.max(1, Math.min(200, parseInt($("cols").value, 10) || 16));
+      const dotSize = Math.max(1, Math.min(50, parseInt($("dotSize").value, 10) || 10));
+      const charGapX = Math.max(0, Math.min(100, parseInt($("charGapX").value, 10) || 0));
+      const charGapY = Math.max(0, Math.min(100, parseInt($("charGapY").value, 10) || 0));
+      const canvasWidth = Math.max(10, Math.min(4096, parseInt($("canvasWidth").value, 10) || 300));
+      const canvasHeight = Math.max(10, Math.min(4096, parseInt($("canvasHeight").value, 10) || 150));
       const centerDisplay = $("centerDisplay").checked;
 
       const bg = hexToRgb($("bgColor").value);

@@ -22,37 +22,37 @@
       <div class="field-group">
         <label>
           行(rows)
-          <input type="number" id="rows" min="1" value="2" />
+          <input type="number" id="rows" min="1" max="100" value="2" />
         </label>
         <label>
           列(cols)
-          <input type="number" id="cols" min="1" value="16" />
+          <input type="number" id="cols" min="1" max="200" value="16" />
         </label>
       </div>
 
       <div class="field-group">
         <label>
           ドットサイズ(px)
-          <input type="number" id="dotSize" min="1" value="10" />
+          <input type="number" id="dotSize" min="1" max="50" value="10" />
         </label>
         <label>
           文字間ギャップX(px)
-          <input type="number" id="charGapX" min="0" value="10" />
+          <input type="number" id="charGapX" min="0" max="100" value="10" />
         </label>
         <label>
           文字間ギャップY(px)
-          <input type="number" id="charGapY" min="0" value="20" />
+          <input type="number" id="charGapY" min="0" max="100" value="20" />
         </label>
       </div>
 
       <div class="field-group">
         <label>
           キャンバス幅
-          <input type="number" id="canvasWidth" min="10" value="990" />
+          <input type="number" id="canvasWidth" min="10" max="4096" value="990" />
         </label>
         <label>
           キャンバス高
-          <input type="number" id="canvasHeight" min="10" value="330" />
+          <input type="number" id="canvasHeight" min="10" max="4096" value="330" />
         </label>
         <label class="checkbox">
           <input type="checkbox" id="centerDisplay" checked />
