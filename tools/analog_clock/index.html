@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>アナログ時計</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="theme-toggle">
+        <button id="themeToggle" type="button" aria-label="テーマ切り替え">ライト/ダーク</button>
+    </div>
+    <div class="bg-picker" role="group" aria-label="ページ背景色設定">
+        <label for="bgColor">背景色</label>
+        <input id="bgColor" name="bgColor" type="color" value="#1a1a1a" aria-label="背景色カラーピッカー">
+        <label class="transparent-label"><input id="bgTransparent" type="checkbox"> 透明背景</label>
+        <button id="bgReset" type="button" aria-label="背景色をリセット">リセット</button>
+    </div>
+    <div class="ui-help" aria-live="polite">
+        ・UキーでUIの表示/非表示を切替。<br>
+        ・URL末尾に ?ui=off を付けても非表示にできます。
+    </div>
+    <div class="clock">
+        <div class="clock-face">
+            <!-- 数字マーカー -->
+            <div class="number number-1"></div>
+            <div class="number number-2"></div>
+            <div class="number number-3"></div>
+            <div class="number number-4"></div>
+            <div class="number number-5"></div>
+            <div class="number number-6"></div>
+            <div class="number number-7"></div>
+            <div class="number number-8"></div>
+            <div class="number number-9"></div>
+            <div class="number number-10"></div>
+            <div class="number number-11"></div>
+            <div class="number number-12"></div>
+            
+            <!-- 時計の針 -->
+            <div class="hand hour-hand"></div>
+            <div class="hand minute-hand"></div>
+            <div class="hand second-hand"></div>
+            <div class="center-point"></div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>

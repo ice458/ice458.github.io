@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>オセロゲーム</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>オセロゲーム</h1>
+
+    <div id="mode-selection">
+        <h2>CPUのモードを選択してください:</h2>
+        <label>
+            <input type="radio" name="mode" value="normal" checked> 全力モード
+        </label>
+        <label>
+            <input type="radio" name="mode" value="sontaku"> 忖度モード (少し手加減)
+        </label>
+        <label>
+            <input type="radio" name="mode" value="lose"> 全力で負けようとするモード
+        </label>
+        <p class="rule-description">
+            <strong>特殊ルール:</strong> 盤上の★マークのマス (角の隣) に石を置くと、もう一度自分のターンになります！
+        </p>
+        <button id="start-button">ゲーム開始</button>
+    </div>
+
+    <div id="game-area" style="display: none;">
+        <div id="game-info">
+            <div id="message">現在のプレイヤー: 黒</div>
+            <div id="score">黒: 2 - 白: 2</div>
+        </div>
+        <div id="board"></div>
+        <button id="reset-button">モード選択に戻る</button>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

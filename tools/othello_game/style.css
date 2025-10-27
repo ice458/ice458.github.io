@@ -1,0 +1,123 @@
+/* CSSスタイルをここに記述します */
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background-color: #f0f0f0;
+    flex-direction: column; /* タイトルとボードを縦に並べる */
+}
+
+#game-info {
+    margin-bottom: 15px;
+    text-align: center;
+    font-size: 1.2em;
+}
+
+#message {
+    margin-bottom: 5px;
+}
+
+#board {
+    display: grid;
+    grid-template-columns: repeat(8, 50px);
+    grid-template-rows: repeat(8, 50px);
+    gap: 2px;
+    background-color: #008000; /* 緑色のボード背景 */
+    border: 5px solid #000;
+    padding: 5px;
+}
+
+.cell {
+    width: 50px;
+    height: 50px;
+    background-color: #006400; /* やや暗い緑色のセル */
+    border: 1px solid #000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    position: relative; /* For potential future markers */
+}
+
+/* 特殊マスのスタイル */
+.special-cell {
+    background-color: #00a000; /* 少し明るい緑 */
+    /* または、目印を追加 */
+}
+.special-cell::after {
+    content: '★'; /* 例: 星マーク */
+    position: absolute;
+    top: 1px;
+    left: 1px;
+    font-size: 10px;
+    color: yellow;
+    opacity: 0.7;
+}
+
+.disc {
+    width: 80%;
+    height: 80%;
+    border-radius: 50%;
+}
+
+.black {
+    background-color: black;
+}
+
+.white {
+    background-color: white;
+}
+
+#mode-selection {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+#mode-selection h2 {
+    margin-bottom: 10px;
+}
+
+#mode-selection label {
+    display: block;
+    margin-bottom: 8px;
+    cursor: pointer;
+}
+
+#mode-selection button {
+    padding: 10px 20px;
+    font-size: 1.1em;
+    cursor: pointer;
+    margin-top: 15px;
+}
+
+/* ルール説明のスタイル */
+.rule-description {
+    margin-top: 15px;
+    font-size: 0.95em;
+    color: #555;
+    max-width: 300px; /* 必要に応じて調整 */
+    margin-left: auto;
+    margin-right: auto;
+}
+
+#game-area {
+    display: flex; /* 初期状態はJSで none に設定 */
+    flex-direction: column;
+    align-items: center;
+}
+
+#reset-button {
+    margin-top: 15px;
+    padding: 8px 15px;
+    cursor: pointer;
+}
+
+/* ゲーム開始後の表示切り替え */
+body.game-started #mode-selection {
+    display: none;
+}
+
+body.game-started #game-area {
+    display: flex; /* ゲーム開始で表示 */
+}

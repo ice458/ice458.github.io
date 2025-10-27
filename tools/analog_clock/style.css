@@ -1,0 +1,277 @@
+:root {
+    --bg: #f5f5f7;
+    --fg: #222;
+    --ui-fg: var(--fg);
+    --clock-bg: #ffffff;
+    --clock-border: #ccc;
+    --shadow-outer: rgba(0, 0, 0, 0.1);
+    --shadow-inner: rgba(0, 0, 0, 0.05);
+    --number-major: #333; /* 3,6,9,12 */
+    --number-minor: #666; /* その他 */
+    --info: #666;
+    --hand-hour: #222;
+    --hand-minute: #444;
+    --hand-second: #e53935;
+    --center: #c0c0c0;
+    --center-border: #fff;
+}
+
+[data-theme="dark"] {
+    --bg: #1a1a1a;
+    --fg: #fff;
+    --ui-fg: var(--fg);
+    --clock-bg: #1a1a1a;
+    --clock-border: #333;
+    --shadow-outer: rgba(0, 0, 0, 0.5);
+    --shadow-inner: rgba(0, 0, 0, 0.5);
+    --number-major: #ddd;
+    --number-minor: #999;
+    --info: #888;
+    --hand-hour: #c0a080;
+    --hand-minute: #80c0c0;
+    --hand-second: #ff4444;
+    --center: #c0c0c0;
+    --center-border: #fff;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background: var(--bg);
+    font-family: 'Montserrat', sans-serif;
+    color: var(--fg);
+}
+
+.theme-toggle {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    z-index: 100;
+}
+
+.theme-toggle button {
+    background: transparent;
+    color: var(--ui-fg);
+    border: 1px solid var(--clock-border);
+    border-radius: 999px;
+    padding: 8px 12px;
+    font-family: inherit;
+    font-size: 18px;
+    cursor: pointer;
+}
+
+.theme-toggle button:hover {
+    background: var(--clock-bg);
+}
+
+.bg-picker {
+    position: fixed;
+    top: 64px;
+    right: 16px;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.bg-picker label {
+    color: var(--ui-fg);
+    font-size: 18px;
+}
+
+.bg-picker input[type="color"] {
+    width: 36px;
+    height: 36px;
+    border: 1px solid var(--clock-border);
+    border-radius: 6px;
+    background: transparent;
+    padding: 0;
+}
+
+.bg-picker button {
+    background: transparent;
+    color: var(--ui-fg);
+    border: 1px solid var(--clock-border);
+    border-radius: 999px;
+    padding: 8px 12px;
+    font-family: inherit;
+    font-size: 18px;
+    cursor: pointer;
+}
+
+.bg-picker button:hover {
+    background: var(--clock-bg);
+}
+
+/* クリーン表示: 設定UIを隠す */
+.controls-hidden .theme-toggle,
+.controls-hidden .bg-picker,
+.controls-hidden .ui-help {
+    display: none !important;
+}
+
+/* 説明文（UIと一緒に表示/非表示） */
+.ui-help {
+    position: fixed;
+    top: 112px; /* theme-toggle(16) + bg-picker(64) の下あたり */
+    right: 16px;
+    z-index: 100;
+    color: var(--ui-fg);
+    background: transparent;
+    border: 1px solid var(--clock-border);
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 18px;
+    line-height: 1.4;
+    max-width: 340px;
+    backdrop-filter: none;
+}
+
+.bg-picker .transparent-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 18px;
+    cursor: pointer;
+}
+
+.bg-picker input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+}
+
+.bg-picker input[disabled] {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.clock {
+    width: 350px;
+    height: 350px;
+    border-radius: 50%;
+    background: var(--clock-bg);
+    border: 10px solid var(--clock-border);
+    box-shadow: 0 0 30px var(--shadow-outer), 
+                inset 0 0 30px var(--shadow-inner);
+    position: relative;
+}
+
+.clock-face {
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
+
+.hand {
+    position: absolute;
+    bottom: 50%;
+    left: 50%;
+    transform-origin: 50% 100%;
+    z-index: 10;
+}
+
+.hour-hand {
+    width: 8px;
+    height: 100px;
+    background: var(--hand-hour);
+    border-radius: 4px;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+    transform: translateX(-50%) rotate(0deg);
+}
+
+.minute-hand {
+    width: 5px;
+    height: 140px;
+    background: var(--hand-minute);
+    border-radius: 3px;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+    transform: translateX(-50%) rotate(0deg);
+}
+
+.second-hand {
+    width: 2px;
+    height: 150px;
+    background: var(--hand-second);
+    border-radius: 1px;
+    box-shadow: 0 0 5px rgba(255, 68, 68, 0.5);
+    transform: translateX(-50%) rotate(0deg);
+    transition: all 0.05s cubic-bezier(0.1, 2.7, 0.58, 1);
+}
+
+.center-point {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 16px;
+    height: 16px;
+    background: var(--center);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 20;
+    border: 2px solid var(--center-border);
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+/* 文字盤のスタイリング - 真円に配置する方法 */
+.clock-face .number {
+    position: absolute;
+    width: 30px;
+    height: 30px;
+    font-weight: 600;
+    font-size: 18px;
+    text-align: center;
+    line-height: 30px;
+    top: 50%;
+    left: 50%;
+    transform-origin: center;
+}
+
+/* 各数字を円周上に配置 */
+.number-1 { transform: translate(-50%, -50%) rotate(30deg) translateY(-135px) rotate(-30deg); }
+.number-2 { transform: translate(-50%, -50%) rotate(60deg) translateY(-135px) rotate(-60deg); }
+.number-3 { transform: translate(-50%, -50%) rotate(90deg) translateY(-135px) rotate(-90deg); }
+.number-4 { transform: translate(-50%, -50%) rotate(120deg) translateY(-135px) rotate(-120deg); }
+.number-5 { transform: translate(-50%, -50%) rotate(150deg) translateY(-135px) rotate(-150deg); }
+.number-6 { transform: translate(-50%, -50%) rotate(180deg) translateY(-135px) rotate(-180deg); }
+.number-7 { transform: translate(-50%, -50%) rotate(210deg) translateY(-135px) rotate(-210deg); }
+.number-8 { transform: translate(-50%, -50%) rotate(240deg) translateY(-135px) rotate(-240deg); }
+.number-9 { transform: translate(-50%, -50%) rotate(270deg) translateY(-135px) rotate(-270deg); }
+.number-10 { transform: translate(-50%, -50%) rotate(300deg) translateY(-135px) rotate(-300deg); }
+.number-11 { transform: translate(-50%, -50%) rotate(330deg) translateY(-135px) rotate(-330deg); }
+.number-12 { transform: translate(-50%, -50%) rotate(0deg) translateY(-135px) rotate(0deg); }
+
+/* コンテンツを追加 */
+.number-1::before { content: '1'; }
+.number-2::before { content: '2'; }
+.number-3::before { content: '3'; }
+.number-4::before { content: '4'; }
+.number-5::before { content: '5'; }
+.number-6::before { content: '6'; }
+.number-7::before { content: '7'; }
+.number-8::before { content: '8'; }
+.number-9::before { content: '9'; }
+.number-10::before { content: '10'; }
+.number-11::before { content: '11'; }
+.number-12::before { content: '12'; }
+
+.number-3, .number-6, .number-9, .number-12 {
+    color: var(--number-major);
+}
+
+.number-1, .number-2, .number-4, .number-5, .number-7, .number-8, .number-10, .number-11 {
+    color: var(--number-minor);
+}
+
+.clock-info {
+    position: absolute;
+    bottom: -40px;
+    width: 100%;
+    text-align: center;
+    font-size: 18px;
+    color: var(--info);
+    font-weight: 300;
+}
