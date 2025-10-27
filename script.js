@@ -186,17 +186,18 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // ページネーションコンテナの表示制御を改善
             // 常にページネーションコンテナは表示し、個別要素の表示を制御
-            paginationContainer.style.display = 'flex';
-            
-            // ページ制御部分（番号、前後ボタン）の表示制御
-            const paginationControls = paginationContainer.querySelector('.pagination');
-            if (paginationControls) {
-                if (totalPages <= 1) {
-                    paginationControls.style.display = 'none';
-                } else {
-                    paginationControls.style.display = 'flex';
+            paginationContainers.forEach(container => {
+                container.style.display = 'flex';
+                // ページ制御部分（番号、前後ボタン）の表示制御
+                const paginationControls = container.querySelector('.pagination');
+                if (paginationControls) {
+                    if (totalPages <= 1) {
+                        paginationControls.style.display = 'none';
+                    } else {
+                        paginationControls.style.display = 'flex';
+                    }
                 }
-            }
+            });
         } else if (paginationEnabled) {
             // ページネーション有効だが項目がない場合
             filteredRows.forEach(item => {
@@ -205,11 +206,13 @@ document.addEventListener('DOMContentLoaded', function() {
             });
             
             // ページネーションコンテナは表示し、制御部分のみ非表示
-            paginationContainer.style.display = 'flex';
-            const paginationControls = paginationContainer.querySelector('.pagination');
-            if (paginationControls) {
-                paginationControls.style.display = 'none';
-            }
+            paginationContainers.forEach(container => {
+                container.style.display = 'flex';
+                const paginationControls = container.querySelector('.pagination');
+                if (paginationControls) {
+                    paginationControls.style.display = 'none';
+                }
+            });
             
             updatePaginationInfo(totalItems);
         } else {
