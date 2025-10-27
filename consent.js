@@ -21,32 +21,6 @@
     } catch (e) {}
   }
 
-  function isEEAHeuristic() {
-    // Allow explicit override for testing or GTM cooperation
-    if (window.__forceConsentBanner === true) return true;
-    if (window.__eeaFlag === true) return true; // external signal can set this true
-
-    // Basic heuristics: language + timezone
-    try {
-      var lang = (navigator.language || navigator.userLanguage || '').toLowerCase();
-      var eeaLangs = [
-        'de','fr','it','es','nl','sv','da','fi','no','pl','cs','sk','sl','hu','el','pt','ro','bg',
-        'hr','lt','lv','et','ga','mt','is','en-gb'
-      ];
-      var likelyEEALang = eeaLangs.some(function(code){ return lang === code || lang.startsWith(code+'-'); });
-
-      var tz = (Intl.DateTimeFormat && Intl.DateTimeFormat().resolvedOptions().timeZone) || '';
-      var eeaTZ = [
-        'Europe/', 'Atlantic/Madeira', 'Atlantic/Canary', 'Atlantic/Faroe'
-      ];
-      var likelyEEATZ = eeaTZ.some(function(prefix){ return tz.indexOf(prefix) === 0; });
-
-      return likelyEEALang || likelyEEATZ;
-    } catch(e) {
-      return false;
-    }
-  }
-
   function ensureStyles(){
     if (document.getElementById(STYLE_ID)) return;
     var css = ''+
@@ -171,7 +145,7 @@
 
     var choice = null;
     try { choice = localStorage.getItem(STORAGE_KEY); } catch(e){}
-    if (!choice && isEEAHeuristic()) {
+    if (!choice) {
       showBanner();
     }
   }
