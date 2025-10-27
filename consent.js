@@ -62,6 +62,8 @@
     acceptBtn.className = 'btn-accept';
     acceptBtn.textContent = '同意する';
     acceptBtn.addEventListener('click', function(){
+      var prev = null;
+      try { prev = localStorage.getItem(STORAGE_KEY); } catch(e) {}
       try { localStorage.setItem(STORAGE_KEY,'granted'); } catch(e) {}
       if (typeof gtag === 'function') {
         gtag('consent','update',{
@@ -70,8 +72,15 @@
           ad_user_data:'granted',
           ad_personalization:'granted'
         });
+        // 初回同意時にページビューを確実に計測 or タグを再初期化
+        // 1) Googleタグがすでに動作中なら page_view を明示送信
+        try { gtag('event','page_view'); } catch(e) {}
       }
       hideBanner();
+      // 2) もしこのページでGoogleタグが同意要件でブロックされていた場合に備えてリロード
+      if (prev !== 'granted') {
+        setTimeout(function(){ try { location.reload(); } catch(e) {} }, 80);
+      }
     });
 
     var rejectBtn = document.createElement('button');
