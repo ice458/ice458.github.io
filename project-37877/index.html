@@ -9,7 +9,19 @@ changefreq: monthly
 <html lang="ja">
 
 <head>
-    <!-- Google Tag Manager -->
+    <!-- Consent Mode default (runs before GTM) -->
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('consent', 'default', {
+    ad_storage: 'denied',
+    analytics_storage: 'denied',
+    ad_user_data: 'denied',
+    ad_personalization: 'denied',
+    wait_for_update: 500
+  });
+</script>
+<!-- Google Tag Manager -->
     <script>(function (w, d, s, l, i) {
             w[l] = w[l] || []; w[l].push({
                 'gtm.start':
@@ -281,6 +293,8 @@ changefreq: monthly
         </div>
 
     </footer>
+
+  <script src="consent.js" defer></script>
 </body>
 
 </html>
