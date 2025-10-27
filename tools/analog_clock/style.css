@@ -110,7 +110,8 @@ body {
 /* クリーン表示: 設定UIを隠す */
 .controls-hidden .theme-toggle,
 .controls-hidden .bg-picker,
-.controls-hidden .ui-help {
+.controls-hidden .ui-help,
+.controls-hidden .page-footer {
     display: none !important;
 }
 
@@ -274,4 +275,27 @@ body {
     font-size: 18px;
     color: var(--info);
     font-weight: 300;
+}
+
+/* フッター: サイトトップ/プライバシーリンク（UIと同様に隠せる） */
+.page-footer {
+    position: fixed;
+    left: 50%;
+    bottom: 16px;
+    transform: translateX(-50%);
+    z-index: 100;
+    color: var(--ui-fg);
+    background: transparent;
+    border: 1px solid var(--clock-border);
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-size: 14px;
+}
+.page-footer a {
+    color: var(--ui-fg);
+    text-decoration: none;
+    margin: 0 6px;
+}
+.page-footer a:hover {
+    text-decoration: underline;
 }

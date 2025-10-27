@@ -1,6 +1,13 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
+    <!-- Google Tag Manager -->
+    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-MMZ5XH4V');</script>
+    <!-- End Google Tag Manager -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>アナログ時計</title>
@@ -8,6 +15,10 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;600&display=swap" rel="stylesheet">
 </head>
 <body>
+    <!-- Google Tag Manager (noscript) -->
+    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-MMZ5XH4V"
+    height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    <!-- End Google Tag Manager (noscript) -->
     <div class="theme-toggle">
         <button id="themeToggle" type="button" aria-label="テーマ切り替え">ライト/ダーク</button>
     </div>
@@ -19,11 +30,11 @@
     </div>
     <div class="ui-help" aria-live="polite">
         ・UキーでUIの表示/非表示を切替。<br>
-        ・URL末尾に ?ui=off を付けても非表示にできます。
+        ・URL末尾に ?ui=off を付けても非表示にできます。<br>
+        ・OBSのブラウザソースを使う場合、カスタムCSSを空欄にして背景透明を選択します。
     </div>
     <div class="clock">
         <div class="clock-face">
-            <!-- 数字マーカー -->
             <div class="number number-1"></div>
             <div class="number number-2"></div>
             <div class="number number-3"></div>
@@ -37,13 +48,19 @@
             <div class="number number-11"></div>
             <div class="number number-12"></div>
             
-            <!-- 時計の針 -->
             <div class="hand hour-hand"></div>
             <div class="hand minute-hand"></div>
             <div class="hand second-hand"></div>
             <div class="center-point"></div>
         </div>
     </div>
+    <footer class="page-footer" role="contentinfo" aria-label="サイトナビゲーション">
+        <a href="../../index.html">ice458の物置き</a>
+        <span aria-hidden="true">·</span>
+        <a href="../../tools.html">Webツール一覧</a>
+        <span aria-hidden="true">·</span>
+        <a href="../../privacy.html">プライバシーポリシー</a>
+    </footer>
     <script src="script.js"></script>
 </body>
 </html>
