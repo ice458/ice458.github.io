@@ -159,6 +159,9 @@ body {
     box-shadow: 0 0 6.9vmin var(--shadow-outer), 
                 inset 0 0 6.9vmin var(--shadow-inner);
     position: relative;
+    /* Safari対策: レンダリング最適化 */
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
 }
 
 .clock-face {
@@ -173,6 +176,10 @@ body {
     left: 50%;
     transform-origin: 50% 100%;
     z-index: 10;
+    /* Safari対策: アニメーション最適化 */
+    will-change: transform;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
 }
 
 .hour-hand {
@@ -200,7 +207,9 @@ body {
     border-radius: 0.2vmin;
     box-shadow: 0 0 1.1vmin rgba(255, 68, 68, 0.5);
     transform: translateX(-50%) rotate(0deg);
+    -webkit-transform: translateX(-50%) rotate(0deg);
     transition: all 0.05s cubic-bezier(0.1, 2.7, 0.58, 1);
+    -webkit-transition: all 0.05s cubic-bezier(0.1, 2.7, 0.58, 1);
 }
 
 .center-point {
@@ -228,8 +237,10 @@ body {
     line-height: 6.9vmin;
     top: 50%;
     left: 50%;
-    transform-origin: center;
-}
+    transform-origin: center;    /* Safari対策: レンダリング最適化 */
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    -webkit-font-smoothing: antialiased;}
 
 /* 各数字を円周上に配置 */
 .number-1 { transform: translate(-50%, -50%) rotate(30deg) translateY(-30.9vmin) rotate(-30deg); }
