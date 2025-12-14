@@ -183,11 +183,13 @@ updateClock();
     };
     setUiHidden(computeInitialHide());
 
-    // キーボードでトグル（Uキー）
-    window.addEventListener('keydown', (e) => {
-        if (e.key && e.key.toLowerCase() === 'u') {
-            const hidden = root.classList.contains('controls-hidden');
-            setUiHidden(!hidden);
+    // 画面クリックでUIトグル（UI要素以外をクリックした場合）
+    document.addEventListener('click', (e) => {
+        // クリックされた要素がインタラクティブな要素（ボタン、入力など）やその子要素であれば何もしない
+        if (e.target.closest('button, input, label, a')) {
+            return;
         }
+        const hidden = root.classList.contains('controls-hidden');
+        setUiHidden(!hidden);
     });
 })();
