@@ -151,13 +151,13 @@ body {
 }
 
 .clock {
-    width: 350px;
-    height: 350px;
+    width: 80vmin;
+    height: 80vmin;
     border-radius: 50%;
     background: var(--clock-bg);
-    border: 10px solid var(--clock-border);
-    box-shadow: 0 0 30px var(--shadow-outer), 
-                inset 0 0 30px var(--shadow-inner);
+    border: 2.3vmin solid var(--clock-border);
+    box-shadow: 0 0 6.9vmin var(--shadow-outer), 
+                inset 0 0 6.9vmin var(--shadow-inner);
     position: relative;
 }
 
@@ -176,29 +176,29 @@ body {
 }
 
 .hour-hand {
-    width: 8px;
-    height: 100px;
+    width: 1.8vmin;
+    height: 22.9vmin;
     background: var(--hand-hour);
-    border-radius: 4px;
-    box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+    border-radius: 0.9vmin;
+    box-shadow: 0 0 1.1vmin rgba(0, 0, 0, 0.3);
     transform: translateX(-50%) rotate(0deg);
 }
 
 .minute-hand {
-    width: 5px;
-    height: 140px;
+    width: 1.1vmin;
+    height: 32vmin;
     background: var(--hand-minute);
-    border-radius: 3px;
-    box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+    border-radius: 0.7vmin;
+    box-shadow: 0 0 1.1vmin rgba(0, 0, 0, 0.3);
     transform: translateX(-50%) rotate(0deg);
 }
 
 .second-hand {
-    width: 2px;
-    height: 150px;
+    width: 0.5vmin;
+    height: 34.3vmin;
     background: var(--hand-second);
-    border-radius: 1px;
-    box-shadow: 0 0 5px rgba(255, 68, 68, 0.5);
+    border-radius: 0.2vmin;
+    box-shadow: 0 0 1.1vmin rgba(255, 68, 68, 0.5);
     transform: translateX(-50%) rotate(0deg);
     transition: all 0.05s cubic-bezier(0.1, 2.7, 0.58, 1);
 }
@@ -207,43 +207,43 @@ body {
     position: absolute;
     top: 50%;
     left: 50%;
-    width: 16px;
-    height: 16px;
+    width: 3.7vmin;
+    height: 3.7vmin;
     background: var(--center);
     border-radius: 50%;
     transform: translate(-50%, -50%);
     z-index: 20;
-    border: 2px solid var(--center-border);
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    border: 0.5vmin solid var(--center-border);
+    box-shadow: 0 0 2.3vmin rgba(0, 0, 0, 0.5);
 }
 
-/* 文字盤のスタイリング - 真円に配置する方法 */
+/* 文字盤のスタイリング */
 .clock-face .number {
     position: absolute;
-    width: 30px;
-    height: 30px;
+    width: 6.9vmin;
+    height: 6.9vmin;
     font-weight: 600;
-    font-size: 18px;
+    font-size: 4.1vmin;
     text-align: center;
-    line-height: 30px;
+    line-height: 6.9vmin;
     top: 50%;
     left: 50%;
     transform-origin: center;
 }
 
 /* 各数字を円周上に配置 */
-.number-1 { transform: translate(-50%, -50%) rotate(30deg) translateY(-135px) rotate(-30deg); }
-.number-2 { transform: translate(-50%, -50%) rotate(60deg) translateY(-135px) rotate(-60deg); }
-.number-3 { transform: translate(-50%, -50%) rotate(90deg) translateY(-135px) rotate(-90deg); }
-.number-4 { transform: translate(-50%, -50%) rotate(120deg) translateY(-135px) rotate(-120deg); }
-.number-5 { transform: translate(-50%, -50%) rotate(150deg) translateY(-135px) rotate(-150deg); }
-.number-6 { transform: translate(-50%, -50%) rotate(180deg) translateY(-135px) rotate(-180deg); }
-.number-7 { transform: translate(-50%, -50%) rotate(210deg) translateY(-135px) rotate(-210deg); }
-.number-8 { transform: translate(-50%, -50%) rotate(240deg) translateY(-135px) rotate(-240deg); }
-.number-9 { transform: translate(-50%, -50%) rotate(270deg) translateY(-135px) rotate(-270deg); }
-.number-10 { transform: translate(-50%, -50%) rotate(300deg) translateY(-135px) rotate(-300deg); }
-.number-11 { transform: translate(-50%, -50%) rotate(330deg) translateY(-135px) rotate(-330deg); }
-.number-12 { transform: translate(-50%, -50%) rotate(0deg) translateY(-135px) rotate(0deg); }
+.number-1 { transform: translate(-50%, -50%) rotate(30deg) translateY(-30.9vmin) rotate(-30deg); }
+.number-2 { transform: translate(-50%, -50%) rotate(60deg) translateY(-30.9vmin) rotate(-60deg); }
+.number-3 { transform: translate(-50%, -50%) rotate(90deg) translateY(-30.9vmin) rotate(-90deg); }
+.number-4 { transform: translate(-50%, -50%) rotate(120deg) translateY(-30.9vmin) rotate(-120deg); }
+.number-5 { transform: translate(-50%, -50%) rotate(150deg) translateY(-30.9vmin) rotate(-150deg); }
+.number-6 { transform: translate(-50%, -50%) rotate(180deg) translateY(-30.9vmin) rotate(-180deg); }
+.number-7 { transform: translate(-50%, -50%) rotate(210deg) translateY(-30.9vmin) rotate(-210deg); }
+.number-8 { transform: translate(-50%, -50%) rotate(240deg) translateY(-30.9vmin) rotate(-240deg); }
+.number-9 { transform: translate(-50%, -50%) rotate(270deg) translateY(-30.9vmin) rotate(-270deg); }
+.number-10 { transform: translate(-50%, -50%) rotate(300deg) translateY(-30.9vmin) rotate(-300deg); }
+.number-11 { transform: translate(-50%, -50%) rotate(330deg) translateY(-30.9vmin) rotate(-330deg); }
+.number-12 { transform: translate(-50%, -50%) rotate(0deg) translateY(-30.9vmin) rotate(0deg); }
 
 /* コンテンツを追加 */
 .number-1::before { content: '1'; }
