@@ -1,0 +1,310 @@
+---
+layout: null
+permalink: /files/RPN35/
+sitemap:
+  priority: 0.7
+  changefreq: monthly
+---
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+<!-- Consent Mode default (runs before GTM) -->
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('consent', 'default', {
+    ad_storage: 'denied',
+    analytics_storage: 'denied',
+    ad_user_data: 'denied',
+    ad_personalization: 'denied',
+    wait_for_update: 2000
+  });
+</script>
+<!-- Google Analytics cookie domain override (host-only) -->
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('set','cookie_domain','none');
+</script>
+<!-- Google Tag Manager -->
+<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','GTM-MMZ5XH4V');</script>
+<!-- End Google Tag Manager -->
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RPN35 マニュアル - ice458の物置き</title>
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://ice458.github.io/files/RPN35/">
+    
+    <meta name="description" content="RPN35（逆ポーランド記法電卓）のマニュアルバージョン管理ページです。各バージョンのマニュアルをダウンロードできます。">
+    <meta name="keywords" content="RPN35,電卓,マニュアル,逆ポーランド記法,ice458">
+    <meta name="author" content="ice458">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://ice458.github.io/files/RPN35/">
+    <meta property="og:title" content="RPN35 マニュアル">
+    <meta property="og:description" content="RPN35（逆ポーランド記法電卓）のマニュアルバージョン管理ページです。">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://ice458.github.io/files/RPN35/">
+    <meta property="twitter:title" content="RPN35 マニュアル">
+    <meta property="twitter:description" content="RPN35（逆ポーランド記法電卓）のマニュアルバージョン管理ページです。">
+
+    <link rel="stylesheet" href="../../styles.css">
+    <!-- ファビコン設定 -->
+    <link rel="icon" type="image/x-icon" href="../../favicon.ico">
+    <link rel="icon" type="image/png" sizes="16x16" href="../../favicon-16x16.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="../../favicon-32x32.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="../../favicon-180x180.png">
+    <link rel="manifest" href="../../site.webmanifest">
+
+    <!-- ブラウザ固有のメタタグ -->
+    <meta name="theme-color" content="#aaaeae">
+    <meta name="msapplication-TileColor" content="#aaaeae">
+    <meta name="msapplication-TileImage" content="../../favicon-180x180.png">
+
+    <style>
+        .manual-table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: white;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+
+        .manual-table thead {
+            background-color: #4a90e2;
+            color: white;
+        }
+
+        .manual-table thead th {
+            padding: 16px;
+            text-align: left;
+            font-weight: 600;
+            border-bottom: 2px solid #357abd;
+        }
+
+        .manual-table tbody tr {
+            border-bottom: 1px solid #e2e8f0;
+            transition: background-color 0.3s ease;
+        }
+
+        .manual-table tbody tr:hover {
+            background-color: #f7f9fc;
+        }
+
+        .manual-table tbody td {
+            padding: 16px;
+            vertical-align: middle;
+            white-space: normal;
+        }
+
+        .manual-table td:nth-child(1),
+        .manual-table td:nth-child(2),
+        .manual-table td:nth-child(3),
+        .manual-table td:nth-child(4) {
+            white-space: nowrap;
+        }
+
+        .version-badge {
+            display: inline-block;
+            background-color: #4a90e2;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .download-link {
+            display: inline-block;
+            background-color: #2ecc71;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 4px;
+            text-decoration: none;
+            transition: background-color 0.3s ease;
+            font-weight: 500;
+        }
+
+        .download-link:hover {
+            background-color: #27ae60;
+        }
+
+        .latest-badge {
+            display: inline-block;
+            background-color: #e74c3c;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            margin-left: 8px;
+        }
+
+        .changes-list {
+            color: #555;
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        .changes-list ul {
+            margin: 8px 0 8px 20px;
+            padding-left: 0;
+        }
+
+        .changes-list li {
+            margin: 4px 0;
+        }
+
+        .firmware-version {
+            background-color: #f0f4f8;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+        }
+
+        @media (max-width: 768px) {
+            .manual-table {
+                font-size: 0.9rem;
+            }
+
+            .manual-table thead th,
+            .manual-table tbody td {
+                padding: 12px;
+            }
+
+            .download-link {
+                padding: 6px 12px;
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-MMZ5XH4V"
+height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+<!-- End Google Tag Manager (noscript) -->
+
+    <header class="site-header">
+        <div class="site-branding">
+            <div class="site-logo">
+                <img src="../../logo.png" alt="ロゴ" class="logo-img">
+            </div>
+            <h1 class="site-title"><a href="../../index.html">ice458の物置き</a></h1>
+        </div>
+        <nav class="site-nav">
+            <a href="../../index.html" class="nav-link active">プロジェクト</a>
+            <a href="../../blog.html" class="nav-link">雑多なメモ等</a>
+        </nav>
+    </header>
+
+    <main class="site-main">
+        <!-- パンくずリスト -->
+        <nav class="breadcrumb" aria-label="パンくずリスト">
+            <ol class="breadcrumb-list">
+                <li class="breadcrumb-item">
+                    <a href="../../index.html" class="breadcrumb-link">ホーム</a>
+                </li>
+                <li class="breadcrumb-item">
+                    <span class="breadcrumb-current">RPN35 マニュアル</span>
+                </li>
+            </ol>
+        </nav>
+
+        <article class="main-content">
+            <div class="article-header">
+                <h1 class="article-title">RPN35 マニュアル</h1>
+            </div>
+
+            <section class="entry-content">
+                <div class="article-content">
+                <p class="description">
+                    RPN35（逆ポーランド記法電卓）のマニュアルです。下記から各バージョンのマニュアルをダウンロードできます。
+                </p>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="manual-table">
+                        <thead>
+                            <tr>
+                                <th>バージョン</th>
+                                <th>ファイル名</th>
+                                <th>対応ファームウエア</th>
+                                <th>公開日</th>
+                                <th>主な追加内容</th>
+                                <th>ダウンロード</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <span class="version-badge">Rev.1.1</span>
+                                    <span class="latest-badge">最新版</span>
+                                </td>
+                                <td><code>instruction_manual_rev1.1.pdf</code></td>
+                                <td><span class="firmware-version">v0.2</span></td>
+                                <td>2025年12月</td>
+                                <td class="changes-list">
+                                    <ul>
+                                        <li>機能追加</li>
+                                    </ul>
+                                </td>
+                                <td>
+                                    <a href="./instruction_manual_rev1.1.pdf" class="download-link">ダウンロード</a>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <span class="version-badge">Rev.1.0</span>
+                                </td>
+                                <td><code>instruction_manual.pdf</code></td>
+                                <td><span class="firmware-version">v0.1</span></td>
+                                <td>2025年09月</td>
+                                <td class="changes-list">
+                                    <ul>
+                                        <li>初版マニュアル</li>
+                                    </ul>
+                                </td>
+                                <td>
+                                    <a href="./instruction_manual.pdf" class="download-link">ダウンロード</a>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+            </section>
+
+            <div class="article-footer">
+                <div class="back-link">
+                    <a href="../../index.html" class="back-button">← 物置きに戻る</a>
+                </div>
+                <div class="article-info">
+                    <p>最終更新: 2025年12月</p>
+                </div>
+            </div>
+        </article>
+    </main>
+
+    <footer class="site-footer">
+        <div class="site-info">
+            <p>&copy; 2025 ice458の物置き　|　<a href="../../privacy.html">プライバシーポリシー</a></p>
+        </div>
+    </footer>
+
+    <script src="/consent.js" defer></script>
+</body>
+
+</html>
