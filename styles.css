@@ -1337,10 +1337,9 @@ a:hover {
 /* 製作過程 */
 .process-step {
     background-color: #fafafa;
-    border-left: 4px solid #2563eb;
     padding: 24px;
     margin-bottom: 24px;
-    border-radius: 0 8px 8px 0;
+    border-radius: 8px;
 }
 
 .process-step h3 {
