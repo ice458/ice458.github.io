@@ -141,6 +141,18 @@
     } catch(e) {}
   }
 
+  function updateFooterCopyrightYear(){
+    try {
+      var year = String(new Date().getFullYear());
+      var targets = document.querySelectorAll('footer p, .site-footer p');
+      targets.forEach(function(node){
+        if (!node || !node.innerHTML) return;
+        if (node.innerHTML.indexOf('&copy;') === -1 && node.innerHTML.indexOf('©') === -1) return;
+        node.innerHTML = node.innerHTML.replace(/(&copy;|©)\s*\d{4}/i, '$1 ' + year);
+      });
+    } catch(e) {}
+  }
+
   // Expose manual opener for GTM or other scripts
   window.showConsentPreferences = function(){
     try { localStorage.removeItem(STORAGE_KEY); } catch(e) {}
@@ -149,6 +161,7 @@
 
   // Init on DOM ready
   function onReady(){
+    updateFooterCopyrightYear();
     restoreConsentIfGranted();
     appendManageLink();
 
