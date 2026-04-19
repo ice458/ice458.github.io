@@ -38,7 +38,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HRTFヘッドホンアンプ - ice458の物置き</title>
-    <meta name="description" content="HRIRの畳み込みによって頭外定位と音場拡張を実現するヘッドホンアンプ兼USB DACです。RP2350とSGTL5000で、4経路256タップFIRと方向別反射・late reverb・APFデコリレーションを実時間処理しています。">
+    <meta name="description" content="HRIRの畳み込みによって頭外定位と音場拡張を実現するヘッドホンアンプ兼USB DACです。RP2350とSGTL5000で、4経路256タップFIRと方向別反射・late reverb・オールパスフィルタデコリレーションを実時間処理しています。">
     <meta name="keywords" content="HRTF,HRIR,頭外定位,ヘッドホンアンプ,USB DAC,RP2350,SGTL5000,オーディオ,電子工作,DIY,ice458">
     <meta name="author" content="ice458">
 
@@ -49,14 +49,14 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     <meta property="og:type" content="article">
     <meta property="og:url" content="https://ice458.github.io/project-15750/">
     <meta property="og:title" content="HRTFヘッドホンアンプ - ice458の物置き">
-    <meta property="og:description" content="HRIRの畳み込みによって頭外定位と音場拡張を実現するヘッドホンアンプ兼USB DACです。RP2350とSGTL5000で、4経路256タップFIRと方向別反射・late reverb・APFデコリレーションを実時間処理しています。">
+    <meta property="og:description" content="HRIRの畳み込みによって頭外定位と音場拡張を実現するヘッドホンアンプ兼USB DACです。RP2350とSGTL5000で、4経路256タップFIRと方向別反射・late reverb・オールパスフィルタデコリレーションを実時間処理しています。">
     <meta property="og:image" content="https://ice458.github.io/logo.png">
 
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image">
     <meta property="twitter:url" content="https://ice458.github.io/project-15750/">
     <meta property="twitter:title" content="HRTFヘッドホンアンプ - ice458の物置き">
-    <meta property="twitter:description" content="HRIRの畳み込みによって頭外定位と音場拡張を実現するヘッドホンアンプ兼USB DACです。RP2350とSGTL5000で、4経路256タップFIRと方向別反射・late reverb・APFデコリレーションを実時間処理しています。">
+    <meta property="twitter:description" content="HRIRの畳み込みによって頭外定位と音場拡張を実現するヘッドホンアンプ兼USB DACです。RP2350とSGTL5000で、4経路256タップFIRと方向別反射・late reverb・オールパスフィルタデコリレーションを実時間処理しています。">
     <meta property="twitter:image" content="https://ice458.github.io/logo.png">
 
     <link rel="stylesheet" href="../styles.css">
@@ -125,7 +125,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
             <div class="article-content">
                 <div class="article-section">
-                    <p>HRIR (頭部インパルス応答) の畳み込みによって、ヘッドホン再生でも音像を頭の外へ出す「頭外定位」を狙ったヘッドホンアンプ兼USB DACを作りました。RP2350 と SGTL5000 を使い、4経路 256タップの FIR 畳み込みに加え、方向別の反射処理や late reverb、APF によるデコリレーション処理までを 48kHz のまま実時間で処理しています。</p>
+                    <p>HRIR (頭部インパルス応答) の畳み込みによって、ヘッドホン再生でも音像を頭の外へ出す「頭外定位」を狙ったヘッドホンアンプ兼USB DACを作りました。RP2350 と SGTL5000 を使い、4経路 256タップの FIR 畳み込みに加え、方向別の反射処理や late reverb、オールパスフィルタ によるデコリレーション処理までを 48kHz のまま実時間で処理しています。</p>
                     <div class="article-image">
                         <img src="img/IMG_9463.png" alt="HRTFヘッドホンアンプの外観">
                         <p class="image-caption">完成した HRTF ヘッドホンアンプ</p>
@@ -202,7 +202,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
          → late reverb (6 本の遅延線)
        direct + early + late
          → Mid/Side 化
-         → Side に APF デコリレーション (3段/耳)
+         → Side に オールパスフィルタ デコリレーション (3段/耳)
          → dry/wet 合成
   → ヘッドルーム & ピークリミット
   → volume (ホスト音量 × ボタン音量の Q15 合成ゲイン)
@@ -221,7 +221,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                         <li><strong>方向別反射 FIR:</strong> 75°/110°/135°/180°/225°/250°/285° の 7 方向について、各 24 タップの HRIR を別途生成しておき、Side 信号を方向ごとの短い FIR に通します。</li>
                         <li><strong>方向別遅延:</strong> 各方向に 8 / 8 / 17 / 17 / 28 / 28 / 42 ms の遅延を与えて合成し、反射音の到達時間差を模倣します。</li>
                         <li><strong>late reverb:</strong> 反射成分と early 成分の差分を励振として与え、6 本の遅延線でフィードバック残響を生成します。</li>
-                        <li><strong>APF デコリレーション:</strong> Mid/Side に分解した Side 成分を、1 耳あたり 3 段の全域通過フィルタに通し、左右の位相相関を下げて包囲感を増加させます。</li>
+                        <li><strong>オールパスフィルタ デコリレーション:</strong> Mid/Side に分解した Side 成分を、1 耳あたり 3 段の全域通過フィルタに通し、左右の位相相関を下げて包囲感を増加させます。</li>
                     </ul>
 
                     <p>EXP は定位そのものを作る処理ではなく、既に作られた頭外定位感の周りに空間感を加える補助的な位置づけです。定位感だけが欲しい場合は EXP を OFF にできるようにしています。</p>
