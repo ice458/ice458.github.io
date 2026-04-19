@@ -242,7 +242,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                     <p>本機ではフィードバック送出を完全に無効化し、代わりに消費側 (I2S 送出側) で流量を吸収する方針としました。USB 側はリングバッファに受信データを積みます。リング残量がデッドバンド (±128 語) を超えたら、そのバッチ内で最初に見つかる無音フレームを複製または破棄し、無音が見つからずハードリミット (±768 語) を超える場合のみバッチ全体で線型補完によるリサンプルを行います。線型補完といっても N=16 程度の動きなので、ピッチ変動は 6 cent 以下に収まり、聴感上はほぼ検知できません。</p>
 
                     <h3>Alt 切替時のハード保護</h3>
-                    <p>Windows 側で既定の再生デバイスを切り替えると、UAC2 は Alt 0 ⇆ Alt 1 の切り替えが頻繁に発生します。Pico SDK の USB ドライバには、すべての EP が閉じられるまで DPRAM のポインタをリセットしない仕様があり、CDC を常時開いている本機の構成ではこの切り替えを繰り返すうちに DPRAM が枯渇し、5 回目で <span class="inline-code">hard_assert</span> に落ちる問題がありました。これは <span class="inline-code">TUP_DCD_EDPT_ISO_ALLOC = 1</span> を有効にし、起動時に ISO 用バッファを 1 度だけ固定確保する方式で回避しています。あわせて Alt 0 遷移時に受信中断フラグが残留し、Alt 1 復帰時に panic する問題も、<span class="inline-code">ep_buf_ctrl</span> を手動でクリアして手動 disarm することで解消しました。</p>
+                    <p>Windows 側で既定の再生デバイスを切り替えると、UAC2 は Alt 0 ⇆ Alt 1 の切り替えが頻繁に発生します。Pico SDK の USB ドライバには、すべての EP が閉じられるまで DPRAM のポインタをリセットしない仕様があり、CDC を常時開いている本機の構成ではこの切り替えを繰り返すうちに DPRAM が枯渇し、5 回目で <span class="inline-code">hard_assert</span> に落ちる問題がありました。これは <span class="inline-code">TUP_DCD_EDPT_ISO_ALLOC = 1</span> を有効にし、起動時に ISO 用バッファを 1 度だけ固定確保する方式で回避しています。あわせて Alt 0 遷移時に受信中断フラグが残留し、Alt 1 復帰時に panic する問題も、ISO エンドポイントのバッファ制御レジスタを手動でクリアして受信を停止させることで解消しました。</p>
                 </div>
 
                 <div class="article-section">
