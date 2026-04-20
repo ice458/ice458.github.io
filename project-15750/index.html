@@ -38,7 +38,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HRTFヘッドホンアンプ - ice458の物置き</title>
-    <meta name="description" content="HRIRの畳み込みによって頭外定位と音場拡張を実現するヘッドホンアンプ兼USB DACです。RP2350とSGTL5000で、4経路256タップFIRと方向別反射・late reverb・オールパスフィルタデコリレーションを実時間処理しています。">
+    <meta name="description" content="HRIRの畳み込みによって頭外定位と音場拡張を実現するヘッドホンアンプ兼USB DACです。RP2350とSGTL5000で、4経路256タップFIRと方向別反射・後期残響・オールパスフィルタによるデコリレーションを実時間処理しています。">
     <meta name="keywords" content="HRTF,HRIR,頭外定位,ヘッドホンアンプ,USB DAC,RP2350,SGTL5000,オーディオ,電子工作,DIY,ice458">
     <meta name="author" content="ice458">
 
@@ -49,14 +49,14 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     <meta property="og:type" content="article">
     <meta property="og:url" content="https://ice458.github.io/project-15750/">
     <meta property="og:title" content="HRTFヘッドホンアンプ - ice458の物置き">
-    <meta property="og:description" content="HRIRの畳み込みによって頭外定位と音場拡張を実現するヘッドホンアンプ兼USB DACです。RP2350とSGTL5000で、4経路256タップFIRと方向別反射・late reverb・オールパスフィルタデコリレーションを実時間処理しています。">
+    <meta property="og:description" content="HRIRの畳み込みによって頭外定位と音場拡張を実現するヘッドホンアンプ兼USB DACです。RP2350とSGTL5000で、4経路256タップFIRと方向別反射・後期残響・オールパスフィルタによるデコリレーションを実時間処理しています。">
     <meta property="og:image" content="https://ice458.github.io/logo.png">
 
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image">
     <meta property="twitter:url" content="https://ice458.github.io/project-15750/">
     <meta property="twitter:title" content="HRTFヘッドホンアンプ - ice458の物置き">
-    <meta property="twitter:description" content="HRIRの畳み込みによって頭外定位と音場拡張を実現するヘッドホンアンプ兼USB DACです。RP2350とSGTL5000で、4経路256タップFIRと方向別反射・late reverb・オールパスフィルタデコリレーションを実時間処理しています。">
+    <meta property="twitter:description" content="HRIRの畳み込みによって頭外定位と音場拡張を実現するヘッドホンアンプ兼USB DACです。RP2350とSGTL5000で、4経路256タップFIRと方向別反射・後期残響・オールパスフィルタによるデコリレーションを実時間処理しています。">
     <meta property="twitter:image" content="https://ice458.github.io/logo.png">
 
     <link rel="stylesheet" href="../styles.css">
@@ -125,7 +125,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
             <div class="article-content">
                 <div class="article-section">
-                    <p>HRIR (頭部インパルス応答) の畳み込みによって、ヘッドホン再生でも音像を頭の外へ出す「頭外定位」を狙ったヘッドホンアンプ兼USB DACを作りました。RP2350 と SGTL5000 を使い、4経路 256タップの FIR 畳み込みに加え、方向別の反射処理や late reverb、オールパスフィルタ によるデコリレーション処理までを 48kHz のまま実時間で処理しています。</p>
+                    <p>HRIR (頭部インパルス応答) の畳み込みによって、ヘッドホン再生でも音像を頭の外へ出す「頭外定位」を狙ったヘッドホンアンプ兼USB DACを作りました。RP2350 と SGTL5000 を使い、4経路 256タップの FIR 畳み込みに加え、方向別の反射処理や後期残響、オールパスフィルタによるデコリレーション処理までを 48kHz のまま実時間で処理しています。</p>
 
                     <p>自作オーディオは懐かしい部品を使う方向と数値性能を追い求める方向の二極化をしているように思いますが、このようなデジタル信号処理モリモリもなかなか楽しいです。</p>
                     
@@ -151,7 +151,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                         <li><strong>HRIR データ:</strong> SADIE II データベース (±45°、 仰角0°、全被験者)</li>
                         <li><strong>主畳み込み:</strong> 4経路 × 256タップ FIR (L→L, L→R, R→L, R→R)</li>
                         <li><strong>方向別反射:</strong> 7方向 × 24タップ FIR + 8～42ms の遅延線</li>
-                        <li><strong>残響:</strong> 6 本の遅延線による late reverb</li>
+                        <li><strong>残響:</strong> 6 本の遅延線による後期残響</li>
                         <li><strong>内部演算:</strong> Q15 固定小数点 (中間値 32bit / 積和 64bit)</li>
                         <li><strong>動作クロック:</strong> SYSCLK 252MHz (OC)</li>
                         <li><strong>電源:</strong> USB 5V</li>
@@ -182,7 +182,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                         <p class="image-caption">回路図</p>
                     </div>
 
-                    <p>操作系は HRIR 切替、EXP (音場拡張) の ON/OFF、音量、状態保存の計 5 ボタンと、現在のモードを示す LED 3 個 (HRIR / EXP / PEAK) を備えています。状態の保存/復元はフラッシュの最終セクタにチェックサム付きで書き込みます。書き込み時は Core1 を停止し、DMA と PIO を完全に止めてから実行することで、オーディオ処理と安全に両立させています。</p>
+                    <p>操作系は HRIR 切替、EXP (音場拡張) の ON/OFF、音量、状態保存の計 5 ボタンと、現在の動作状態を示す LED 3 個 (HRIR / EXP / PEAK) を備えています。状態の保存/復元はフラッシュの最終セクタにチェックサム付きで書き込みます。書き込み時は Core1 を停止し、DMA と PIO を完全に止めてから実行することで、オーディオ処理と安全に両立させています。</p>
                 </div>
 
                 <div class="article-section">
@@ -190,7 +190,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                     <p>DSP は Core1 で動作させ、Core0 は USB やボタン、LED といった UI 処理に専念させる構成としました。DMA のダブルバッファ (1 バッファあたり 128 フレーム ≒ 2.67ms) が完了するたびに割り込みが入り、その中で 1 ブロック分の処理を行います。動作モードは以下の 3 種類で、ボタン操作で切り替えます。</p>
 
                     <ul>
-                        <li><strong>通過モード:</strong> 畳み込みを行わず、入力をそのまま減衰して出力します。</li>
+                        <li><strong>パススルーモード:</strong> 畳み込みを行わず、入力をそのまま減衰して出力します。</li>
                         <li><strong>頭外定位モード:</strong> 主畳み込みによって頭外定位を生成します。</li>
                         <li><strong>頭外定位＋音場拡張モード:</strong> 主畳み込みに加え、方向別反射・後期残響・オールパスフィルタによる無相関化で空間感を付加します。</li>
                     </ul>
@@ -214,7 +214,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
                     <p>ワード ⇔ 24bit 整数の変換は、それぞれ 8bit 右シフトと、飽和後に 8bit 左シフトで行います。</p>
 
-                    <h3>通過モード</h3>
+                    <h3>パススルーモード</h3>
                     <p>入力をそのまま 0.45 倍に減衰して出力します。これにより他モードとの聴覚上の音量差を低減します。</p>
 
                     <p>$$y_L = 0.45 \cdot x_L,\quad y_R = 0.45 \cdot x_R$$</p>
@@ -300,12 +300,12 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
                 <div class="article-section">
                     <h2>CPU 使用率</h2>
-                    <p>Core1 の処理サイクルを DWT CYCCNT で測定し、1 バッファ分 (128 フレーム) の処理に掛かるサイクル数を CDC 経由で 1 秒ごとに出力できるようにしています。予算は <span class="inline-code">SYSCLK × 128 / 48000</span> で、252MHz 動作時はおよそ 67 万サイクルです。EXP OFF では主 FIR が支配的で 52% 前後、EXP ON では方向別反射と late reverb が加わって 92% 前後という結果になりました。</p>
+                    <p>Core1 の処理サイクルを DWT CYCCNT で測定し、1 バッファ分 (128 フレーム) の処理に掛かるサイクル数を CDC 経由で 1 秒ごとに出力できるようにしています。予算は <span class="inline-code">SYSCLK × 128 / 48000</span> で、252MHz 動作時はおよそ 67 万サイクルです。EXP OFF では主 FIR が支配的で 52% 前後、EXP ON では方向別反射と後期残響が加わって 92% 前後という結果になりました。</p>
                 </div>
 
                 <div class="article-section">
                     <h2>使用感</h2>
-                    <p>PASSTHROUGH から HRTF モードへ切り替えると、音像が耳の近くから前方へ抜けていく変化がはっきり分かります。ただし HRIR は本来、個人の耳介・頭部形状に合わせたものが最適なので、SADIE II の被験者すべてが自分の耳に合うわけではありません。何人かを切り替えて、最も自然に前方から聞こえるデータを選ぶ使い方が基本となります。EXP を ON にすると特に残響の多いソースで空間の広がりが増え、OFF にすると定位そのものを素直に確認できます。用途に応じて切り替えやすいよう物理ボタンに割り当てています。</p>
+                    <p>パススルーモードから頭外定位モードへ切り替えると、音像が耳の近くから前方へ抜けていく変化がはっきり分かります。ただし HRIR は本来、個人の耳介・頭部形状に合わせたものが最適なので、SADIE II の被験者すべてが自分の耳に合うわけではありません。何人かを切り替えて、最も自然に前方から聞こえるデータを選ぶ使い方が基本となります。EXP を ON にすると特に残響の多いソースで空間の広がりが増え、OFF にすると定位そのものを素直に確認できます。用途に応じて切り替えやすいよう物理ボタンに割り当てています。</p>
 
                     <div class="article-image">
                         <img src="img/IMG_9465.png" alt="アクリルパネルで挟んだHRTFヘッドホンアンプの写真">
