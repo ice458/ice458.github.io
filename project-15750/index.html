@@ -243,20 +243,20 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
                     <p><strong>1. 側方信号の履歴:</strong> 側方成分 \(S\) を Q15 化し、反射用の履歴バッファへ書き込みます。</p>
 
-                    <p><strong>2. 方向別反射と遅延線:</strong> 7 方向 \(d \in \{0,\dots,6\}\) について、側方信号を方向別の短い HRIR で畳み込み、0.70 倍のヘッドルームを通して方向別の遅延線 (最大 2016 サンプル ≒ 42ms) にずらし、方向別利得 \(g_d\) を掛けて加算します。これが初期反射 \(E_L, E_R\) です。</p>
+                    <p><strong>2. 方向別反射と遅延線:</strong> 7 方向 \(d \in \{0,\dots,6\}\) について、側方信号を方向別の短い HRIR で畳み込み、0.70 倍のヘッドルームを通して方向別の遅延線 (最大 2016 サンプル ≒ 42ms) にずらし、方向別利得 \(g_d\) を掛けて加算します。これが初期反射 \(E_L, E_R\) です。方位角 \(\theta_d\) は正面を 0°、右回りを正、左回りを負として、左右対称なペアで前方寄りから後方へ並べています。</p>
 
                     <p>$$E_L = \sum_d g_d \cdot r_L^{(d)}[n - D_d],\quad E_R = \sum_d g_d \cdot r_R^{(d)}[n - D_d]$$</p>
 
                     <div class="measurement-table">
                         <table class="results-table">
                             <thead>
-                                <tr><th>方向 \(d\)</th><th>遅延 \(D_d\) (サンプル)</th><th>利得 \(g_d\)</th></tr>
+                                <tr><th>方向 \(d\)</th><th>方位角 \(\theta_d\)</th><th>遅延 \(D_d\) (サンプル)</th><th>利得 \(g_d\)</th></tr>
                             </thead>
                             <tbody>
-                                <tr><td>0, 1</td><td>384</td><td>0.110</td></tr>
-                                <tr><td>2, 3</td><td>816</td><td>0.080</td></tr>
-                                <tr><td>4, 5</td><td>1344</td><td>0.056</td></tr>
-                                <tr><td>6</td><td>2016</td><td>0.036</td></tr>
+                                <tr><td>0, 1</td><td>&minus;75°, +75°</td><td>384</td><td>0.110</td></tr>
+                                <tr><td>2, 3</td><td>&minus;110°, +110°</td><td>816</td><td>0.080</td></tr>
+                                <tr><td>4, 5</td><td>&minus;135°, +135°</td><td>1344</td><td>0.056</td></tr>
+                                <tr><td>6</td><td>180°</td><td>2016</td><td>0.036</td></tr>
                             </tbody>
                         </table>
                     </div>

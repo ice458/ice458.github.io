@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>低クロストークヘッドホンアンプ 要約 - ice458</title>
+<style>
+  @page { size: A4 landscape; margin: 12mm 14mm; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: "Yu Gothic", "Hiragino Sans", "Meiryo", sans-serif;
+    font-size: 9.5pt;
+    line-height: 1.45;
+    color: #111;
+    background: #fff;
+  }
+  h1 { font-size: 14pt; margin: 0 0 2mm 0; border-bottom: 1.5pt solid #333; padding-bottom: 1mm; }
+  h2 { font-size: 10.5pt; margin: 3mm 0 1.5mm 0; color: #222; border-left: 3pt solid #555; padding-left: 2mm; }
+  p { margin: 0 0 1.5mm 0; }
+  ul { margin: 0 0 1.5mm 4mm; padding: 0; }
+  li { margin: 0; }
+  .meta { font-size: 8.5pt; color: #555; margin-bottom: 2mm; }
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4mm;
+    align-items: start;
+  }
+  .figs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3mm;
+    margin-top: 2mm;
+  }
+  .fig { text-align: center; }
+  .fig img { max-width: 100%; max-height: 55mm; object-fit: contain; }
+  .fig .cap { font-size: 8pt; color: #444; margin-top: 0.5mm; }
+  .formula {
+    font-family: "Cambria Math", serif;
+    text-align: center;
+    margin: 1mm 0;
+    font-size: 10pt;
+  }
+  .spec li { margin-bottom: 0.3mm; }
+  strong { color: #000; }
+  .lead { font-size: 10pt; margin-bottom: 2mm; }
+</style>
+</head>
+<body>
+  <h1>低クロストークヘッドホンアンプ</h1>
+  <div class="meta">ice458 / 2025年08月25日 — オーディオ・電子工作</div>
+
+  <p class="lead">
+    入出力アンバランスかつレールスプリッタによるGND生成にもかかわらず、<strong>全可聴帯域でクロストーク -80dB以下</strong>を実現したヘッドホンアンプ。
+    減算回路を用いた出力段により、共通インピーダンスZcmによるクロストークを大幅に抑制している。
+  </p>
+
+  <div class="grid">
+    <div>
+      <h2>仕様</h2>
+      <ul class="spec">
+        <li><strong>電源:</strong> 9V (006P / DCジャック)</li>
+        <li><strong>クロストーク:</strong> ≦ -80dB (20kHz以下)</li>
+        <li><strong>最大出力電流:</strong> 60mA</li>
+        <li><strong>出力:</strong> 100mW @ 60Ω負荷</li>
+      </ul>
+
+      <h2>クロストーク発生のメカニズム</h2>
+      <p>負荷から戻る電流 (i<sub>R</sub>+i<sub>L</sub>) が共通インピーダンスZ<sub>cm</sub>で電圧に変換され、もう一方のチャンネルに混入する。概算式:</p>
+      <div class="formula">Crosstalk [dB] ≈ 20 log<sub>10</sub>(Z<sub>cm</sub> / Z<sub>load</sub>)</div>
+      <p>レールスプリッタIC、TLE2426の出力抵抗 7.5mΩ、コネクタ接触抵抗 数mΩ等を考えるとZ<sub>cm</sub>=10mΩを切るのは困難。Z<sub>load</sub>=60Ωとすれば理論限界は約 -75.6dB であり、-80dB以下にするには根本的な回路工夫が必須。</p>
+    </div>
+
+    <div>
+      <h2>設計上の工夫</h2>
+      <ul>
+        <li><strong>入力 0.5倍アッテネータ (R10/R11):</strong> 初段オペアンプの入力インピーダンス差を縮小し、ボリューム位置によらずバランスを維持。</li>
+        <li><strong>2段目を減算回路化:</strong> オフセット入力を出力コネクタのコモンに接続し、クロストーク発生時に打ち消し方向へ出力が変化。</li>
+        <li><strong>効果:</strong> レールスプリッタ出力抵抗・基板パターン抵抗をループゲイン分の1まで等価的に縮小。実質的にコネクタ接触抵抗とケーブル共通抵抗のみがZ<sub>cm</sub>に寄与する。</li>
+        <li><strong>レールスプリッタ:</strong> オペアンプ2並列バッファでGND生成。R1=R2=10Ωでもクロストーク悪化なし。</li>
+      </ul>
+
+      <h2>測定結果</h2>
+      <p>両ch 51Ω負荷・出力 1Vrmsの正弦波で測定。<strong>全可聴帯域で -80dB以下</strong>、50Hzでは -90dB以下を達成。ただしDMMの保証確度以下なので参考値。</p>
+    </div>
+  </div>
+
+  <div class="figs">
+    <div class="fig"><img src="img/sch3.png" alt="クロストークの発生メカニズム"><div class="cap">クロストークの発生メカニズム</div></div>
+    <div class="fig"><img src="img/crosstalk2.png" alt="クロストーク測定結果"><div class="cap">クロストーク周波数特性</div></div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>HRTFヘッドホンアンプ 要約 - ice458</title>
+<style>
+  @page { size: A4 landscape; margin: 12mm 14mm; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: "Yu Gothic", "Hiragino Sans", "Meiryo", sans-serif;
+    font-size: 9.5pt;
+    line-height: 1.45;
+    color: #111;
+    background: #fff;
+  }
+  h1 { font-size: 14pt; margin: 0 0 2mm 0; border-bottom: 1.5pt solid #333; padding-bottom: 1mm; }
+  h2 { font-size: 10.5pt; margin: 3mm 0 1.5mm 0; color: #222; border-left: 3pt solid #555; padding-left: 2mm; }
+  p { margin: 0 0 1.5mm 0; }
+  ul { margin: 0 0 1.5mm 4mm; padding: 0; }
+  li { margin: 0; }
+  .meta { font-size: 8.5pt; color: #555; margin-bottom: 2mm; }
+  .lead { font-size: 10pt; margin-bottom: 2mm; }
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4mm;
+    align-items: start;
+  }
+  .figs {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 3mm;
+    margin-top: 2mm;
+  }
+  .fig { text-align: center; }
+  .fig img { max-width: 100%; max-height: 60mm; object-fit: contain; }
+  .fig .cap { font-size: 8pt; color: #444; margin-top: 0.5mm; }
+  .formula {
+    font-family: "Cambria Math", serif;
+    text-align: center;
+    margin: 1mm 0;
+    font-size: 10pt;
+  }
+  strong { color: #000; }
+</style>
+</head>
+<body>
+  <h1>HRTFヘッドホンアンプ</h1>
+  <div class="meta">ice458 / 2026年04月20日 — オーディオ・電子工作・DSP</div>
+
+  <p class="lead">
+    HRIR (頭部インパルス応答) の畳み込みにより<strong>頭外定位</strong>を実現するヘッドホンアンプ兼USB DAC。
+    RP2350 + SGTL5000 で、4経路 256タップのFIR畳み込みに加え、方向別反射・後期残響・オールパスによる無相関化までを 48kHz 実時間処理する。
+  </p>
+
+  <div class="grid">
+    <div>
+      <h2>HRTF / HRIR とは</h2>
+      <p>
+        <strong>HRTF (Head-Related Transfer Function, 頭部伝達関数)</strong> は、ある方向の音源から鼓膜までの音響伝達特性を表す関数。
+        音は耳に届くまでに、頭部・耳介・胴体での反射や回折を受け、方向ごとに固有の周波数特性および左右耳への到達時間差 (ITD) ・レベル差 (ILD) が生じる。
+        HRTFはこれらを「音源 → 鼓膜」のフィルタとして数値化したものである。
+      </p>
+      <p>
+        <strong>HRIR (Head-Related Impulse Response)</strong> はHRTFを時間領域で表現したインパルス応答であり、信号処理上はこれを音声に畳み込むことで任意方向から聞こえる音を合成できる。本機では英 York大学の <strong>SADIE II</strong> データベース (人工頭・実被験者の高密度測定データ) を採用し、被験者を切り替えられるようにしている。
+      </p>
+
+      <h2>なぜ通常のヘッドホン再生は「頭内定位」になるのか</h2>
+      <p>
+        ヘッドホンは音源が耳のすぐ近くにあるため、本来は頭部・耳介で起こるはずの反射・回折による周波数特性変化と、左右耳への到達時間差がほとんど失われる。結果として脳は方向手がかりを得られず、音像が頭の中に貼り付いたように知覚される。これが<strong>頭内定位</strong>であり、独特の聞き疲れや閉塞感の原因となる。
+      </p>
+      <p>
+        HRIRを音源に畳み込んでからヘッドホンで再生すると、失われていた方向手がかりが信号上に復元され、音像が前方の空間に出る<strong>頭外定位</strong>感が得られる。
+      </p>
+
+      <h2>仕様</h2>
+      <ul>
+        <li><strong>マイコン:</strong> Raspberry Pi Pico 2 (RP2350, SYSCLK 252MHz OC)</li>
+        <li><strong>コーデック:</strong> SGTL5000 (I2S マスター / 48kHz・24bit)</li>
+        <li><strong>USB Audio:</strong> UAC2.0 Full-Speed, 48kHz/16bit/2ch</li>
+        <li><strong>HRIR:</strong> SADIE II (±45°, EL=0°, 全被験者切替)</li>
+        <li><strong>主畳み込み:</strong> 4経路 × 256タップ FIR</li>
+        <li><strong>方向別反射:</strong> 7方向 × 24タップ + 8〜42ms 遅延線</li>
+        <li><strong>後期残響:</strong> 6 並列櫛形遅延 + 1次LPF帰還</li>
+        <li><strong>内部演算:</strong> Q15 固定小数点 (積和 64bit)</li>
+      </ul>
+    </div>
+
+    <div>
+      <h2>頭外定位の原理</h2>
+      <p>
+        仮想的にスピーカーを自身の左右前方 ±45° に設置した状況を再現する。
+        左スピーカーから出た音は左耳だけでなく右耳にも回り込み、右スピーカーも同様にクロスフィードを生じる。
+        したがって耳に届く信号は、各スピーカー → 両耳の計4経路のHRIRからなる 2×2 行列の畳み込みで表せる:
+      </p>
+      <div class="formula">(y<sub>L</sub>, y<sub>R</sub>)<sup>T</sup> = [[h<sub>LL</sub>, h<sub>RL</sub>], [h<sub>LR</sub>, h<sub>RR</sub>]] ∗ (x<sub>L</sub>, x<sub>R</sub>)<sup>T</sup></div>
+      <p>
+        ここで h<sub>LL</sub> は左SPから左耳、h<sub>LR</sub> は左SPから右耳に到達するHRIR。
+        4経路を畳み込んだ結果、左右耳に届く信号が「前方のスピーカーから届いた音」に近づく。
+      </p>
+
+      <h2>個人差と被験者選択</h2>
+      <p>
+        頭部や耳介の形状は人によって大きく異なり、HRTFは本来、個人ごとに全く違うものになる。
+        他人のHRIRを用いると前後の弁別が不安定になったり音色が不自然になったりする。
+        本機ではボタン操作で SADIE II 内の複数被験者のHRIRを切り替えられ、最も自然に前方から聞こえるデータを選んで使用する運用としている。
+      </p>
+
+      <h2>動作モード</h2>
+      <ul>
+        <li><strong>パススルー:</strong> 畳み込みなし、0.45倍減衰のみ。</li>
+        <li><strong>頭外定位:</strong> M/S分解 → 仮想スピーカー再配分 → 4経路 FIR畳み込み。基本の頭外定位処理。</li>
+        <li><strong>頭外定位 + 音場拡張:</strong> 上記に方向別の初期反射・後期残響・3段オールパスによる無相関化を加算し、空間の広がりと臨場感を強化する。</li>
+      </ul>
+
+      <h2>ハードウェア構成</h2>
+      <p>
+        SGTL5000 を I2S マスターとし、Pico 側は PIO で I2S スレーブ受け。
+        MCLK 12MHz は SYSCLK 252MHz から PWM 整数分周 (÷21) で生成する。
+        Core1 を DSP 処理に専念させ、Core0 で USB・ボタン・LED の UI 処理を行う 2 コア分担構成。
+      </p>
+    </div>
+  </div>
+
+  <div class="figs">
+    <div class="fig"><img src="img/block.png" alt="信号処理のブロック図(概略)"><div class="cap">信号処理のブロック図(概略)</div></div>
+  </div>
+</body>
+</html>
