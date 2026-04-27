@@ -970,6 +970,34 @@ a:hover {
         color: black !important;
         text-decoration: underline !important;
     }
+
+    .article-image,
+    .image-row,
+    .image-item,
+    .measurement-table,
+    .results-table,
+    .results-table tr,
+    .spec-list li,
+    .reference-list li,
+    blockquote,
+    pre,
+    figure {
+        break-inside: avoid;
+        page-break-inside: avoid;
+    }
+
+    .article-image img,
+    .image-item img {
+        break-inside: avoid;
+        page-break-inside: avoid;
+    }
+
+    h1, h2, h3, h4,
+    .article-section h2,
+    .article-section h3 {
+        break-after: avoid;
+        page-break-after: avoid;
+    }
 }
 
 
