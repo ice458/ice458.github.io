@@ -195,6 +195,11 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                         <li><strong>頭外定位＋音場拡張モード:</strong> 主畳み込みに加え、方向別反射・後期残響・オールパスフィルタによる無相関化で空間感を付加します。</li>
                     </ul>
 
+                    <div class="article-image">
+                        <img src="img/block.png" alt="信号処理のブロック図(概略)">
+                        <p class="image-caption">信号処理のブロック図(概略)</p>
+                    </div>
+
                     <h3>共通の入出力データ形式</h3>
                     <p>I2S から受け取る 32bit ワードは上位 24bit に音声データを左詰めで持っています。内部処理は 24bit 符号付き整数を基本とし、FIR の履歴と係数は Q15、積和の累算器は Q30 (int64) で持ちます。</p>
 

@@ -30,10 +30,10 @@
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 3mm;
-    margin-top: 2mm;
+    margin-top: 0;
   }
   .fig { text-align: center; }
-  .fig img { max-width: 100%; max-height: 60mm; object-fit: contain; }
+  .fig img { max-width: 100%; max-height: 46mm; object-fit: contain; }
   .fig .cap { font-size: 8pt; color: #444; margin-top: 0.5mm; }
   .formula {
     font-family: "Cambria Math", serif;
@@ -90,5 +90,9 @@
     <div class="fig"><img src="img3.png" alt="クロストークの低減メカニズム"><div class="cap">クロストークの低減メカニズム</div></div>
     <div class="fig"><img src="img4.png" alt="クロストーク測定結果 左: 可変機能OFF時  右: -20dB設定時"><div class="cap">クロストーク周波数特性<br>左: 可変機能OFF時  右: -20dB設定時</div></div>
   </div>
+  <p><strong>本機のクロストーク低減技術について</strong><br>
+    4極ジャックのスリーブを2接点化し、リターン電流経路(S端子)と基準電位ノード(R2端子)を分離する基本構成は、ニックネーム氏(Thyris Electronics)による特許第7801839号と共通します。同特許がS端子をパワーグランドに直結し、R2端子で検出した電位をバッファ経由で信号処理の基準として追従させる構成であるのに対し、本機ではアンプによる能動制御でS端子を駆動してR2端子電位を(VDD-VSS)/2に固定する点が異なります。</p>
+
+
 </body>
 </html>
