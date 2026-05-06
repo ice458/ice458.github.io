@@ -244,7 +244,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                     <p><strong>4. ボリュームと出力:</strong> ホスト音量とボタン音量を合成した Q15 ゲインを掛け、24bit 左詰めの 32bit ワードへ戻して I2S に流します。</p>
 
                     <h3>頭外定位＋音場拡張モード</h3>
-                    <p>頭外定位モードの処理を実行 (ただし側方利得は 1.25 → 1.625 に増加) した上で、以下を加えます。</p>
+                    <p>頭外定位モードの処理を実行 (ただし側方利得は 1.25 → 1.45 に増加) した上で、以下を加えます。</p>
 
                     <p><strong>1. 側方信号の履歴:</strong> 側方成分 \(S\) を Q15 化し、反射用の履歴バッファへ書き込みます。</p>
 
@@ -266,9 +266,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                         </table>
                     </div>
 
-                    <p><strong>3. 後期残響 (6 並列櫛形遅延):</strong> 反射駆動差分と初期反射差分から励振信号 \(e\) を作り、長さの異なる 6 本の遅延線 (1499 / 1777 / 1999 / 2357 / 2753 / 3251 サンプル) に並列に供給します。各ラインは 1 次低域フィルタで高域を減衰させてからフィードバックします。</p>
+                    <p><strong>3. 後期残響 (6 並列櫛形遅延):</strong> 反射駆動信号と初期反射の Side 差分を主体に、Mid 和成分も少量 (0.18 倍) 混ぜて励振信号 \(e\) を作り、長さの異なる 6 本の遅延線 (1499 / 1777 / 1999 / 2357 / 2753 / 3251 サンプル) に並列に供給します。Side 主体とすることで定位の芯を残しつつ、Mid を少量加えることでセンター定位の音にも自然な残響が乗ります。各ラインは 1 次低域フィルタで高域を減衰させてからフィードバックします。</p>
 
-                    <p>$$e = 0.30 \cdot \frac{r_L^{drive} - r_R^{drive}}{2} + \frac{E_L - E_R}{2}$$</p>
+                    <p>$$e = \underbrace{0.30 \cdot \frac{r_L^{drive} - r_R^{drive}}{2} + \frac{E_L - E_R}{2}}_{\text{Side 励振}} + 0.18 \left( \underbrace{0.30 \cdot \frac{r_L^{drive} + r_R^{drive}}{2} + \frac{E_L + E_R}{2}}_{\text{Mid 励振}} \right)$$</p>
                     <p>$$\text{lp}_i \leftarrow \text{lp}_i + 0.58\,(d_i - \text{lp}_i),\quad \text{buf}_i[\text{pos}_i] \leftarrow e + 0.66\,\text{lp}_i$$</p>
 
                     <p>6 本の遅延出力から、平均値 \(M_r\) と左右で重み符号を変えた \(D_L, D_R\) を作り、\(M_r + 0.38(D_L - M_r)\) のように混合して 0.58 倍したものを残響成分 \(L_{late}, R_{late}\) とします。</p>
