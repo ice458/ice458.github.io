@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>可変クロストークヘッドホンアンプ 要約 - ice458</title>
+<style>
+  @page { size: A4 landscape; margin: 12mm 14mm; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: "Yu Gothic", "Hiragino Sans", "Meiryo", sans-serif;
+    font-size: 9.5pt;
+    line-height: 1.45;
+    color: #111;
+    background: #fff;
+  }
+  h1 { font-size: 14pt; margin: 0 0 2mm 0; border-bottom: 1.5pt solid #333; padding-bottom: 1mm; }
+  h2 { font-size: 10.5pt; margin: 3mm 0 1.5mm 0; color: #222; border-left: 3pt solid #555; padding-left: 2mm; }
+  p { margin: 0 0 1.5mm 0; }
+  ul { margin: 0 0 1.5mm 4mm; padding: 0; }
+  li { margin: 0; }
+  .meta { font-size: 8.5pt; color: #555; margin-bottom: 2mm; }
+  .cols {
+    column-count: 2;
+    column-gap: 6mm;
+  }
+  .cols h2 { break-after: avoid; -webkit-column-break-after: avoid; }
+  .cols p, .cols li, .cols .formula { break-inside: avoid; -webkit-column-break-inside: avoid; }
+  .cols ul { break-inside: auto; }
+  .figs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3mm;
+    margin-top: 2mm;
+  }
+  .fig { text-align: center; }
+  .fig img { max-width: 100%; max-height: 60mm; object-fit: contain; }
+  .fig .cap { font-size: 8pt; color: #444; margin-top: 0.5mm; }
+  .formula {
+    font-family: "Cambria Math", serif;
+    text-align: center;
+    margin: 1mm 0;
+    font-size: 10pt;
+  }
+  .spec li { margin-bottom: 0.3mm; }
+  strong { color: #000; }
+  .lead { font-size: 10pt; margin-bottom: 2mm; }
+</style>
+</head>
+<body>
+  <h1>可変クロストークヘッドホンアンプ</h1>
+  <div class="meta">ice458 / 2026年01月10日 — オーディオ・電子工作</div>
+
+  <p class="lead">
+    4極ジャックを用いた特殊な回路方式により、コネクタ接触抵抗を含む共通インピーダンスによるクロストークを大幅に抑制し、アンバランス出力でありながら<strong>全可聴帯域でクロストーク -95dB以下</strong>を実現。さらに加算回路とデジタルポテンショメータを用いて、<strong>クロストーク量を-98～-20dBで任意に調整可能</strong>なヘッドホンアンプ。
+  </p>
+
+  <div class="cols">
+    <h2>仕様</h2>
+    <ul class="spec">
+      <li><strong>電源:</strong> 9V (DCジャック)</li>
+      <li><strong>クロストーク:</strong> ≦ -106dB (20kHz以下)、-98～-20dB可変</li>
+      <li><strong>入力:</strong> バランス (6.3mm TRS×2)</li>
+    </ul>
+
+    <h2>クロストーク低減のメカニズム</h2>
+    <p>負荷から戻る電流 (i<sub>R</sub>+i<sub>L</sub>) が共通インピーダンスZ<sub>cm</sub>で電圧に変換され、もう一方のチャンネルに混入することでクロストークが発生。概算式:</p>
+    <div class="formula">Crosstalk [dB] ≈ 20 log<sub>10</sub>(Z<sub>cm</sub> / Z<sub>load</sub>)</div>
+    <p>すなわちZ<sub>cm</sub>が極小であればクロストークも極小。</p>
+    <ul>
+      <li><strong>基本方針:</strong> Z<sub>cm</sub>をフィードバックの力で1/Aにする。</li>
+      <li><strong>出力コネクタ構成:</strong> 4極ジャックのスリーブを2接点化し、電流経路のS端子とクロストーク検出用のR2端子を分離。</li>
+      <li><strong>基準電位の固定:</strong> S端子電圧を制御し、回路全体の基準となるR2端子を (VDD-VSS)/2 に固定。CMRR/PSRR由来のクロストークや歪みを低減。</li>
+      <li><strong>接触抵抗対策:</strong> R2端子側にバッファを設け、R2端子接触抵抗の影響を低減。</li>
+      <li><strong>前段クロストーク低減:</strong> 信号増幅を反転増幅化し、信号GNDへ流れる電流を減らして出力段以前のクロストークを最小化。</li>
+      <li><strong>未挿入時の安定化:</strong> R<sub>f</sub>により、ヘッドホン未挿入時でも信号GNDを固定。</li>
+    </ul>
+
+    <h2>設計上の工夫</h2>
+    <ul>
+      <li><strong>差動→シングル変換:</strong> 初段差動回路の基準電圧入力を反転信号で駆動。HOT/COLDの入力インピーダンスを同じにする。</li>
+      <li><strong>電子ボリュームの直列接続:</strong> 音量によらず一定のクロストーク割合を維持。</li>
+      <li><strong>基板上のガードリング:</strong> 初段や混合段での意図しないクロストークを防ぐ。(効果不明)</li>
+    </ul>
+
+    <h2>測定結果</h2>
+    <p>両ch 51Ω負荷・出力 1Vrmsの正弦波で測定。<strong>全可聴帯域で -95dB以下</strong>、1kHzでは -108dB以下を達成。ただしDMMの保証確度以下なので参考値。</p>
+  </div>
+
+  <div class="figs">
+    <div class="fig"><img src="img3.png" alt="クロストークの低減メカニズム"><div class="cap">クロストークの低減メカニズム</div></div>
+    <div class="fig"><img src="img4.png" alt="クロストーク測定結果 左: 可変機能OFF時  右: -20dB設定時"><div class="cap">クロストーク周波数特性<br>左: 可変機能OFF時  右: -20dB設定時</div></div>
+  </div>
+</body>
+</html>
