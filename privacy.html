@@ -26,6 +26,31 @@ sitemap:
   function gtag(){dataLayer.push(arguments);}
   gtag('set','cookie_domain','none');
 </script>
+<!-- Consent geo override: auto-grant analytics outside EEA/UK -->
+<script>
+  (function(){
+    try {
+      var stored = null;
+      try { stored = localStorage.getItem('consent.choice'); } catch(e) {}
+      if (stored === 'denied') return;
+      if (stored === 'granted') {
+        gtag('consent','update',{
+          ad_storage:'granted', analytics_storage:'granted',
+          ad_user_data:'granted', ad_personalization:'granted'
+        });
+        return;
+      }
+      var tz = '';
+      try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone || ''; } catch(e) {}
+      var isEEA = /^Europe\//.test(tz)
+               || tz === 'Asia/Nicosia'
+               || /^Atlantic\/(Reykjavik|Madeira|Azores|Canary)$/.test(tz);
+      if (!isEEA) {
+        gtag('consent','update',{ analytics_storage:'granted' });
+      }
+    } catch(e) {}
+  })();
+</script>
 <!-- Google Tag Manager -->
 <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
 new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
@@ -66,39 +91,69 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <article class="main-content">
       <div class="entry-content">
         <h1>プライバシーポリシー</h1>
-        <p>本サイトでは、利便性向上および閲覧状況の把握・改善のため、Cookie等を使用し、Google Analyticsを利用してアクセス解析を行う場合があります。</p>
+        <p>本サイトは、個人による技術系コンテンツの公開を目的として運営されています。本ポリシーでは、サイト運営にあたって取得する情報、Cookie等の取扱い、および外部サービスへの送信について説明します。</p>
 
-        <h2>1. 収集する情報</h2>
+        <h2>1. 取得する情報</h2>
+        <p>本サイトは、訪問者の利用状況を把握するため、Cookie等を介して以下の情報を取得することがあります。</p>
         <ul>
-          <li>ブラウザや端末の識別子、IPアドレス等（Googleが提供するCookie等を通じて取得される場合があります）</li>
-          <li>閲覧したページ、滞在時間、クリック等の利用状況</li>
+          <li>ブラウザの種類・バージョン、OS、画面サイズ、言語、参照元URL</li>
+          <li>閲覧したページのURL、滞在時間、サイト内でのクリック・スクロール等の操作情報</li>
+          <li>IPアドレス（Google Analytics 4 上で匿名化された状態で処理され、本サイト管理者は具体的なIPアドレスを保管しません）</li>
+          <li>Google Analyticsが発行するクライアントID（端末を識別するためのランダムな値）</li>
         </ul>
+        <p>本サイトはお問い合わせフォームや会員登録機能を提供していないため、氏名・住所・メールアドレス等を直接取得することはありません。</p>
 
         <h2>2. 利用目的</h2>
-        <p>本サイトの利用状況を把握し、コンテンツの改善、表示の最適化、サイトの安定運用のために利用します。</p>
+        <p>取得した情報は、本サイトのアクセス状況の把握、コンテンツの改善、表示の最適化、不具合の調査等、サイト運営に関する目的のみで利用します。<strong>広告配信および広告効果測定には利用しません。</strong></p>
 
-        <h2>3. 使用するサービス</h2>
+        <h2>3. 利用する外部サービス（外部送信規律に基づく開示）</h2>
+        <p>本サイトは以下の外部サービスを利用しており、上記「1. 取得する情報」に記載した情報の一部が、各サービス事業者に対して送信されます。</p>
+
+        <p><strong>Google Analytics 4</strong></p>
         <ul>
-          <li>Google Analytics / Google Tag Manager</li>
-        </ul>
-        <p>Googleによるデータの取扱いについては、Googleのプライバシーポリシーおよび利用規約をご確認ください。</p>
-
-        <h2>4. 第三者への提供・国外移転</h2>
-        <p>取得されたデータはGoogle社（米国等）に送信され、統計情報として利用される場合があります。</p>
-
-        <h2>5. 選択と制御</h2>
-        <ul>
-          <li>ブラウザの設定でCookieの受け入れを拒否・削除できます。</li>
-          <li>Googleの広告設定やオプトアウトアドオンにより、計測の一部を無効化できます。</li>
+          <li>送信先事業者：Google LLC（米国）</li>
+          <li>送信される情報：閲覧ページURL、参照元URL、ブラウザ・端末情報、画面サイズ、Cookie・クライアントID、匿名化されたIPアドレス</li>
+          <li>利用目的：アクセス解析・統計集計</li>
         </ul>
 
-        <h2>6. 免責</h2>
-        <p>本サイトの外部リンク先で提供される情報・サービス等については責任を負いかねます。</p>
+        <p><strong>Google Tag Manager</strong></p>
+        <ul>
+          <li>送信先事業者：Google LLC（米国）</li>
+          <li>送信される情報：タグ配信に必要なリクエスト情報</li>
+          <li>利用目的：計測タグの管理・配信</li>
+        </ul>
 
-        <h2>7. 改定</h2>
-        <p>本ポリシーの内容は、法令やサービス変更等に応じて改定されることがあります。最新の改定日は本ページに表示します。</p>
+        <p>Googleによる情報の取扱いの詳細は、<a href="https://policies.google.com/privacy" target="_blank" rel="noopener">Googleプライバシーポリシー</a>および<a href="https://policies.google.com/technologies/partner-sites" target="_blank" rel="noopener">「Googleのサービスを使用するサイトやアプリから収集した情報のGoogleによる使用」</a>をご参照ください。</p>
 
-        <p class="article-date">改定日: 2025-09-12</p>
+        <h2>4. 同意の取得とCookie制御（Consent Mode v2）</h2>
+        <p>本サイトはGoogle Consent Mode v2を導入し、訪問者の地域に応じて次のように動作します。</p>
+        <ul>
+          <li><strong>EEA（欧州経済領域）および英国からの訪問者：</strong> 初回訪問時にCookie同意バナーを表示します。「同意する」を選択するまで、アクセス解析用Cookieを含むすべての非必須Cookieは保存・送信されません。</li>
+          <li><strong>その他の地域からの訪問者：</strong> 個人情報保護法および電気通信事業法に基づき、本ポリシーでの開示をもって、アクセス解析を目的としたCookie利用についてバナーによる事前同意の取得は行っていません。広告関連のCookie（広告効果測定・パーソナライズ等）は使用しません。</li>
+        </ul>
+        <p>地域判定はブラウザのタイムゾーン情報を用いた簡易的なものであり、実際の所在地と異なる場合があります。</p>
+
+        <h2>5. Cookieの拒否・解析の停止方法</h2>
+        <p>以下のいずれかの方法で、本サイトでの計測を停止できます。</p>
+        <ul>
+          <li>本サイトフッターの「Cookie設定」リンクをクリックし、表示されるバナーから「拒否する」を選択する</li>
+          <li>ブラウザの設定からCookieを拒否または削除する</li>
+          <li>Googleが提供する<a href="https://tools.google.com/dlpage/gaoptout" target="_blank" rel="noopener">Google Analytics オプトアウト アドオン</a>を導入する</li>
+        </ul>
+
+        <h2>6. 国外移転</h2>
+        <p>上記「3.」に記載のとおり、取得された情報の一部は米国に所在するGoogle LLCに送信されます。GoogleはEU-US Data Privacy Framework（DPF）の認証事業者として、個人データの保護のための適切な措置を講じています。</p>
+
+        <h2>7. データの保管期間</h2>
+        <p>Google Analytics上でのユーザー単位データの保持期間はGoogleの設定に従い、最長で14か月です。集計済みの統計情報については、上記の保持期間に依らず保持される場合があります。</p>
+
+        <h2>8. 免責</h2>
+        <p>本サイト内の外部リンク先で提供される情報・サービス等については、本サイト管理者は責任を負いかねます。</p>
+
+        <h2>9. 改定</h2>
+        <p>本ポリシーは、法令やサービスの変更等に応じて改定されることがあります。重要な変更があった場合は本ページ上で告知します。</p>
+
+        <p class="article-date">改定日: 2026-05-12</p>
       </div>
     </article>
   </main>

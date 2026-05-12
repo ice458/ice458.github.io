@@ -7,6 +7,15 @@
   var BANNER_ID = 'consent-banner-eea';
   var STYLE_ID = 'consent-banner-style';
 
+  function isEEA(){
+    try {
+      var tz = (Intl.DateTimeFormat && Intl.DateTimeFormat().resolvedOptions().timeZone) || '';
+      return /^Europe\//.test(tz)
+          || tz === 'Asia/Nicosia'
+          || /^Atlantic\/(Reykjavik|Madeira|Azores|Canary)$/.test(tz);
+    } catch(e) { return false; }
+  }
+
   function restoreConsentIfGranted() {
     try {
       var v = localStorage.getItem(STORAGE_KEY);
@@ -87,8 +96,22 @@
     rejectBtn.className = 'btn-reject';
     rejectBtn.textContent = '拒否する';
     rejectBtn.addEventListener('click', function(){
+      var prev = null;
+      try { prev = localStorage.getItem(STORAGE_KEY); } catch(e) {}
       try { localStorage.setItem(STORAGE_KEY,'denied'); } catch(e) {}
+      if (typeof gtag === 'function') {
+        gtag('consent','update',{
+          ad_storage:'denied',
+          analytics_storage:'denied',
+          ad_user_data:'denied',
+          ad_personalization:'denied'
+        });
+      }
       hideBanner();
+      // If we were previously granted (e.g. non-EEA auto-grant), reload so any active tags stop.
+      if (prev === 'granted' || prev === null) {
+        setTimeout(function(){ try { location.reload(); } catch(e) {} }, 80);
+      }
     });
 
     actions.appendChild(acceptBtn);
@@ -167,7 +190,10 @@
 
     var choice = null;
     try { choice = localStorage.getItem(STORAGE_KEY); } catch(e){}
-    if (!choice) {
+    // Auto-show banner only for EEA/UK visitors without a stored choice.
+    // Non-EEA visitors are auto-granted by the inline geo override; they can still
+    // open the banner manually via the footer "Cookie設定" link.
+    if (!choice && isEEA()) {
       showBanner();
     }
   }
