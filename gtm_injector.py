@@ -91,6 +91,53 @@ GTM_MARKER = "GTM-MMZ5XH4V"
 # Use root-relative path so subdirectories can load the single shared script
 CONSENT_JS_TAG = "<script src=\"/consent.js\" defer></script>"
 
+# Whitespace-tolerant detection for `gtag('set','cookie_domain','none')`.
+# Quotes may be ' or ", with arbitrary spaces between tokens.
+COOKIE_DOMAIN_SET_RE = re.compile(
+    r"cookie_domain\s*['\"]\s*,\s*['\"]\s*none\s*['\"]"
+)
+
+# Standalone cookie_domain block (comment + adjacent <script>...</script>).
+# Used to dedupe accidental multiple insertions.
+COOKIE_DOMAIN_BLOCK_RE = re.compile(
+    r"<!--\s*Google Analytics cookie domain override \(host-only\)\s*-->\s*"
+    r"<script\b[^>]*>.*?</script>\s*",
+    re.DOTALL | re.IGNORECASE,
+)
+
+
+def _find_pre_gtm_insert_pos(text: str) -> int:
+    """Return index where a snippet should be inserted right before the GTM loader.
+    Returns -1 if no GTM loader is present in the document."""
+    pos = text.find("<!-- Google Tag Manager -->")
+    if pos != -1:
+        return pos
+    url_pos = text.find("https://www.googletagmanager.com/gtm.js?id=")
+    if url_pos != -1:
+        script_start = text.rfind("<script", 0, url_pos)
+        return script_start if script_start != -1 else url_pos
+    return -1
+
+
+def _dedup_cookie_domain_blocks(text: str) -> tuple[str, bool]:
+    """Collapse multiple standalone cookie_domain override blocks down to one.
+    Keeps the first occurrence, drops the rest."""
+    matches = list(COOKIE_DOMAIN_BLOCK_RE.finditer(text))
+    if len(matches) <= 1:
+        return text, False
+    out: list[str] = []
+    last_end = 0
+    kept_first = False
+    for m in matches:
+        out.append(text[last_end:m.start()])
+        if not kept_first:
+            out.append(m.group(0))
+            kept_first = True
+        # else: drop this duplicate
+        last_end = m.end()
+    out.append(text[last_end:])
+    return "".join(out), True
+
 
 def should_skip(path: Path) -> bool:
     parts = {p for p in path.parts}
@@ -122,33 +169,27 @@ def inject_into_html(content: str) -> tuple[str, bool]:
 
     def inject_consent_before_gtm(text: str) -> tuple[str, bool]:
         if has_consent_default(text):
-            # Even if consent default exists, ensure cookie_domain set exists before GTM
-            if "cookie_domain','none'" not in text and 'cookie_domain" ,\'none\'' not in text:
-                insert_pos = text.find("<!-- Google Tag Manager -->")
-                if insert_pos == -1:
-                    url_pos = text.find("https://www.googletagmanager.com/gtm.js?id=")
-                    if url_pos != -1:
-                        script_start = text.rfind("<script", 0, url_pos)
-                        insert_pos = script_start if script_start != -1 else url_pos
+            changed_here = False
+            # Ensure cookie_domain set exists somewhere (regex-based, whitespace-tolerant)
+            if not COOKIE_DOMAIN_SET_RE.search(text):
+                insert_pos = _find_pre_gtm_insert_pos(text)
                 if insert_pos != -1:
-                    return text[:insert_pos] + COOKIE_DOMAIN_SET_SNIPPET + text[insert_pos:], True
-                head_open = re.search(r"<head[^>]*>", text, flags=re.IGNORECASE)
-                if head_open:
-                    idx = head_open.end()
-                    return text[:idx] + "\n" + COOKIE_DOMAIN_SET_SNIPPET + text[idx:], True
+                    text = text[:insert_pos] + COOKIE_DOMAIN_SET_SNIPPET + text[insert_pos:]
+                    changed_here = True
+                else:
+                    head_open = re.search(r"<head[^>]*>", text, flags=re.IGNORECASE)
+                    if head_open:
+                        idx = head_open.end()
+                        text = text[:idx] + "\n" + COOKIE_DOMAIN_SET_SNIPPET + text[idx:]
+                        changed_here = True
             # Also bump wait_for_update to at least 2000ms to allow user action
             new_text = re.sub(r"(wait_for_update\s*:\s*)\d+", r"\g<1>2000", text)
-            changed_here = new_text != text
-            return new_text, changed_here
-        # Find GTM loader occurrence to place consent right before it
-        # Prefer the GTM HTML comment marker if available, else the script url
-        insert_pos = text.find("<!-- Google Tag Manager -->")
-        if insert_pos == -1:
-            url_pos = text.find("https://www.googletagmanager.com/gtm.js?id=")
-            if url_pos != -1:
-                # find the enclosing <script ...> start tag for better placement
-                script_start = text.rfind("<script", 0, url_pos)
-                insert_pos = script_start if script_start != -1 else url_pos
+            if new_text != text:
+                text = new_text
+                changed_here = True
+            return text, changed_here
+        # No consent default present: insert one right before the GTM loader
+        insert_pos = _find_pre_gtm_insert_pos(text)
         if insert_pos != -1:
             return text[:insert_pos] + CONSENT_DEFAULT_SNIPPET + text[insert_pos:], True
         # Fallback: try to put into <head> start
@@ -193,12 +234,7 @@ def inject_into_html(content: str) -> tuple[str, bool]:
 
     # Ensure geo override snippet is present, placed right before GTM loader
     if GEO_MARKER not in new_content:
-        insert_pos = new_content.find("<!-- Google Tag Manager -->")
-        if insert_pos == -1:
-            url_pos = new_content.find("https://www.googletagmanager.com/gtm.js?id=")
-            if url_pos != -1:
-                script_start = new_content.rfind("<script", 0, url_pos)
-                insert_pos = script_start if script_start != -1 else url_pos
+        insert_pos = _find_pre_gtm_insert_pos(new_content)
         if insert_pos != -1:
             new_content = new_content[:insert_pos] + CONSENT_GEO_SNIPPET + new_content[insert_pos:]
             changed = True
@@ -245,6 +281,11 @@ def inject_into_html(content: str) -> tuple[str, bool]:
         if replaced != new_content:
             new_content = replaced
             changed = True
+
+    # Collapse any duplicate standalone cookie_domain override blocks
+    new_content, did_dedup = _dedup_cookie_domain_blocks(new_content)
+    if did_dedup:
+        changed = True
 
     return new_content, changed
 
