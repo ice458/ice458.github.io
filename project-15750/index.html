@@ -177,7 +177,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                         <li><strong>USB Audio:</strong> UAC2.0 Full-Speed, 48kHz / 16bit / 2ch</li>
                         <li><strong>HRIR データ:</strong> SADIE II データベース (±45°、 仰角0°、全被験者)</li>
                         <li><strong>主畳み込み:</strong> 4経路 × 256タップ FIR (L→L, L→R, R→L, R→R)</li>
-                        <li><strong>方向別反射:</strong> 7方向 × 24タップ FIR + 8～42ms の遅延線</li>
+                        <li><strong>方向別反射:</strong> 7方向 × 2経路 × 24タップ FIR（計14本） + 8～42ms の遅延線</li>
                         <li><strong>残響:</strong> 6 本の遅延線による後期残響</li>
                         <li><strong>内部演算:</strong> Q15 固定小数点 (中間値 32bit / 積和 64bit)</li>
                         <li><strong>動作クロック:</strong> SYSCLK 252MHz (OC)</li>
@@ -275,9 +275,11 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
                     <p><strong>1. 側方信号の履歴:</strong> 側方成分 \(S\) を Q15 化し、反射用の履歴バッファへ書き込みます。</p>
 
-                    <p><strong>2. 方向別反射と遅延線:</strong> 7 方向 \(d \in \{0,\dots,6\}\) について、側方信号を方向別の短い HRIR で畳み込み、0.70 倍のヘッドルームを通して方向別の遅延線 (最大 2016 サンプル ≒ 42ms) にずらし、方向別利得 \(g_d\) を掛けて加算します。これが初期反射 \(E_L, E_R\) です。方位角 \(\theta_d\) は正面を 0°、右回りを正、左回りを負として、左右対称なペアで前方寄りから後方へ並べています。</p>
+                    <p><strong>2. 方向別反射と遅延線:</strong> 7 方向 \(d \in \{0,\dots,6\}\) について、側方信号を方向別の短い HRIR で畳み込み、0.70 倍のヘッドルームを通して方向別の遅延線 (最大 2016 サンプル ≒ 42ms) にずらし、方向別利得 \(g_d\) を掛けて加算します。これが初期反射 \(E_L, E_R\) です。左右それぞれに反射を作るため、短い FIR（24タップ）は 7 方向 × 2 耳で合計 14 本が並列に動いています。方位角 \(\theta_d\) は正面を 0°、右回りを正、左回りを負として、左右対称なペアで前方寄りから後方へ並べています。</p>
 
                     <p>$$E_L = \sum_d g_d \cdot r_L^{(d)}[n - D_d],\quad E_R = \sum_d g_d \cdot r_R^{(d)}[n - D_d]$$</p>
+
+                    <p>このモードでは、主畳み込みが 4 経路 × 256 タップ、方向別反射が 7 方向 × 2 経路 × 24 タップです。48kHz 動作では、主畳み込みだけで毎秒約 4,900 万回の積和 (MAC) になり、方向別反射を足すと \((4×256 + 7×2×24)×48000 = 65,280,000\) より、合計で毎秒約 6,500 万回の積和演算を行っています。</p>
 
                     <div class="measurement-table">
                         <table class="results-table">
