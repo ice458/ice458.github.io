@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <!-- Consent Mode default (runs before GTM) -->
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('consent', 'default', {
+            ad_storage: 'denied', analytics_storage: 'denied',
+            ad_user_data: 'denied', ad_personalization: 'denied',
+            wait_for_update: 2000
+        });
+    </script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('set', 'cookie_domain', 'none');
+    </script>
+    <script>
+        (function () {
+            try {
+                var stored = null;
+                try { stored = localStorage.getItem('consent.choice'); } catch (e) { }
+                if (stored === 'denied') return;
+                if (stored === 'granted') {
+                    gtag('consent', 'update', {
+                        ad_storage: 'granted', analytics_storage: 'granted',
+                        ad_user_data: 'granted', ad_personalization: 'granted'
+                    });
+                    return;
+                }
+                var tz = '';
+                try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone || ''; } catch (e) { }
+                var isEEA = /^Europe\//.test(tz) || tz === 'Asia/Nicosia'
+                    || /^Atlantic\/(Reykjavik|Madeira|Azores|Canary)$/.test(tz);
+                if (!isEEA) { gtag('consent', 'update', { analytics_storage: 'granted' }); }
+            } catch (e) { }
+        })();
+    </script>
+    <script>(function (w, d, s, l, i) {
+        w[l] = w[l] || []; w[l].push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' });
+        var f = d.getElementsByTagName(s)[0], j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : '';
+        j.async = true; j.src = 'https://www.googletagmanager.com/gtm.js?id=' + i + dl;
+        f.parentNode.insertBefore(j, f);
+    })(window, document, 'script', 'dataLayer', 'GTM-MMZ5XH4V');</script>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SPICE PWL Generator | PWL波形ジェネレータ - ice458の物置き</title>
+    <meta name="description" content="SPICE シミュレータ用 PWL（Piecewise Linear）波形をブラウザ上でインタラクティブに編集・生成するツール。電圧・電流ソース対応、グリッドスナップ、単位切り替え（fs〜s / µV〜kV / pA〜A）、クリップボードコピー機能付き。インストール不要。">
+    <meta name="keywords" content="SPICE, PWL, Piecewise Linear, 波形ジェネレータ, 波形エディタ, LTspice, ngspice, 電圧源, 電流源, ice458">
+    <meta name="author" content="ice458">
+
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://ice458.github.io/tools/pwl_gen/">
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://ice458.github.io/tools/pwl_gen/">
+    <meta property="og:title" content="SPICE PWL Generator | PWL波形ジェネレータ">
+    <meta property="og:description" content="SPICE シミュレータ用 PWL 波形をブラウザ上でインタラクティブに編集・生成。LTspice / ngspice 対応、インストール不要。">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary">
+    <meta property="twitter:url" content="https://ice458.github.io/tools/pwl_gen/">
+    <meta property="twitter:title" content="SPICE PWL Generator | PWL波形ジェネレータ">
+    <meta property="twitter:description" content="SPICE シミュレータ用 PWL 波形をブラウザ上でインタラクティブに編集・生成。LTspice / ngspice 対応、インストール不要。">
+
+    <!-- ファビコン -->
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/favicon-180x180.png">
+    <link rel="manifest" href="/site.webmanifest">
+
+    <!-- ブラウザ固有 -->
+    <meta name="theme-color" content="#aaaeae">
+    <meta name="msapplication-TileColor" content="#aaaeae">
+    <meta name="msapplication-TileImage" content="/favicon-180x180.png">
+
+    <!-- 構造化データ -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "SPICE PWL Generator",
+      "alternateName": "PWL波形ジェネレータ",
+      "description": "SPICE シミュレータ用 PWL（Piecewise Linear）波形をブラウザ上でインタラクティブに編集・生成するツール。電圧・電流ソース対応、グリッドスナップ、単位切り替え（fs〜s / µV〜kV / pA〜A）付き。",
+      "url": "https://ice458.github.io/tools/pwl_gen/",
+      "applicationCategory": "DeveloperApplication",
+      "operatingSystem": "Web Browser",
+      "browserRequirements": "Requires JavaScript",
+      "inLanguage": "ja",
+      "isAccessibleForFree": true,
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "JPY"
+      },
+      "author": {
+        "@type": "Person",
+        "name": "ice458",
+        "url": "https://ice458.github.io/"
+      }
+    }
+    </script>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-MMZ5XH4V" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<div class="container">
+    <header>
+        <h1>SPICE PWL Generator</h1>
+        <details style="font-size:0.82em;color:#666;margin-top:8px;">
+            <summary style="cursor:pointer;">操作方法</summary>
+            <ul style="margin:6px 0 0 1.2em;line-height:1.8;">
+                <li><strong>ダブルクリック</strong>: 波形上に点を追加</li>
+                <li><strong>クリック</strong>: 点を選択</li>
+                <li><strong>ドラッグ</strong>: 選択した点を移動</li>
+                <li><strong>右ドラッグ</strong>: 表示をパン</li>
+                <li><strong>ホイール</strong>: 両軸ズーム / <strong>Shift+ホイール</strong>: X軸 / <strong>Ctrl+ホイール</strong>: Y軸</li>
+                <li><strong>Delete</strong>: 選択した点を削除</li>
+                <li><strong>F</strong>: 全点が収まるようにオートスケール</li>
+            </ul>
+        </details>
+    </header>
+
+    <!-- toolbar -->
+    <div class="toolbar">
+        <label>Source</label>
+        <select id="srcType">
+            <option value="V">Voltage</option>
+            <option value="I">Current</option>
+        </select>
+
+        <div class="sep"></div>
+
+        <label>Time</label>
+        <select id="timeUnit">
+            <option value="1e-15">fs</option>
+            <option value="1e-12">ps</option>
+            <option value="1e-9">ns</option>
+            <option value="1e-6" selected>µs</option>
+            <option value="1e-3">ms</option>
+            <option value="1">s</option>
+        </select>
+
+        <label>Value</label>
+        <select id="valUnit">
+            <option value="1e-6">µV</option>
+            <option value="1e-3" selected>mV</option>
+            <option value="1">V</option>
+            <option value="1e3">kV</option>
+        </select>
+
+        <div class="sep"></div>
+
+        <div class="snap-row">
+            <input type="checkbox" id="snapEnable">
+            <label for="snapEnable">Grid snap</label>
+        </div>
+        <div class="snap-fields">
+            <label>T:</label>
+            <input type="number" id="snapT" value="1" min="0.001" step="0.1">
+            <label>V:</label>
+            <input type="number" id="snapV" value="1" min="0.001" step="0.1">
+        </div>
+
+        <div class="sep"></div>
+
+        <label>min ΔT:</label>
+        <input type="number" id="minDtInput" value="0.001" min="0" step="any" title="時間の最小分離幅（現在の時間単位）">
+
+        <div class="sep"></div>
+
+        <button id="btnAutoScale" title="F">Auto Scale</button>
+        <button id="btnCopy" class="secondary">Copy PWL</button>
+    </div>
+
+    <div class="main">
+        <!-- canvas -->
+        <div class="canvas-wrap" id="canvasWrap">
+            <canvas id="plot"></canvas>
+        </div>
+
+        <!-- right panel -->
+        <div class="side">
+            <!-- view range -->
+            <div class="panel">
+                <h3>View Range</h3>
+                <div class="field-row"><label>X min</label><input type="number" id="xMin" value="0" step="0.1"></div>
+                <div class="field-row"><label>X max</label><input type="number" id="xMax" value="10" step="0.1"></div>
+                <div class="field-row"><label>Y min</label><input type="number" id="yMin" value="-5" step="0.1"></div>
+                <div class="field-row"><label>Y max</label><input type="number" id="yMax" value="5" step="0.1"></div>
+            </div>
+
+            <!-- selected point editor -->
+            <div class="panel" id="pointEditor" style="display:none">
+                <h3>Selected Point</h3>
+                <div class="field-row"><label>Time</label><input type="number" id="editT" step="any"></div>
+                <div class="field-row"><label>Value</label><input type="number" id="editV" step="any"></div>
+                <button id="btnDelPoint" class="danger" style="width:100%;margin-top:4px;">Delete Point</button>
+            </div>
+
+            <!-- point list -->
+            <div class="panel" style="flex:1;overflow:hidden;display:flex;flex-direction:column;">
+                <h3>Points</h3>
+                <div class="point-list" id="pointList"></div>
+                <button id="btnAddPoint" style="margin-top:8px;width:100%;">+ Add Point</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- status / output -->
+    <div class="statusbar">
+        <span id="statusMsg">ダブルクリックで点を追加</span>
+        <span id="cursorCoord"></span>
+    </div>
+    <div style="margin-top:8px;">
+        <textarea class="output-area" id="pwlOutput" rows="3" spellcheck="false" readonly></textarea>
+    </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
