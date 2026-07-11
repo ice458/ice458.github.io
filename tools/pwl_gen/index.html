@@ -142,23 +142,23 @@
             <option value="1e-15">fs</option>
             <option value="1e-12">ps</option>
             <option value="1e-9">ns</option>
-            <option value="1e-6" selected>µs</option>
-            <option value="1e-3">ms</option>
+            <option value="1e-6">µs</option>
+            <option value="1e-3" selected>ms</option>
             <option value="1">s</option>
         </select>
 
         <label>Value</label>
         <select id="valUnit">
             <option value="1e-6">µV</option>
-            <option value="1e-3" selected>mV</option>
-            <option value="1">V</option>
+            <option value="1e-3">mV</option>
+            <option value="1" selected>V</option>
             <option value="1e3">kV</option>
         </select>
 
         <div class="sep"></div>
 
         <div class="snap-row">
-            <input type="checkbox" id="snapEnable">
+            <input type="checkbox" id="snapEnable" checked>
             <label for="snapEnable">Grid snap</label>
         </div>
         <div class="snap-fields">
@@ -196,19 +196,19 @@
                 <div class="field-row"><label>Y max</label><input type="number" id="yMax" value="5" step="0.1"></div>
             </div>
 
+            <!-- point list -->
+            <div class="panel" style="flex:1;overflow:hidden;display:flex;flex-direction:column;">
+                <h3>Points</h3>
+                <div class="point-list" id="pointList"></div>
+                <button id="btnAddPoint" style="margin-top:8px;width:100%;">+ Add Point</button>
+            </div>
+
             <!-- selected point editor -->
             <div class="panel" id="pointEditor" style="display:none">
                 <h3>Selected Point</h3>
                 <div class="field-row"><label>Time</label><input type="number" id="editT" step="any"></div>
                 <div class="field-row"><label>Value</label><input type="number" id="editV" step="any"></div>
                 <button id="btnDelPoint" class="danger" style="width:100%;margin-top:4px;">Delete Point</button>
-            </div>
-
-            <!-- point list -->
-            <div class="panel" style="flex:1;overflow:hidden;display:flex;flex-direction:column;">
-                <h3>Points</h3>
-                <div class="point-list" id="pointList"></div>
-                <button id="btnAddPoint" style="margin-top:8px;width:100%;">+ Add Point</button>
             </div>
         </div>
     </div>
@@ -221,6 +221,14 @@
     <div style="margin-top:8px;">
         <textarea class="output-area" id="pwlOutput" rows="3" spellcheck="false" readonly></textarea>
     </div>
+
+    <footer style="margin-top: 20px; padding-top: 10px; border-top: 1px solid #ccc; text-align: center; font-size: 0.9em;">
+        <p>
+            <a href="../../index.html">ice458の物置き</a> |
+            <a href="../../tools.html">Webツール一覧</a> |
+            <a href="../../privacy.html">プライバシーポリシー</a>
+        </p>
+    </footer>
 </div>
 
 <script src="app.js"></script>

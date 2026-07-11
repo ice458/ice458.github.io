@@ -10,9 +10,9 @@ const state = {
     timeUnitLabel: 'µs',
     valUnitLabel: 'mV',
     points: [[0, 0], [5e-6, 0]],  // SI base: [seconds, V or A]
-    selectedIdx: null,
+    selectedIndices: new Set(),
     view: { xMin: 0, xMax: 10, yMin: -5, yMax: 5 },  // display units
-    snap: { enabled: false, t: 1, v: 1 },             // display units
+    snap: { enabled: true, t: 1, v: 1 },             // display units
     minDtDisplay: 1e-3,   // minimum time separation in display units
 };
 
@@ -123,10 +123,11 @@ function addPointSI(tSI, vSI) {
 }
 
 function deleteSelected() {
-    if (state.selectedIdx === null) return;
-    if (state.points.length <= 2) { setStatus('最低2点必要です'); return; }
-    state.points.splice(state.selectedIdx, 1);
-    state.selectedIdx = null;
+    if (state.selectedIndices.size === 0) return;
+    if (state.points.length - state.selectedIndices.size < 2) { setStatus('最低2点必要です'); return; }
+    const toDelete = Array.from(state.selectedIndices).sort((a, b) => b - a);
+    toDelete.forEach(idx => state.points.splice(idx, 1));
+    state.selectedIndices.clear();
     refreshAll();
 }
 
@@ -175,7 +176,14 @@ function draw() {
     state.points.forEach(([tSI, vSI], i) => {
         const [dx, dy] = toDisplay(tSI, vSI);
         const [px, py] = disp2px(dx, dy);
-        const sel = i === state.selectedIdx;
+        let sel = state.selectedIndices.has(i);
+        if (boxSelecting && boxStart && boxCurrent) {
+            const minX = Math.min(boxStart[0], boxCurrent[0]);
+            const maxX = Math.max(boxStart[0], boxCurrent[0]);
+            const minY = Math.min(boxStart[1], boxCurrent[1]);
+            const maxY = Math.max(boxStart[1], boxCurrent[1]);
+            if (px >= minX && px <= maxX && py >= minY && py <= maxY) sel = true;
+        }
         ctx.beginPath();
         ctx.arc(px, py, sel ? 7 : 5, 0, Math.PI * 2);
         ctx.fillStyle = sel ? COLORS.sel : COLORS.point;
@@ -189,6 +197,18 @@ function draw() {
         ctx.font = '10px Consolas, monospace';
         ctx.fillText(`(${fmtNum(dx)}, ${fmtNum(dy)})`, px + 8, py - 4);
     });
+
+    if (boxSelecting && boxStart && boxCurrent) {
+        ctx.fillStyle = 'rgba(33, 150, 243, 0.15)';
+        ctx.strokeStyle = 'rgba(33, 150, 243, 0.6)';
+        ctx.lineWidth = 1;
+        const bx = Math.min(boxStart[0], boxCurrent[0]);
+        const by = Math.min(boxStart[1], boxCurrent[1]);
+        const bw = Math.abs(boxStart[0] - boxCurrent[0]);
+        const bh = Math.abs(boxStart[1] - boxCurrent[1]);
+        ctx.fillRect(bx, by, bw, bh);
+        ctx.strokeRect(bx, by, bw, bh);
+    }
 
     ctx.restore();
     drawAxes(pad, xMin, xMax, yMin, yMax, W, H);
@@ -318,7 +338,19 @@ function updatePointList() {
     state.points.forEach(([tSI, vSI], i) => {
         const [td, vd] = toDisplay(tSI, vSI);
         const row = document.createElement('div');
-        row.className = 'point-row' + (i === state.selectedIdx ? ' selected' : '');
+        row.className = 'point-row' + (state.selectedIndices.has(i) ? ' selected' : '');
+
+        const chk = document.createElement('input');
+        chk.type = 'checkbox';
+        chk.checked = state.selectedIndices.has(i);
+        chk.style.marginRight = '8px';
+        chk.addEventListener('click', e => e.stopPropagation());
+        chk.addEventListener('change', e => {
+            if (e.target.checked) state.selectedIndices.add(i);
+            else state.selectedIndices.delete(i);
+            refreshAll();
+        });
+        row.appendChild(chk);
 
         const lbl = document.createElement('span');
         lbl.textContent = `${fmtNum(td)} ${state.timeUnitLabel}, ${fmtNum(vd)} ${state.valUnitLabel}`;
@@ -332,13 +364,25 @@ function updatePointList() {
             e.stopPropagation();
             if (state.points.length <= 2) { setStatus('最低2点必要です'); return; }
             state.points.splice(i, 1);
-            if (state.selectedIdx === i) state.selectedIdx = null;
-            else if (state.selectedIdx > i) state.selectedIdx--;
+            const newSel = new Set();
+            for (let si of state.selectedIndices) {
+                if (si < i) newSel.add(si);
+                else if (si > i) newSel.add(si - 1);
+            }
+            state.selectedIndices = newSel;
             refreshAll();
         });
         row.appendChild(del);
 
-        row.addEventListener('click', () => { selectPoint(i); refreshAll(); });
+        row.addEventListener('click', (e) => {
+            if (e.ctrlKey || e.shiftKey) {
+                if (state.selectedIndices.has(i)) state.selectedIndices.delete(i);
+                else state.selectedIndices.add(i);
+            } else {
+                selectPoint(i);
+            }
+            refreshAll();
+        });
         pointList.appendChild(row);
     });
 }
@@ -347,9 +391,14 @@ function updatePointList() {
 //  Selection & editor
 // ============================================================
 function selectPoint(idx) {
-    state.selectedIdx = idx;
-    if (idx !== null) {
-        const [td, vd] = toDisplay(...state.points[idx]);
+    state.selectedIndices.clear();
+    if (idx !== null) state.selectedIndices.add(idx);
+}
+
+function updateEditorVisibility() {
+    if (state.selectedIndices.size === 1) {
+        const sIdx = Array.from(state.selectedIndices)[0];
+        const [td, vd] = toDisplay(...state.points[sIdx]);
         editT.value = fmtNum(td);
         editV.value = fmtNum(vd);
         pointEditor.style.display = '';
@@ -359,7 +408,8 @@ function selectPoint(idx) {
 }
 
 function applyEditorToPoint() {
-    if (state.selectedIdx === null) return;
+    if (state.selectedIndices.size !== 1) return;
+    const sIdx = Array.from(state.selectedIndices)[0];
     const td = parseFloat(editT.value);
     const vd = parseFloat(editV.value);
     if (isNaN(td) || isNaN(vd)) return;
@@ -369,14 +419,16 @@ function applyEditorToPoint() {
 
     // Resolve any time collision by nudging forward.
     // We keep the current point excluded while resolving, then apply.
-    const resolved = resolveTime(tSI, state.selectedIdx);
+    const resolved = resolveTime(tSI, sIdx);
     const nudged = Math.abs(resolved - tSI) > minDt() * 0.5;
 
-    state.points[state.selectedIdx] = [resolved, vSI];
+    state.points[sIdx] = [resolved, vSI];
     sortPoints();
-    state.selectedIdx = state.points.findIndex(
+    const newIdx = state.points.findIndex(
         p => Math.abs(p[0] - resolved) < minDt() * 0.1 && Math.abs(p[1] - vSI) < 1e-30
     );
+    state.selectedIndices.clear();
+    if (newIdx !== -1) state.selectedIndices.add(newIdx);
 
     if (nudged) {
         const [rdD] = toDisplay(resolved, 0);
@@ -438,15 +490,17 @@ function refreshAll() {
     draw();
     updatePointList();
     updateOutput();
-    if (state.selectedIdx !== null) {
-        const [td, vd] = toDisplay(...state.points[state.selectedIdx]);
-        editT.value = fmtNum(td);
-        editV.value = fmtNum(vd);
-    }
+    updateEditorVisibility();
     const n = state.points.length;
-    setStatus(state.selectedIdx !== null
-        ? `点 ${state.selectedIdx + 1}/${n} を選択中 — ドラッグで移動、右パネルで数値編集`
-        : `${n} 点 — ダブルクリックで追加、クリックで選択`);
+    const selCount = state.selectedIndices.size;
+    if (selCount === 1) {
+        const sIdx = Array.from(state.selectedIndices)[0];
+        setStatus(`点 ${sIdx + 1}/${n} を選択中 — ドラッグで移動、右パネルで数値編集`);
+    } else if (selCount > 1) {
+        setStatus(`${selCount}/${n} 点を選択中`);
+    } else {
+        setStatus(`${n} 点 — ダブルクリックで追加、クリックで選択`);
+    }
 }
 
 // ============================================================
@@ -456,6 +510,9 @@ let dragging = false;
 let panning  = false;
 let panStart = null;
 let panView  = null;
+let boxSelecting = false;
+let boxStart = null;
+let boxCurrent = null;
 
 function canvasMousePos(e) {
     const rect = canvas.getBoundingClientRect();
@@ -489,11 +546,19 @@ canvas.addEventListener('mousedown', e => {
     if (e.button !== 0) return;
     const idx = nearestPoint(px, py);
     if (idx !== null) {
-        selectPoint(idx);
-        dragging = true;
+        if (e.ctrlKey || e.shiftKey) {
+            if (state.selectedIndices.has(idx)) state.selectedIndices.delete(idx);
+            else state.selectedIndices.add(idx);
+        } else {
+            selectPoint(idx);
+            dragging = true;
+        }
         refreshAll();
     } else {
-        selectPoint(null);
+        if (!e.ctrlKey && !e.shiftKey) state.selectedIndices.clear();
+        boxSelecting = true;
+        boxStart = [px, py];
+        boxCurrent = [px, py];
         refreshAll();
     }
 });
@@ -522,36 +587,63 @@ canvas.addEventListener('mousemove', e => {
         return;
     }
 
-    if (dragging && state.selectedIdx !== null) {
+    if (boxSelecting) {
+        boxCurrent = [px, py];
+        draw();
+        return;
+    }
+
+    if (dragging && state.selectedIndices.size === 1) {
+        const sIdx = Array.from(state.selectedIndices)[0];
         let [td, vd] = px2disp(px, py);
         [td, vd] = snapDisp(td, vd);
         let [tSI, vSI] = toSI(td, vd);
         tSI = Math.max(0, tSI);
-        tSI = resolveTime(tSI, state.selectedIdx);
-        state.points[state.selectedIdx] = [tSI, vSI];
+        tSI = resolveTime(tSI, sIdx);
+        state.points[sIdx] = [tSI, vSI];
         sortPoints();
-        state.selectedIdx = state.points.findIndex(
+        const newIdx = state.points.findIndex(
             p => Math.abs(p[0] - tSI) < minDt() * 0.1 && Math.abs(p[1] - vSI) < 1e-30
         );
+        state.selectedIndices.clear();
+        if (newIdx !== -1) state.selectedIndices.add(newIdx);
         draw();
         updatePointList();
         updateOutput();
-        if (state.selectedIdx !== null) {
-            const [tdD, vdD] = toDisplay(...state.points[state.selectedIdx]);
-            editT.value = fmtNum(tdD);
-            editV.value = fmtNum(vdD);
-        }
+        updateEditorVisibility();
     }
 });
 
 canvas.addEventListener('mouseup', () => {
+    if (boxSelecting) {
+        boxSelecting = false;
+        if (boxStart && boxCurrent) {
+            const minX = Math.min(boxStart[0], boxCurrent[0]);
+            const maxX = Math.max(boxStart[0], boxCurrent[0]);
+            const minY = Math.min(boxStart[1], boxCurrent[1]);
+            const maxY = Math.max(boxStart[1], boxCurrent[1]);
+            state.points.forEach(([tSI, vSI], i) => {
+                const [dx, dy] = toDisplay(tSI, vSI);
+                const [px, py] = disp2px(dx, dy);
+                if (px >= minX && px <= maxX && py >= minY && py <= maxY) {
+                    state.selectedIndices.add(i);
+                }
+            });
+        }
+        refreshAll();
+    }
     dragging = false; panning = false;
     panStart = null; panView = null;
+    boxStart = null; boxCurrent = null;
 });
 
 canvas.addEventListener('mouseleave', () => {
     cursorCoord.textContent = '';
     dragging = false; panning = false;
+    if (boxSelecting) {
+        boxSelecting = false;
+        refreshAll();
+    }
 });
 
 canvas.addEventListener('contextmenu', e => e.preventDefault());
