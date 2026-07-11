@@ -330,6 +330,48 @@ function updateOutput() {
     pwlOutput.value = generatePWL();
 }
 
+const SPICE_SCALES = {
+    'f': 1e-15, 'p': 1e-12, 'n': 1e-9, 'u': 1e-6, 'µ': 1e-6, 'm': 1e-3, 'mil': 25.4e-6,
+    'k': 1e3, 'meg': 1e6, 'g': 1e9, 't': 1e12
+};
+
+function parseSpiceValue(str) {
+    const match = str.match(/^([-+]?\d*\.?\d+(?:[eE][-+]?\d+)?)(.*)$/);
+    if (!match) return NaN;
+    const val = parseFloat(match[1]);
+    const suf = match[2].toLowerCase();
+    const scale = SPICE_SCALES[suf] || 1;
+    return val * scale;
+}
+
+function loadPWL() {
+    const text = pwlOutput.value;
+    const regex = /[-+]?\d*\.?\d+(?:[eE][-+]?\d+)?(?:f|p|n|u|µ|m|mil|k|meg|g|t)?/gi;
+    const matches = text.match(regex);
+    if (!matches) {
+        setStatus('読み込みエラー：数値が見つかりません');
+        return;
+    }
+    const newPoints = [];
+    for (let i = 0; i < matches.length; i += 2) {
+        if (i + 1 >= matches.length) break;
+        const t = parseSpiceValue(matches[i]);
+        const v = parseSpiceValue(matches[i+1]);
+        if (!isNaN(t) && !isNaN(v) && t >= 0) {
+            newPoints.push([t, v]);
+        }
+    }
+    if (newPoints.length >= 2) {
+        state.points = newPoints;
+        sortPoints();
+        state.selectedIndices.clear();
+        autoScale();
+        setStatus(`${newPoints.length} 点を読み込みました`);
+    } else {
+        setStatus('読み込みエラー：有効なデータ点が2つ以上必要です');
+    }
+}
+
 // ============================================================
 //  Point list
 // ============================================================
@@ -778,8 +820,10 @@ document.getElementById('btnAddPoint').addEventListener('click', () => {
 document.getElementById('btnAutoScale').addEventListener('click', autoScale);
 
 // ============================================================
-//  Copy
+//  Copy & Load
 // ============================================================
+document.getElementById('btnLoad').addEventListener('click', loadPWL);
+
 document.getElementById('btnCopy').addEventListener('click', () => {
     const text = generatePWL();
     navigator.clipboard.writeText(text)
