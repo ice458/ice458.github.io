@@ -17,6 +17,49 @@ const state = {
 };
 
 // ============================================================
+//  History (Undo / Redo)
+// ============================================================
+const maxHistory = 50;
+let historyStack = [];
+let historyIdx = -1;
+
+function saveState() {
+    const cur = {
+        points: JSON.parse(JSON.stringify(state.points)),
+        selectedIndices: Array.from(state.selectedIndices)
+    };
+    if (historyIdx < historyStack.length - 1) {
+        historyStack = historyStack.slice(0, historyIdx + 1);
+    }
+    historyStack.push(cur);
+    if (historyStack.length > maxHistory) {
+        historyStack.shift();
+    } else {
+        historyIdx++;
+    }
+}
+
+function undo() {
+    if (historyIdx > 0) {
+        historyIdx--;
+        const s = historyStack[historyIdx];
+        state.points = JSON.parse(JSON.stringify(s.points));
+        state.selectedIndices = new Set(s.selectedIndices);
+        refreshAll();
+    }
+}
+
+function redo() {
+    if (historyIdx < historyStack.length - 1) {
+        historyIdx++;
+        const s = historyStack[historyIdx];
+        state.points = JSON.parse(JSON.stringify(s.points));
+        state.selectedIndices = new Set(s.selectedIndices);
+        refreshAll();
+    }
+}
+
+// ============================================================
 //  Unit maps
 // ============================================================
 const TIME_UNITS = {
@@ -115,6 +158,7 @@ function resolveTime(tSI, excludeIdx = null) {
 }
 
 function addPointSI(tSI, vSI) {
+    saveState();
     tSI = Math.max(0, tSI);
     tSI = resolveTime(tSI);
     state.points.push([tSI, vSI]);
@@ -125,6 +169,7 @@ function addPointSI(tSI, vSI) {
 function deleteSelected() {
     if (state.selectedIndices.size === 0) return;
     if (state.points.length - state.selectedIndices.size < 2) { setStatus('最低2点必要です'); return; }
+    saveState();
     const toDelete = Array.from(state.selectedIndices).sort((a, b) => b - a);
     toDelete.forEach(idx => state.points.splice(idx, 1));
     state.selectedIndices.clear();
@@ -345,6 +390,7 @@ function parseSpiceValue(str) {
 }
 
 function loadPWL() {
+    saveState();
     const text = pwlOutput.value;
     const regex = /[-+]?\d*\.?\d+(?:[eE][-+]?\d+)?(?:f|p|n|u|µ|m|mil|k|meg|g|t)?/gi;
     const matches = text.match(regex);
@@ -353,12 +399,18 @@ function loadPWL() {
         return;
     }
     const newPoints = [];
+    let lastTime = 0;
     for (let i = 0; i < matches.length; i += 2) {
         if (i + 1 >= matches.length) break;
-        const t = parseSpiceValue(matches[i]);
-        const v = parseSpiceValue(matches[i+1]);
+        const tStr = matches[i];
+        const vStr = matches[i+1];
+        const isRelative = tStr.startsWith('+');
+        let t = parseSpiceValue(tStr);
+        let v = parseSpiceValue(vStr);
+        if (isRelative && newPoints.length > 0) t += lastTime;
         if (!isNaN(t) && !isNaN(v) && t >= 0) {
             newPoints.push([t, v]);
+            lastTime = t;
         }
     }
     if (newPoints.length >= 2) {
@@ -405,6 +457,7 @@ function updatePointList() {
         del.addEventListener('click', e => {
             e.stopPropagation();
             if (state.points.length <= 2) { setStatus('最低2点必要です'); return; }
+            saveState();
             state.points.splice(i, 1);
             const newSel = new Set();
             for (let si of state.selectedIndices) {
@@ -458,6 +511,8 @@ function applyEditorToPoint() {
 
     let [tSI, vSI] = toSI(td, vd);
     tSI = Math.max(0, tSI);
+
+    saveState();
 
     // Resolve any time collision by nudging forward.
     // We keep the current point excluded while resolving, then apply.
@@ -543,6 +598,9 @@ function refreshAll() {
     } else {
         setStatus(`${n} 点 — ダブルクリックで追加、クリックで選択`);
     }
+
+    const tPanel = document.getElementById('transformPanel');
+    if (tPanel) tPanel.style.display = selCount >= 1 ? '' : 'none';
 }
 
 // ============================================================
@@ -555,6 +613,8 @@ let panView  = null;
 let boxSelecting = false;
 let boxStart = null;
 let boxCurrent = null;
+let dragBaseP = null;
+let dragStartPoints = [];
 
 function canvasMousePos(e) {
     const rect = canvas.getBoundingClientRect();
@@ -592,8 +652,17 @@ canvas.addEventListener('mousedown', e => {
             if (state.selectedIndices.has(idx)) state.selectedIndices.delete(idx);
             else state.selectedIndices.add(idx);
         } else {
-            selectPoint(idx);
+            if (!state.selectedIndices.has(idx)) {
+                selectPoint(idx);
+            }
+            saveState(); // Save state before drag starts
             dragging = true;
+            dragBaseP = state.points[idx];
+            dragStartPoints = Array.from(state.selectedIndices).map(i => ({
+                p: state.points[i],
+                startT: state.points[i][0],
+                startV: state.points[i][1]
+            }));
         }
         refreshAll();
     } else {
@@ -635,20 +704,35 @@ canvas.addEventListener('mousemove', e => {
         return;
     }
 
-    if (dragging && state.selectedIndices.size === 1) {
-        const sIdx = Array.from(state.selectedIndices)[0];
+    if (dragging && dragStartPoints.length > 0) {
+        let baseInfo = dragStartPoints.find(d => d.p === dragBaseP);
+        if (!baseInfo) baseInfo = dragStartPoints[0];
+
         let [td, vd] = px2disp(px, py);
         [td, vd] = snapDisp(td, vd);
         let [tSI, vSI] = toSI(td, vd);
-        tSI = Math.max(0, tSI);
-        tSI = resolveTime(tSI, sIdx);
-        state.points[sIdx] = [tSI, vSI];
+
+        let deltaT = tSI - baseInfo.startT;
+        let deltaV = vSI - baseInfo.startV;
+
+        let minT = Math.min(...dragStartPoints.map(d => d.startT));
+        if (minT + deltaT < 0) {
+            deltaT = -minT;
+        }
+
+        dragStartPoints.forEach(d => {
+            d.p[0] = d.startT + deltaT;
+            d.p[1] = d.startV + deltaV;
+        });
+
         sortPoints();
-        const newIdx = state.points.findIndex(
-            p => Math.abs(p[0] - tSI) < minDt() * 0.1 && Math.abs(p[1] - vSI) < 1e-30
-        );
+
         state.selectedIndices.clear();
-        if (newIdx !== -1) state.selectedIndices.add(newIdx);
+        dragStartPoints.forEach(d => {
+            const newIdx = state.points.indexOf(d.p);
+            if (newIdx !== -1) state.selectedIndices.add(newIdx);
+        });
+
         draw();
         updatePointList();
         updateOutput();
@@ -677,6 +761,7 @@ canvas.addEventListener('mouseup', () => {
     dragging = false; panning = false;
     panStart = null; panView = null;
     boxStart = null; boxCurrent = null;
+    dragBaseP = null; dragStartPoints = [];
 });
 
 canvas.addEventListener('mouseleave', () => {
@@ -734,6 +819,8 @@ document.addEventListener('keydown', e => {
     if (e.key === 'Delete' || e.key === 'Backspace') deleteSelected();
     if (e.key === 'f' || e.key === 'F') autoScale();
     if (e.key === 'Escape') { selectPoint(null); refreshAll(); }
+    if (e.key.toLowerCase() === 'z' && e.ctrlKey && !e.shiftKey) { e.preventDefault(); undo(); }
+    if ((e.key.toLowerCase() === 'y' && e.ctrlKey) || (e.key.toLowerCase() === 'z' && e.ctrlKey && e.shiftKey)) { e.preventDefault(); redo(); }
 });
 
 // ============================================================
@@ -774,7 +861,56 @@ document.getElementById('valUnit').addEventListener('change', e => {
 });
 
 // ============================================================
-//  Snap
+//  Repeat
+// ============================================================
+
+document.getElementById('btnRepeat').addEventListener('click', () => {
+    const count = parseInt(document.getElementById('repeatCount').value, 10);
+    if (isNaN(count) || count < 1) return;
+
+    let targetIndices = Array.from(state.selectedIndices).sort((a, b) => a - b);
+    if (targetIndices.length === 0) {
+        targetIndices = state.points.map((_, i) => i);
+    }
+    if (targetIndices.length < 2) {
+        setStatus('リピートするには最低2点を選択するか、グラフに2点以上存在する必要があります');
+        return;
+    }
+
+    saveState();
+    const minT = state.points[targetIndices[0]][0];
+    const maxT = state.points[targetIndices[targetIndices.length - 1]][0];
+    const period = maxT - minT;
+    const dt = minDt();
+
+    const globalMaxT = state.points.reduce((max, p) => Math.max(max, p[0]), 0);
+    const newPoints = [];
+    let currentT = globalMaxT;
+
+    for (let r = 1; r <= count; r++) {
+        const startT = currentT + dt;
+        targetIndices.forEach(idx => {
+            const [t, v] = state.points[idx];
+            newPoints.push([startT + (t - minT), v]);
+        });
+        currentT = startT + period;
+    }
+
+    const oldSelP = Array.from(state.selectedIndices).map(i => state.points[i]);
+    state.points.push(...newPoints);
+    sortPoints();
+    state.selectedIndices.clear();
+    oldSelP.forEach(p => {
+        const idx = state.points.indexOf(p);
+        if (idx !== -1) state.selectedIndices.add(idx);
+    });
+    autoScale();
+    refreshAll();
+    setStatus(`${count} 回リピート展開しました`);
+});
+
+// ============================================================
+//  Init
 // ============================================================
 document.getElementById('snapEnable').addEventListener('change', e => {
     state.snap.enabled = e.target.checked;
@@ -848,4 +984,5 @@ const _minDtVal = parseFloat(document.getElementById('minDtInput').value);
 if (isFinite(_minDtVal) && _minDtVal > 0) state.minDtDisplay = _minDtVal;
 
 syncRangeInputs();
+saveState();
 refreshAll();
