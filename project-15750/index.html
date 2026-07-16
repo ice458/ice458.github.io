@@ -202,7 +202,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
                 <div class="article-section">
                     <h2>ハードウェア</h2>
-                    <p>ヘッドホン出力とライン入力、USB 入力を持ち、マイコンは Raspberry Pi Pico 2 を使用しています。コーデックには入出力を一体で賄える SGTL5000 を使い、こちらを I2S マスターとして 48kHz / 24bit で動作させ、Pico 側は PIO で I2S スレーブとして受け取る構成にしました。MCLK は SGTL5000 が要求する 12MHz を、SYSCLK 252MHz から PWM による整数分周 (252 / 21) で生成しています。オーバークロックは分周が整数比になる点と、DSP 処理に十分なサイクル余裕を確保するために必要でした。</p>
+                    <p>ヘッドホン出力とライン入力、USB 入力を持ち、マイコンは Raspberry Pi Pico 2 と同じ RP2350A を使用しています。コーデックには入出力を一体で賄える SGTL5000 を使い、こちらを I2S マスターとして 48kHz / 24bit で動作させ、Pico 側は PIO で I2S スレーブとして受け取る構成にしました。MCLK は SGTL5000 が要求する 12MHz を、SYSCLK 252MHz から PWM による整数分周 (252 / 21) で生成しています。オーバークロックは分周が整数比になる点と、DSP 処理に十分なサイクル余裕を確保するために必要でした。</p>
 
                     <div class="article-image">
                         <img src="img/sch.png" alt="HRTFヘッドホンアンプの回路図">
