@@ -61,9 +61,23 @@ _PREFIX_RE = re.compile(
     r"^([+-]?\d+\.?\d*(?:[eE][+-]?\d+)?)\s*([TGMkmuμnpf])$"
 )
 
-# Performance limits
-_WARN_SIZE = 12
-_MAX_SIZE = 20
+# Performance limits. The old hard cap (_MAX_SIZE) existed because the legacy
+# Cramer/berkowitz path could hang the browser on a large symbolic system. The
+# fast solver replaces that with a term-count guard (_MAX_TERMS) which fires on
+# the actual blow-up (an intermediate fraction exploding), not a proxy for it,
+# so there is no fixed size ceiling any more. _WARN_SIZE still flags systems
+# large enough that a fully-symbolic solve may be slow.
+_WARN_SIZE = 14
+# Per-entry monomial-count guard for the fast solver. Empirically the answer
+# (and every intermediate fraction) of a genuinely useful symbolic solve stays
+# small -- a fully-symbolic 4-stage active filter peaks around 260 monomials --
+# while a structure whose flat symbolic form explodes (a long RC ladder, a deep
+# op-amp cascade) grows past this within a step or two. It is checked on the
+# OPERANDS of each fraction op, not just results, because one gcd reduction on
+# two large multivariate fractions runs uninterruptibly for tens of seconds --
+# so a large operand must be caught before it is used, not after. Tripping the
+# guard means "this circuit's symbolic answer is huge; solve it numerically."
+_MAX_TERMS = 500
 
 
 # ===================================================================
@@ -371,12 +385,12 @@ def _build_mna(elements: List[dict]) -> Tuple[
     n_branch = len(group2)
     n_total = n_nodes + n_branch
 
-    # Performance guard
-    if n_total > _MAX_SIZE:
-        errors.append(f"System size {n_total} exceeds maximum ({_MAX_SIZE})")
-        return zeros(1), zeros(1, 1), [], [], errors
+    # No hard size cap: the fast solver's term-count guard handles blow-up.
+    # A large system may still be slow to solve fully symbolically, so warn.
     if n_total > _WARN_SIZE:
-        errors.append(f"WARNING: system size {n_total} may be slow (>{_WARN_SIZE})")
+        errors.append(
+            f"WARNING: system size {n_total} is large; a fully-symbolic solve "
+            f"may be slow. Enter component values to solve numerically instead.")
 
     branch_idx = {name: n_nodes + i for i, name in enumerate(group2)}
 
@@ -581,6 +595,266 @@ def _extract_coeffs(poly: sp.Poly) -> List[str]:
     return [str(c) for c in poly.all_coeffs()]
 
 
+# ===================================================================
+#  Fast sparse solver (fraction field + Markowitz elimination)
+# ===================================================================
+#
+# The legacy path builds H(s) with Cramer's rule and berkowitz determinants,
+# then cancel()s the result. On anything past a handful of elements the
+# cancel/expand step blows up (see plans/speedup-plan.md): the determinant's
+# unexpanded product-of-sums form hides massive term duplication that only
+# surfaces when it is normalised.
+#
+# This solver instead solves A·x = z once, directly over the field of
+# fractions of ZZ[s, R1, ...], keeping every entry reduced (numerator and
+# denominator coprime) at all times. Standard Gaussian elimination -- NOT
+# fraction-free -- so a row with a zero in the pivot column is left untouched
+# and MNA sparsity survives, which is what makes cascaded active filters
+# tractable. Markowitz pivoting minimises fill-in.
+#
+# The transfer function is a single component of x (or a difference of two for
+# a differential output), so no extra eliminations are needed regardless of
+# output kind.
+
+# A placeholder symbol for pi, so finite-gain op-amp entries (which carry a
+# literal pi) embed in the polynomial ring; mapped back to sp.pi on the way out.
+_PI_SYM = sp.Symbol("_pi_")
+
+
+class _SolverFallback(Exception):
+    """The fast solver cannot handle this system; use the legacy path."""
+
+
+class _SolverTooLarge(Exception):
+    """An intermediate expression exceeded the term-count guard."""
+
+
+def _markowitz_choose(rows, live_rows, live_cols):
+    """Pick the (row, col) pivot minimising Markowitz fill cost.
+
+    cost = (row_nnz - 1) * (col_nnz - 1), tie-broken by smaller numerator.
+    Returns (row, col) or (None, None) if no nonzero live entry remains.
+    """
+    col_count: Dict[int, int] = {}
+    for i in live_rows:
+        for c in rows[i]:
+            if c in live_cols:
+                col_count[c] = col_count.get(c, 0) + 1
+    best_key = None
+    best = (None, None)
+    for i in live_rows:
+        r_nnz = sum(1 for c in rows[i] if c in live_cols)
+        for c, v in rows[i].items():
+            if c not in live_cols:
+                continue
+            key = ((r_nnz - 1) * (col_count[c] - 1), len(v.numer) + len(v.denom))
+            if best_key is None or key < best_key:
+                best_key = key
+                best = (i, c)
+    return best
+
+
+def _frac_solve_H(
+    A: sp.Matrix,
+    z_tf: sp.Matrix,
+    out_idx: Optional[int],
+    out_idx2: Optional[int],
+    max_terms: int = 50000,
+    time_budget: float = 20.0,
+) -> sp.Expr:
+    """Solve A·x = z_tf over the fraction field and return the raw H(s).
+
+    H = x[out_idx]                          (single-ended output)
+      = x[out_idx] - x[out_idx2]            (differential; a None index is ground)
+
+    Raises :class:`_SolverFallback` if the entries cannot be embedded in a
+    polynomial ring; :class:`_SolverTooLarge` if an intermediate fraction grows
+    past *max_terms* monomials, or the elimination exceeds *time_budget* seconds.
+    The time budget matters because the cost is dominated by gcd reductions on
+    the fraction entries -- a moderate-size but dense answer (a long RC ladder)
+    can run for tens of seconds while never tripping the term count, so wall
+    time is the guard that actually bounds it.
+    """
+    import time as _time
+    from sympy.polys.fields import field
+    from sympy import ZZ
+    from sympy.polys.polyerrors import CoercionFailed, GeneratorsError, PolynomialError
+
+    _EMBED_ERRORS = (CoercionFailed, GeneratorsError, PolynomialError, ValueError, TypeError)
+
+    deadline = _time.perf_counter() + time_budget
+    n = A.rows
+
+    # pi -> placeholder so the ring embedding sees only Symbols.
+    has_pi = any(A[i, j].has(sp.pi) for i in range(n) for j in range(n)) or \
+        any(z_tf[i].has(sp.pi) for i in range(n))
+    A_ent = A
+    z_ent = z_tf
+    if has_pi:
+        A_ent = A.applyfunc(lambda e: e.subs(sp.pi, _PI_SYM))
+        z_ent = z_tf.applyfunc(lambda e: e.subs(sp.pi, _PI_SYM))
+
+    syms = set()
+    for i in range(n):
+        for j in range(n):
+            syms |= A_ent[i, j].free_symbols
+        syms |= z_ent[i].free_symbols
+    names = sorted(str(x) for x in syms)
+    if not names:
+        names = ["s"]   # a fully-numeric system still needs a ring variable
+
+    try:
+        F = field(",".join(names), ZZ)[0]
+        # sparse augmented rows: row -> {col: FracElement}, rhs at column n.
+        rows: Dict[int, Dict[int, Any]] = {}
+        for i in range(n):
+            r: Dict[int, Any] = {}
+            for j in range(n):
+                e = A_ent[i, j]
+                if e != 0:
+                    r[j] = F.from_expr(e)
+            zi = z_ent[i]
+            if zi != 0:
+                r[n] = F.from_expr(zi)
+            rows[i] = r
+    except _EMBED_ERRORS as exc:
+        raise _SolverFallback(str(exc))
+
+    def _sz(e) -> int:
+        return len(e.numer) + len(e.denom)
+
+    def _guard(e):
+        """Abort on any entry whose monomial count crosses the term guard.
+
+        Checked on operands BEFORE they feed another fraction op, not just on
+        results: a single gcd reduction on two large multivariate fractions can
+        run for tens of seconds uninterruptibly, so the size has to be caught
+        before the expensive operation starts, not after it returns.
+        """
+        if _sz(e) > max_terms:
+            raise _SolverTooLarge(f"~{_sz(e)} terms")
+        return e
+
+    live_rows = set(range(n))
+    live_cols = set(range(n))
+    pivots: List[Tuple[int, int]] = []
+
+    for _ in range(n):
+        pi, pc = _markowitz_choose(rows, live_rows, live_cols)
+        if pi is None:
+            # No nonzero pivot in the remaining block: singular system.
+            raise _SolverFallback("singular (fast path)")
+        piv = _guard(rows[pi][pc])
+        for i in list(live_rows):
+            if i == pi:
+                continue
+            f = rows[i].get(pc)
+            if f is None:
+                continue   # zero in pivot column: row untouched, sparsity kept
+            if _time.perf_counter() > deadline:
+                raise _SolverTooLarge("exceeded time budget")
+            factor = _guard(f / piv)
+            row_i = rows[i]
+            for c, v in rows[pi].items():
+                if c == pc:
+                    continue
+                sub = factor * v
+                cur = row_i.get(c)
+                nv = (cur - sub) if cur is not None else (-sub)
+                if nv != 0:
+                    row_i[c] = _guard(nv)
+                elif c in row_i:
+                    del row_i[c]
+            del row_i[pc]
+        pivots.append((pi, pc))
+        live_rows.discard(pi)
+        live_cols.discard(pc)
+
+    # Back-substitution in reverse pivot order: when a pivot is processed every
+    # other column left in its row has already been solved (see plan notes).
+    # The solved components accumulate the full answer, so this phase is where a
+    # dense result actually gets built -- it carries the same guards as forward
+    # elimination.
+    x: Dict[int, Any] = {}
+    for pi, pc in reversed(pivots):
+        if _time.perf_counter() > deadline:
+            raise _SolverTooLarge("exceeded time budget")
+        r = rows[pi]
+        acc = r.get(n, F.zero)
+        for c, v in r.items():
+            if c == pc or c == n:
+                continue
+            acc = _guard(acc - v * _guard(x[c]))
+        x[pc] = _guard(acc / r[pc])
+
+    def component(idx: Optional[int]):
+        return x[idx] if idx is not None else F.zero
+
+    H_field = component(out_idx)
+    if out_idx2 is not None:
+        H_field = H_field - component(out_idx2)
+
+    H_expr = H_field.as_expr()
+    if has_pi:
+        H_expr = H_expr.subs(_PI_SYM, sp.pi)
+    return H_expr
+
+
+def _value_subs_map(A: sp.Matrix, z_tf: sp.Matrix, values: Dict[str, Any]) -> Dict[sp.Symbol, sp.Expr]:
+    """Build an exact substitution dict for the numeric-first solve.
+
+    Matches value names against the symbols actually present in A / z_tf (so a
+    ``positive=True`` symbol and a plain one both resolve), and converts each
+    value with ``Rational`` -- keeping the coefficients exact rather than
+    importing binary floating-point error into the transfer function.
+    """
+    present = {}
+    for i in range(A.rows):
+        for j in range(A.cols):
+            for sym in A[i, j].free_symbols:
+                present[str(sym)] = sym
+        for sym in z_tf[i].free_symbols:
+            present[str(sym)] = sym
+    subs: Dict[sp.Symbol, sp.Expr] = {}
+    for name, val in values.items():
+        try:
+            r = sp.Rational(str(val))
+        except (ValueError, TypeError):
+            r = sp.sympify(str(val))
+        if name in present:
+            subs[present[name]] = r
+        else:
+            subs[Symbol(name)] = r
+            subs[Symbol(name, positive=True)] = r
+    return subs
+
+
+def _legacy_cramer_H(
+    A: sp.Matrix,
+    z_tf: sp.Matrix,
+    output_idx: Optional[int],
+    output_idx2: Optional[int],
+    det_A: sp.Expr,
+    n_total: int,
+) -> sp.Expr:
+    """Cramer's rule with berkowitz determinants (the original solve path).
+
+    Retained as the fast solver's fallback and for ``options.method='legacy'``.
+    """
+    def det_with_col(col: int) -> sp.Expr:
+        A_k = A.copy()
+        for row in range(n_total):
+            A_k[row, col] = z_tf[row]
+        return A_k.berkowitz_det()
+
+    if output_idx is not None and output_idx2 is None:
+        return det_with_col(output_idx) / det_A
+    if output_idx is not None and output_idx2 is not None:
+        return (det_with_col(output_idx) - det_with_col(output_idx2)) / det_A
+    # output_from is ground: H = -H_to
+    return -det_with_col(output_idx2) / det_A
+
+
 def solve(circuit_json: str) -> str:
     """Solve the circuit for transfer function(s).
 
@@ -702,45 +976,50 @@ def solve(circuit_json: str) -> str:
             if nn_i is not None:
                 z_tf[nn_i] -= 1
 
-        # ----- Cramer's Rule -----
-        # det(A) via berkowitz
-        det_A = A.berkowitz_det()
-
-        if det_A == 0:
-            return _err(["Singular MNA matrix — circuit may have errors"])
-
-        # For single-node output
-        if output_idx is not None and output_idx2 is None:
-            # Replace column output_idx with z_tf
-            A_k = A.copy()
-            for row in range(n_total):
-                A_k[row, output_idx] = z_tf[row]
-            det_Ak = A_k.berkowitz_det()
-            H_raw = det_Ak / det_A
-
-        elif output_idx is not None and output_idx2 is not None:
-            # Differential: H = H_from - H_to
-            A_k1 = A.copy()
-            for row in range(n_total):
-                A_k1[row, output_idx] = z_tf[row]
-            det_Ak1 = A_k1.berkowitz_det()
-
-            A_k2 = A.copy()
-            for row in range(n_total):
-                A_k2[row, output_idx2] = z_tf[row]
-            det_Ak2 = A_k2.berkowitz_det()
-
-            H_raw = (det_Ak1 - det_Ak2) / det_A
-
-        elif output_idx is None and output_idx2 is not None:
-            # output_from is ground: H = 0 - H_to = -H_to
-            A_k2 = A.copy()
-            for row in range(n_total):
-                A_k2[row, output_idx2] = z_tf[row]
-            det_Ak2 = A_k2.berkowitz_det()
-            H_raw = -det_Ak2 / det_A
-        else:
+        if output_idx is None and output_idx2 is None:
             return _err(["Could not determine output variable index"])
+
+        # ----- Options: numeric-first values and method selection -----
+        options = circuit.get("options") or {}
+        method = options.get("method", "auto")
+        values = options.get("values") or {}
+
+        # Numeric-first: substitute component values into A and z_tf BEFORE
+        # solving, so a large filter collapses to a small numeric polynomial and
+        # never has to form its (exponentially large) symbolic transfer function.
+        # Rationals, not floats -- exact, no binary round-off in the coefficients.
+        if values:
+            subs_map = _value_subs_map(A, z_tf, values)
+            A = A.subs(subs_map)
+            z_tf = z_tf.subs(subs_map)
+
+        # ----- Compute the raw transfer function H_raw -----
+        # Fast path: solve A·x = z_tf once over the fraction field. Falls back to
+        # the legacy Cramer/berkowitz path if the system cannot be embedded in a
+        # polynomial ring (unexpected transcendental) or is structurally singular.
+        stats: Dict[str, Any] = {"n": n_total}
+        H_raw = None
+        used_method = method
+        if method != "legacy":
+            try:
+                H_raw = _frac_solve_H(A, z_tf, output_idx, output_idx2, _MAX_TERMS)
+                used_method = "fast"
+            except _SolverTooLarge as exc:
+                return _err([
+                    f"The symbolic transfer function is too large to compute "
+                    f"({exc}). Enter component values to solve numerically, or "
+                    f"split the circuit into smaller blocks."])
+            except _SolverFallback:
+                H_raw = None   # drop to legacy below
+
+        if H_raw is None:
+            det_A = A.berkowitz_det()
+            if det_A == 0:
+                return _err(["Singular MNA matrix — circuit may have errors"])
+            H_raw = _legacy_cramer_H(A, z_tf, output_idx, output_idx2, det_A, n_total)
+            used_method = "legacy"
+
+        stats["method"] = used_method
 
         # Simplify
         H_simplified = cancel(H_raw)
@@ -783,6 +1062,9 @@ def solve(circuit_json: str) -> str:
         for c in num_poly.all_coeffs() + den_poly.all_coeffs():
             all_syms.update(str(sym) for sym in sp.sympify(c).free_symbols if sym != s)
 
+        stats["den_terms"] = sum(
+            len(sp.Add.make_args(sp.expand(c))) for c in den_poly.all_coeffs())
+
         tf = {
             "num_coeffs": num_coeffs,
             "den_coeffs": den_coeffs,
@@ -794,7 +1076,7 @@ def solve(circuit_json: str) -> str:
             "H_expr": str(H_simplified),
         }
 
-        result: Dict[str, Any] = {"tf": tf, "errors": warnings}
+        result: Dict[str, Any] = {"tf": tf, "errors": warnings, "stats": stats}
         return _ok(result)
 
     except Exception as exc:
