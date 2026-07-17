@@ -2086,8 +2086,8 @@ function initSchematic() {
 
     stage = new Konva.Stage({
         container: 'schematic-container',
-        width: container.offsetWidth,
-        height: container.offsetHeight
+        width: container.clientWidth,
+        height: container.clientHeight
     });
 
     gridLayer = new Konva.Layer({ listening: false });
@@ -2104,8 +2104,8 @@ function initSchematic() {
     setupPalette();
 
     const resize = () => {
-        stage.width(container.offsetWidth);
-        stage.height(container.offsetHeight);
+        stage.width(container.clientWidth);
+        stage.height(container.clientHeight);
         gridLayer.batchDraw();
     };
     window.addEventListener('resize', resize);
