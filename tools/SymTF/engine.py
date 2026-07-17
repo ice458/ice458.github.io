@@ -180,8 +180,10 @@ def _ok(payload: dict) -> str:
     return json.dumps(payload, default=str)
 
 
-def _err(messages: List[str]) -> str:
-    return json.dumps({"ok": False, "errors": messages}, default=str)
+def _err(messages: List[str], **extra) -> str:
+    payload = {"ok": False, "errors": messages}
+    payload.update(extra)
+    return json.dumps(payload, default=str)
 
 
 # ===================================================================
@@ -829,6 +831,20 @@ def _value_subs_map(A: sp.Matrix, z_tf: sp.Matrix, values: Dict[str, Any]) -> Di
     return subs
 
 
+def _remaining_symbols(A: sp.Matrix, z_tf: sp.Matrix) -> List[str]:
+    """Sorted names of the symbols still present in the system (excluding s).
+
+    Used to tell the UI which values it must collect for the numeric-first
+    solve after a symbolic solve overflows the term guard.
+    """
+    syms = set()
+    for i in range(A.rows):
+        for j in range(A.cols):
+            syms |= A[i, j].free_symbols
+        syms |= z_tf[i].free_symbols
+    return sorted(str(x) for x in syms if x != s and x != _PI_SYM)
+
+
 def _legacy_cramer_H(
     A: sp.Matrix,
     z_tf: sp.Matrix,
@@ -1005,10 +1021,18 @@ def solve(circuit_json: str) -> str:
                 H_raw = _frac_solve_H(A, z_tf, output_idx, output_idx2, _MAX_TERMS)
                 used_method = "fast"
             except _SolverTooLarge as exc:
-                return _err([
-                    f"The symbolic transfer function is too large to compute "
-                    f"({exc}). Enter component values to solve numerically, or "
-                    f"split the circuit into smaller blocks."])
+                # Report machine-readably so the UI can offer the numeric-first
+                # path: reason='too_large' and the list of symbols that need a
+                # value. (When we already had values and still overflowed, the
+                # circuit is genuinely intractable -- no numeric escape hatch.)
+                remaining = _remaining_symbols(A, z_tf)
+                return _err(
+                    [f"The symbolic transfer function is too large to compute "
+                     f"({exc}). Enter component values to solve numerically, or "
+                     f"split the circuit into smaller blocks."],
+                    reason="too_large",
+                    symbols=remaining,
+                )
             except _SolverFallback:
                 H_raw = None   # drop to legacy below
 

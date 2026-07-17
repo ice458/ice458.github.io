@@ -11,6 +11,41 @@ let currentSubstitutedTf = null;
 let currentApproxTf = null;
 let isFullyNumeric = false;
 
+// Numeric-first mode. A circuit whose symbolic transfer function is
+// exponentially large (a deep op-amp cascade, a long ladder) cannot be solved
+// symbolically -- but with component values it collapses to a small numeric
+// polynomial. When the engine reports that, we drop into this mode: the Values
+// table is filled from the circuit's symbols, and once every one has a value we
+// solve numerically (options.values) instead of substituting into a symbolic
+// H(s) that was never formed.
+let numericMode = false;
+let numericSymbols = [];
+
+// LRU cache of solve results, keyed by the exact circuit JSON (elements +
+// ports + options). Undo/redo and port round-trips re-issue identical solves;
+// this keeps them instant. Only deterministic outcomes are cached -- a success
+// or a "too large" verdict -- never a transient transport failure.
+const _solveCache = new Map();
+const _SOLVE_CACHE_MAX = 8;
+
+async function solveCircuitCached(circuitJson) {
+    const key = JSON.stringify(circuitJson);
+    const hit = _solveCache.get(key);
+    if (hit) {
+        _solveCache.delete(key);   // refresh LRU recency
+        _solveCache.set(key, hit);
+        return hit;
+    }
+    const result = await Bridge.solveCircuit(circuitJson);
+    if (result.ok || result.reason === 'too_large') {
+        _solveCache.set(key, result);
+        while (_solveCache.size > _SOLVE_CACHE_MAX) {
+            _solveCache.delete(_solveCache.keys().next().value);
+        }
+    }
+    return result;
+}
+
 // DOM Elements
 const els = {
     engineStatus: document.getElementById('engine-status'),
@@ -190,6 +225,7 @@ els.engineCancelBtn?.addEventListener('click', () => {
     Bridge.cancel();
     engineReady = false;
     lastSolvedKey = null;
+    _solveCache.clear();   // results from the terminated worker are moot
     els.engineCancelBtn.classList.add('hidden');
     setEngineStatus('loading', 'Cancelled — restarting engine…');
 });
@@ -561,7 +597,10 @@ els.subsTbody.addEventListener('input', (e) => {
     if (e.target.classList.contains('subs-val-input')) {
         clearTimeout(subsLiveTimer);
         subsLiveTimer = setTimeout(() => {
-            try { applySubstitution(); } catch (err) { showGlobalError('UI Error: ' + err.message); }
+            // In numeric-first mode there is no symbolic H(s) to substitute
+            // into; the values drive a numeric re-solve instead.
+            const fn = numericMode ? maybeRunNumericSolve : applySubstitution;
+            try { fn(); } catch (err) { showGlobalError('UI Error: ' + err.message); }
         }, 350);
         return;
     }
@@ -583,7 +622,18 @@ els.subsTbody.addEventListener('input', (e) => {
 els.clearSubsBtn.addEventListener('click', () => {
     document.querySelectorAll('.subs-val-input').forEach(input => input.value = '');
     clearSubsError();
-    applySubstitution();   // no fields set -> restores the symbolic form
+    if (numericMode) {
+        // No symbolic form to fall back to; just drop the stale numeric result
+        // and wait for values again.
+        currentTf = null;
+        currentSubstitutedTf = null;
+        isFullyNumeric = false;
+        els.resultContainer.classList.add('hidden');
+        els.resultPlaceholder.classList.remove('hidden');
+        updatePlotTabState();
+    } else {
+        applySubstitution();   // no fields set -> restores the symbolic form
+    }
 });
 
 // Plotting
@@ -748,21 +798,29 @@ async function runAnalysis(forceInput = null, forceOutput = null, silent = false
 
     const key = solveKey(inName, outNode);
     const seq = ++solveSeq;
-    const result = await Bridge.solveCircuit(currentCircuitJson);
+    const result = await solveCircuitCached(currentCircuitJson);
 
     // A newer solve was issued while this one ran: its result owns the screen.
     if (seq !== solveSeq) throw new Error("Superseded by a newer analysis");
 
     if (!result.ok) {
+        lastSolvedKey = null;
+        // Too large to solve symbolically: not a dead end -- offer the numeric
+        // path. This is a normal outcome for big filters, not an error to throw.
+        if (result.reason === 'too_large') {
+            hasAnalyzed = true;
+            enterNumericMode(result.symbols || [], result.errors || []);
+            return null;
+        }
         // With no Analyze button there is no manual retry, so solve
         // failures always land in the persistent parse-error box
         // rather than being swallowed (silent) or modal (manual).
-        lastSolvedKey = null;
         setParseError(result.errors.map(m => "Analysis: " + m));
         throw new Error("Analysis failed");
     }
 
     hasAnalyzed = true;   // enables auto-refresh on later edits
+    numericMode = false;  // a symbolic result supersedes any numeric-first state
     lastSolvedKey = key;
     if (result.errors && result.errors.length > 0) {
         setParseError(result.errors.map(m => "Analysis: " + m));
@@ -803,6 +861,83 @@ function renderResults(tf) {
         [...els.subsTbody.querySelectorAll('.subs-val-input')].some(i => i.value.trim() !== '')) {
         applySubstitution();
     }
+}
+
+// The symbolic solve overflowed: this circuit's symbolic H(s) is too large to
+// form. Switch the Values table into "fill every field, then I solve
+// numerically" mode. The symbol list comes from the engine (it knows exactly
+// which values are still needed), so the fields appear even though there is no
+// symbolic transfer function to substitute into.
+function enterNumericMode(symbols, errors) {
+    numericMode = true;
+    numericSymbols = symbols;
+    currentTf = null;
+    currentSubstitutedTf = null;
+    currentApproxTf = null;
+    isFullyNumeric = false;
+    approxChain = [];
+    if (els.approxSteps) renderApproxChain();
+
+    els.resultPlaceholder.classList.remove('hidden');
+    els.resultPlaceholder.textContent =
+        'Too large for a symbolic result — enter a value for every component below to plot the numeric response.';
+    els.resultContainer.classList.add('hidden');
+
+    setParseError(errors.concat(
+        ['Enter a value for every symbol below; the response is then computed numerically.']));
+
+    populateSubstitutionTable(symbols);
+    els.subsPlaceholder.classList.add('hidden');
+    els.subsContainer.classList.remove('hidden');
+    updatePlotTabState();
+    updateApproxTabState();
+
+    // Values may already be filled (an edit re-analysed an already-numeric
+    // circuit) -- solve straight away if so.
+    maybeRunNumericSolve();
+}
+
+// In numeric mode, once every symbol has a value, solve with options.values so
+// the engine substitutes into the MNA and returns a small numeric H(s) it never
+// had to build symbolically. Debounced through the same live path as
+// substitution, and guarded by the solve sequence so stale results never land.
+async function maybeRunNumericSolve() {
+    if (!numericMode || !currentCircuitJson) return;
+
+    const values = {};
+    let missing = false;
+    document.querySelectorAll('.subs-val-input').forEach(inp => {
+        const v = inp.value.trim();
+        if (v === '') missing = true;
+        else values[inp.dataset.sym] = parseSIValue(v);
+    });
+    if (missing || numericSymbols.some(sym => !(sym in values))) {
+        // Not all values in yet: keep the guidance up, nothing to solve.
+        return;
+    }
+
+    const circuit = { ...currentCircuitJson, options: { method: 'auto', values } };
+    const seq = ++solveSeq;
+    let result;
+    try {
+        result = await solveCircuitCached(circuit);
+    } catch (e) {
+        return;
+    }
+    if (seq !== solveSeq) return;
+    if (!result.ok) {
+        setSubsError((result.errors || ['Numeric solve failed.']).join('; '));
+        return;
+    }
+    clearSubsError();
+    hideParseError();
+    currentTf = result.tf;
+    currentSubstitutedTf = result.tf;
+    isFullyNumeric = (result.tf.symbols.length === 0);
+    els.resultPlaceholder.classList.add('hidden');
+    els.resultContainer.classList.remove('hidden');
+    renderTf(result.tf);
+    updatePlotTabState();
 }
 
 // Draws a transfer function into the banner. Display only -- no state, no table

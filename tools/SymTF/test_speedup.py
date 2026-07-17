@@ -97,3 +97,61 @@ def test_bench_consistency_cases():
     for cname in CONSISTENCY_CASES:
         netlist, inp, out = get(cname)
         assert_methods_agree(netlist, inp, {"kind": "node_voltage", "node": out})
+
+
+# --- Numeric-first mode (options.values) -----------------------------------
+
+def _solve_opts(netlist, input_name, output_spec, options):
+    pr = json.loads(parse_netlist(netlist))
+    assert pr["ok"], pr.get("errors")
+    circuit = json.loads(pr["circuit_json"])
+    circuit["input"] = {"name": input_name}
+    circuit["output"] = output_spec
+    circuit["options"] = options
+    return json.loads(solve(json.dumps(circuit)))
+
+
+def test_numeric_first_matches_symbolic_then_substitute():
+    """Solving with options.values must equal the symbolic solve then a
+    numeric substitution of the same values."""
+    netlist, inp, out = "Vin in 0 Vin\nR1 in out R1\nC1 out 0 C1", "Vin", "out"
+    out_spec = {"kind": "node_voltage", "node": out}
+    vals = {"R1": "1000", "C1": "1e-9"}
+
+    numeric = _solve_opts(netlist, inp, out_spec, {"method": "auto", "values": vals})
+    assert numeric["ok"], numeric.get("errors")
+    assert numeric["tf"]["symbols"] == []            # fully numeric
+    assert numeric["stats"]["method"] == "fast"
+
+    # Reference: symbolic H, then substitute the same values (Rational, exact).
+    from engine import substitute
+    sym = _solve_opts(netlist, inp, out_spec, {"method": "auto"})
+    subbed = json.loads(substitute(json.dumps(sym["tf"]), json.dumps(vals)))["tf"]
+    # Compare as rational functions.
+    a = sympify(numeric["tf"]["H_expr"])
+    b = sympify(subbed["H_expr"])
+    assert simplify(cancel(a - b)) == 0
+
+
+def test_too_large_reports_reason_and_symbols():
+    """A deep symbolic cascade overflows the guard and reports the numeric
+    escape hatch: reason='too_large' plus the symbols that still need values."""
+    from bench.circuits import get
+    netlist, inp, out = get("mfb4")
+    r = _solve_opts(netlist, inp, {"kind": "node_voltage", "node": out}, {"method": "auto"})
+    assert r["ok"] is False
+    assert r.get("reason") == "too_large"
+    assert len(r.get("symbols", [])) > 0
+
+
+def test_too_large_becomes_solvable_with_values():
+    """The same over-large circuit solves once values are supplied."""
+    from bench.circuits import get
+    netlist, inp, out = get("mfb4")
+    r = _solve_opts(netlist, inp, {"kind": "node_voltage", "node": out}, {"method": "auto"})
+    vals = {name: "1000" if name.startswith("R") else "1e-9" for name in r["symbols"]}
+    solved = _solve_opts(netlist, inp, {"kind": "node_voltage", "node": out},
+                         {"method": "auto", "values": vals})
+    assert solved["ok"], solved.get("errors")
+    assert solved["tf"]["symbols"] == []
+    assert solved["tf"]["den_degree"] == 8   # 4 cascaded biquads
