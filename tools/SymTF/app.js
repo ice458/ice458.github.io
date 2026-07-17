@@ -98,6 +98,7 @@ const els = {
     subsContainer: document.getElementById('subs-container'),
     subsTbody: document.getElementById('subs-tbody'),
     clearSubsBtn: document.getElementById('clear-subs-btn'),
+    solveLongBtn: document.getElementById('solve-long-btn'),
     subsError: document.getElementById('subs-error'),
     
     // Plotting
@@ -807,6 +808,7 @@ async function runAnalysis(forceInput = null, forceOutput = null, silent = false
 
     hasAnalyzed = true;   // enables auto-refresh on later edits
     numericMode = false;  // a symbolic result supersedes any numeric-first state
+    els.solveLongBtn?.classList.add('hidden');
     lastSolvedKey = key;
     if (result.errors && result.errors.length > 0) {
         setParseError(result.errors.map(m => "Analysis: " + m));
@@ -866,15 +868,18 @@ function enterNumericMode(symbols, errors) {
 
     els.resultPlaceholder.classList.remove('hidden');
     els.resultPlaceholder.textContent =
-        'Too large for a symbolic result — enter a value for every component below to plot the numeric response.';
+        'Too large for a fully symbolic result — enter component values below. ' +
+        'A few fields (about 3–4, more with "Solve harder") may be left blank ' +
+        'to keep those symbols symbolic in H(s).';
     els.resultContainer.classList.add('hidden');
 
     setParseError(errors.concat(
-        ['Enter a value for every symbol below; the response is then computed numerically.']));
+        ['Enter values below. Leaving a few fields blank keeps those symbols symbolic in H(s).']));
 
     populateSubstitutionTable(symbols);
     els.subsPlaceholder.classList.add('hidden');
     els.subsContainer.classList.remove('hidden');
+    els.solveLongBtn?.classList.remove('hidden');
     updatePlotTabState();
     updateApproxTabState();
 
@@ -883,26 +888,46 @@ function enterNumericMode(symbols, errors) {
     maybeRunNumericSolve();
 }
 
-// In numeric mode, once every symbol has a value, solve with options.values so
-// the engine substitutes into the MNA and returns a small numeric H(s) it never
-// had to build symbolically. Debounced through the same live path as
-// substitution, and guarded by the solve sequence so stale results never land.
-async function maybeRunNumericSolve() {
+// The Solve harder button: same solve, engine effort 'long' -- up to about a
+// minute of computation and a higher free-symbol allowance. Explicit user
+// action only: the automatic per-keystroke attempts stay on the quick budget
+// so editing never silently queues minute-long jobs in the worker.
+els.solveLongBtn?.addEventListener('click', async () => {
+    const btn = els.solveLongBtn;
+    const prev = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'Solving… (up to ~1 min)';
+    try {
+        await maybeRunNumericSolve('long');
+    } finally {
+        btn.disabled = false;
+        btn.textContent = prev;
+    }
+});
+
+// In numeric mode the value fields drive re-solves with options.values: the
+// engine substitutes into the MNA and solves whatever stays symbolic. Not all
+// fields are required -- a handful of symbols (engine-guarded) may be left
+// blank to keep them symbolic in H(s), which is how a 50-element filter can
+// still be swept over 3-6 chosen components. Debounced through the same live
+// path as substitution, and guarded by the solve sequence so stale results
+// never land. effort='long' (the Solve harder button) lets the engine spend up
+// to ~a minute and admit more free symbols.
+async function maybeRunNumericSolve(effort = 'quick') {
     if (!numericMode || !currentCircuitJson) return;
 
     const values = {};
-    let missing = false;
     document.querySelectorAll('.subs-val-input').forEach(inp => {
         const v = inp.value.trim();
-        if (v === '') missing = true;
-        else values[inp.dataset.sym] = parseSIValue(v);
+        if (v !== '') values[inp.dataset.sym] = parseSIValue(v);
     });
-    if (missing || numericSymbols.some(sym => !(sym in values))) {
-        // Not all values in yet: keep the guidance up, nothing to solve.
-        return;
-    }
+    // With no values at all, a quick attempt is exactly the symbolic solve
+    // that just failed -- skip. The Solve harder button may still try it.
+    if (effort === 'quick' && Object.keys(values).length === 0) return;
 
-    const circuit = { ...currentCircuitJson, options: { method: 'auto', values } };
+    const options = { method: 'auto', values };
+    if (effort === 'long') options.effort = 'long';
+    const circuit = { ...currentCircuitJson, options };
     const seq = ++solveSeq;
     let result;
     try {
@@ -912,7 +937,14 @@ async function maybeRunNumericSolve() {
     }
     if (seq !== solveSeq) return;
     if (!result.ok) {
-        setSubsError((result.errors || ['Numeric solve failed.']).join('; '));
+        if (result.reason === 'too_large') {
+            setSubsError((result.errors || []).join(' ') +
+                (effort === 'quick'
+                    ? ' — fill more fields, or press "Solve harder (~1 min)".'
+                    : ''));
+        } else {
+            setSubsError((result.errors || ['Numeric solve failed.']).join('; '));
+        }
         return;
     }
     clearSubsError();
@@ -924,6 +956,7 @@ async function maybeRunNumericSolve() {
     els.resultContainer.classList.remove('hidden');
     renderTf(result.tf);
     updatePlotTabState();
+    updateApproxTabState();
 }
 
 // Draws a transfer function into the banner. Display only -- no state, no table

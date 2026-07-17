@@ -303,6 +303,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                                 </table>
                                 <div class="action-row">
                                     <button id="clear-subs-btn" class="secondary-btn">Clear</button>
+                                    <!-- Numeric mode only: retry the solve with a bigger
+                                         budget (~1 min) so more symbols can stay symbolic. -->
+                                    <button id="solve-long-btn" class="secondary-btn hidden"
+                                            title="Retry allowing up to about a minute of computation — more symbols can be left blank (symbolic)">Solve harder (~1 min)</button>
                                 </div>
                                 <div id="subs-error" class="error-box hidden"></div>
                             </div>
@@ -485,7 +489,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <script src="samples.js?v=5"></script>
     <script src="netlist.js?v=5"></script>
     <script src="schematic.js?v=5"></script>
-    <script src="app.js?v=7"></script>
+    <script src="app.js?v=8"></script>
     <script src="/consent.js" defer></script>
 </body>
 </html>

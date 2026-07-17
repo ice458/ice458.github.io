@@ -79,6 +79,35 @@ _WARN_SIZE = 14
 # guard means "this circuit's symbolic answer is huge; solve it numerically."
 _MAX_TERMS = 500
 
+# Effort presets for the fast solver, selected by options.effort.
+#
+#   quick — the default, tuned for the interactive loop (auto re-analysis on
+#           every edit): a small entry cap aborts hopeless circuits in well
+#           under a second.
+#   long  — user-invoked "spend up to a minute on it": a much larger entry cap
+#           admits bigger intermediates (an 8-stage RC ladder passes through
+#           ~8600-term entries on its way to a 29s solve), and a *product* cap
+#           bounds the cost of each individual fraction op instead. The product
+#           cap is what actually keeps the wall time honest: gcd-heavy systems
+#           (a 4-stage MFB cascade) have single reductions that run for minutes
+#           uninterruptibly, and they reach large×large operand products long
+#           before the entry cap trips -- while the ladder's big entries only
+#           ever multiply small partners (~large×20), far under the cap.
+# max_vars bounds the number of ring generators (s + free symbols) admitted:
+# multivariate gcd cost is exponential in the variable count, and a single gcd
+# is uninterruptible -- a 21-generator system (4-stage MFB, 20 free symbols)
+# was measured spending 17s on ONE subtraction of 126×629-term fractions and
+# minutes on later ones, while a 17-generator ladder chews through 8600-term
+# entries to finish in ~30s. Term/product caps cannot see this, so variable
+# count is checked up front, refusing immediately with "give more components
+# values" instead of burning minutes. 18 = the measured-safe 17 plus one.
+_EFFORT_LIMITS = {
+    "quick": {"max_terms": _MAX_TERMS, "time_budget": 20.0, "max_product": None,
+              "max_vars": None},
+    "long": {"max_terms": 12000, "time_budget": 60.0, "max_product": 1_000_000,
+             "max_vars": 18},
+}
+
 
 # ===================================================================
 #  Helpers
@@ -663,6 +692,8 @@ def _frac_solve_H(
     out_idx2: Optional[int],
     max_terms: int = 50000,
     time_budget: float = 20.0,
+    max_product: Optional[int] = None,
+    max_vars: Optional[int] = None,
 ) -> sp.Expr:
     """Solve A·x = z_tf over the fraction field and return the raw H(s).
 
@@ -705,6 +736,14 @@ def _frac_solve_H(
     if not names:
         names = ["s"]   # a fully-numeric system still needs a ring variable
 
+    # Refuse up front when there are too many ring variables for this effort
+    # level: multivariate gcd cost is exponential in the variable count and a
+    # single gcd cannot be interrupted, so this is the one blow-up that must be
+    # rejected before elimination starts rather than caught during it.
+    if max_vars is not None and len(names) > max_vars:
+        n_free = len([x for x in syms if x != s and x != _PI_SYM])
+        raise _SolverTooLarge(f"{n_free} symbols still free")
+
     try:
         F = field(",".join(names), ZZ)[0]
         # sparse augmented rows: row -> {col: FracElement}, rhs at column n.
@@ -737,6 +776,20 @@ def _frac_solve_H(
             raise _SolverTooLarge(f"~{_sz(e)} terms")
         return e
 
+    def _op_guard(a, b):
+        """Abort before a fraction op whose operand-size product is too big.
+
+        The cost of a FracElement multiply/divide is governed by the product of
+        the operand sizes (the gcd runs over that many term pairs), and it is
+        uninterruptible once started. Under the large-entry 'long' preset this
+        is the guard that keeps wall time honest: a ladder's big intermediates
+        only ever meet small partners (cheap), while a gcd-heavy cascade
+        reaches large×large products -- and minutes-long single ops -- well
+        before its entries trip the term cap.
+        """
+        if max_product is not None and _sz(a) * _sz(b) > max_product:
+            raise _SolverTooLarge(f"op cost ~{_sz(a) * _sz(b)}")
+
     live_rows = set(range(n))
     live_cols = set(range(n))
     pivots: List[Tuple[int, int]] = []
@@ -755,11 +808,13 @@ def _frac_solve_H(
                 continue   # zero in pivot column: row untouched, sparsity kept
             if _time.perf_counter() > deadline:
                 raise _SolverTooLarge("exceeded time budget")
+            _op_guard(f, piv)
             factor = _guard(f / piv)
             row_i = rows[i]
             for c, v in rows[pi].items():
                 if c == pc:
                     continue
+                _op_guard(factor, v)
                 sub = factor * v
                 cur = row_i.get(c)
                 nv = (cur - sub) if cur is not None else (-sub)
@@ -786,7 +841,9 @@ def _frac_solve_H(
         for c, v in r.items():
             if c == pc or c == n:
                 continue
-            acc = _guard(acc - v * _guard(x[c]))
+            _op_guard(v, _guard(x[c]))
+            acc = _guard(acc - v * x[c])
+        _op_guard(acc, r[pc])
         x[pc] = _guard(acc / r[pc])
 
     def component(idx: Optional[int]):
@@ -995,10 +1052,12 @@ def solve(circuit_json: str) -> str:
         if output_idx is None and output_idx2 is None:
             return _err(["Could not determine output variable index"])
 
-        # ----- Options: numeric-first values and method selection -----
+        # ----- Options: numeric-first values, method, and effort -----
         options = circuit.get("options") or {}
         method = options.get("method", "auto")
         values = options.get("values") or {}
+        effort = options.get("effort", "quick")
+        limits = _EFFORT_LIMITS.get(effort, _EFFORT_LIMITS["quick"])
 
         # Numeric-first: substitute component values into A and z_tf BEFORE
         # solving, so a large filter collapses to a small numeric polynomial and
@@ -1018,7 +1077,13 @@ def solve(circuit_json: str) -> str:
         used_method = method
         if method != "legacy":
             try:
-                H_raw = _frac_solve_H(A, z_tf, output_idx, output_idx2, _MAX_TERMS)
+                H_raw = _frac_solve_H(
+                    A, z_tf, output_idx, output_idx2,
+                    max_terms=limits["max_terms"],
+                    time_budget=limits["time_budget"],
+                    max_product=limits["max_product"],
+                    max_vars=limits["max_vars"],
+                )
                 used_method = "fast"
             except _SolverTooLarge as exc:
                 # Report machine-readably so the UI can offer the numeric-first

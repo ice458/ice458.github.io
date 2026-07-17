@@ -155,3 +155,44 @@ def test_too_large_becomes_solvable_with_values():
     assert solved["ok"], solved.get("errors")
     assert solved["tf"]["symbols"] == []
     assert solved["tf"]["den_degree"] == 8   # 4 cascaded biquads
+
+
+def test_partial_values_keep_symbols_symbolic():
+    """Values for a subset of components: the rest stay symbolic in H(s).
+
+    This is the 50-element partial-sweep workflow: fix most components
+    numerically, keep the interesting few symbolic."""
+    from bench.circuits import get
+    netlist, inp, out = get("sk10")   # ~51 elements, 40 symbols
+    r = _solve_opts(netlist, inp, {"kind": "node_voltage", "node": out}, {"method": "auto"})
+    assert r.get("reason") == "too_large"
+    keep = {"R1a", "C1a"}
+    vals = {name: "1000" if name.startswith("R") else "1e-9"
+            for name in r["symbols"] if name not in keep}
+    solved = _solve_opts(netlist, inp, {"kind": "node_voltage", "node": out},
+                         {"method": "auto", "values": vals})
+    assert solved["ok"], solved.get("errors")
+    assert set(solved["tf"]["symbols"]) == keep
+    assert solved["tf"]["den_degree"] == 20   # 10 cascaded biquads
+
+
+def test_effort_long_admits_more_and_refuses_by_var_count():
+    """effort='long' raises the budget but refuses immediately (no minutes of
+    burn) when too many symbols are still free -- the refusal names the count."""
+    from bench.circuits import get
+    netlist, inp, out = get("mfb4")   # 20 free symbols: over even the long cap
+    import time
+    t0 = time.perf_counter()
+    r = _solve_opts(netlist, inp, {"kind": "node_voltage", "node": out},
+                    {"method": "auto", "effort": "long"})
+    elapsed = time.perf_counter() - t0
+    assert r["ok"] is False
+    assert r.get("reason") == "too_large"
+    assert "symbols still free" in r["errors"][0]
+    assert elapsed < 5.0, f"refusal must be immediate, took {elapsed:.1f}s"
+
+    # And an unknown effort value falls back to quick rather than erroring.
+    ok = _solve_opts("Vin in 0 Vin\nR1 in out R1\nC1 out 0 C1", "Vin",
+                     {"kind": "node_voltage", "node": "out"},
+                     {"method": "auto", "effort": "bogus"})
+    assert ok["ok"], ok.get("errors")
