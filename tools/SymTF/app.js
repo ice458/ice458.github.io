@@ -777,25 +777,11 @@ async function runAnalysis(forceInput = null, forceOutput = null, silent = false
     currentCircuitJson.input = { kind: inKind, name: inName };
     currentCircuitJson.output = { kind: "node_voltage", node: outNode };
 
-    // Pre-check size to set expectations. The UI no longer freezes (the solve
-    // runs in a worker), but a big system can still take long -- say so, and
-    // point at the Cancel that has appeared in the header.
-    const elements = currentCircuitJson.elements || [];
-    const nodeSet = new Set();
-    let nBranch = 0;
-    for (const el of elements) {
-        for (const key of ["n1", "n2", "np", "nn", "ncp", "ncn", "nout"]) {
-            if (el[key] && el[key] !== "0") nodeSet.add(el[key]);
-        }
-        if (["V", "E", "O"].includes(el.type)) nBranch++;
-    }
-    const nTotal = nodeSet.size + nBranch;
-    if (nTotal > 12) {
-        setParseError(`Analysis: WARNING: system size ${nTotal} may take a while (>12). You can keep editing; Cancel is in the header.`);
-    } else {
-        hideParseError();
-    }
-
+    // No speculative size warning here any more: the solve runs in a worker (the
+    // UI never freezes), the fast path handles far larger systems than the old
+    // n>12 threshold, and anything genuinely too large to solve symbolically is
+    // caught by the engine and routed to numeric mode. Real warnings and the
+    // too-large verdict come back with the result below.
     const key = solveKey(inName, outNode);
     const seq = ++solveSeq;
     const result = await solveCircuitCached(currentCircuitJson);
