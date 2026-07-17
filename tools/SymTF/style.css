@@ -328,6 +328,11 @@ textarea {
     font-size: 0.85rem;
     white-space: pre-wrap;
     animation: fade-in 0.3s ease;
+    /* A half-wired big circuit reports one line per floating terminal; without
+       a cap those lines squeeze the schematic canvas until it cannot be edited
+       -- exactly when the user needs it to fix the errors. Scroll instead. */
+    max-height: 9.5em;
+    overflow-y: auto;
 }
 
 /* --- Schematic Editor (M6) --- */

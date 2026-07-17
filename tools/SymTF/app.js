@@ -1106,6 +1106,13 @@ function parseSIValue(str) {
     return val.toString();
 }
 
+// Component-name order: R2 before R10. The engine sorts symbols
+// lexicographically (R1, R10, R11, ..., R2, ...), which is unreadable as soon
+// as a circuit has ten parts of one kind; numeric-aware compare fixes the
+// display without touching the engine's JSON contract.
+const natCompare = (a, b) =>
+    String(a).localeCompare(String(b), undefined, { numeric: true, sensitivity: 'base' });
+
 function populateSubstitutionTable(symbols) {
     els.subsPlaceholder.classList.add('hidden');
     els.subsContainer.classList.remove('hidden');
@@ -1129,7 +1136,7 @@ function populateSubstitutionTable(symbols) {
 
     els.subsTbody.innerHTML = '';
 
-    symbols.forEach(sym => {
+    [...symbols].sort(natCompare).forEach(sym => {
         const tr = document.createElement('tr');
         const val = prev[sym] ? ` value="${escHtml(prev[sym])}"` : '';
         tr.innerHTML = `
@@ -1146,7 +1153,8 @@ function populateSubstitutionTable(symbols) {
     const model = window.Schematic ? window.Schematic.getModel() : { components: [] };
     const fixed = model.components.filter(c =>
         ['R', 'C', 'L', 'E', 'G'].includes(c.type) &&
-        c.value && window.Netlist?.isNumericValue(c.value.trim()));
+        c.value && window.Netlist?.isNumericValue(c.value.trim()))
+        .sort((a, b) => natCompare(a.name, b.name));
     fixed.forEach(c => {
         const tr = document.createElement('tr');
         tr.innerHTML = `
