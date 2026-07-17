@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- Consent Mode default (runs before GTM) -->
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  // Force host-only cookies to avoid public suffix issues (e.g., github.io)
+  gtag('set','cookie_domain','none');
+  gtag('consent', 'default', {
+    ad_storage: 'denied',
+    analytics_storage: 'denied',
+    ad_user_data: 'denied',
+    ad_personalization: 'denied',
+    wait_for_update: 2000
+  });
+</script>
+<!-- Consent geo override: auto-grant analytics outside EEA/UK -->
+<script>
+  (function(){
+    try {
+      var stored = null;
+      try { stored = localStorage.getItem('consent.choice'); } catch(e) {}
+      if (stored === 'denied') return;
+      if (stored === 'granted') {
+        gtag('consent','update',{
+          ad_storage:'granted', analytics_storage:'granted',
+          ad_user_data:'granted', ad_personalization:'granted'
+        });
+        return;
+      }
+      var tz = '';
+      try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone || ''; } catch(e) {}
+      var isEEA = /^Europe\//.test(tz)
+               || tz === 'Asia/Nicosia'
+               || /^Atlantic\/(Reykjavik|Madeira|Azores|Canary)$/.test(tz);
+      if (!isEEA) {
+        gtag('consent','update',{ analytics_storage:'granted' });
+      }
+    } catch(e) {}
+  })();
+</script>
+<!-- Google Tag Manager -->
+<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','GTM-MMZ5XH4V');</script>
+<!-- End Google Tag Manager -->
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SymTF - Symbolic Circuit Analyzer | 回路の伝達関数を記号解析 - ice458の物置き</title>
+    <meta name="description"
+        content="受動・能動回路の伝達関数をブラウザ上で記号的に導出する回路解析ツールです。回路図エディタまたはネットリストから入力し、SymPyによる伝達関数の導出、極・零点の算出、Bodeプロット、近似式の比較に対応します。インストール不要で動作します。">
+    <meta name="keywords"
+        content="伝達関数,記号解析,回路解析,symbolic,transfer function,circuit analyzer,SymPy,Bode,ボード線図,極,零点,ネットリスト,回路図エディタ,フィルタ設計,ice458">
+    <meta name="author" content="ice458">
+
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://ice458.github.io/tools/SymTF/">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://ice458.github.io/tools/SymTF/">
+    <meta property="og:title" content="SymTF - Symbolic Circuit Analyzer | 回路の伝達関数を記号解析">
+    <meta property="og:description"
+        content="受動・能動回路の伝達関数をブラウザ上で記号的に導出する回路解析ツールです。回路図エディタから入力し、伝達関数の導出、極・零点の算出、Bodeプロットに対応します。">
+    <meta property="og:image" content="https://ice458.github.io/tools/SymTF/SymTF.png">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://ice458.github.io/tools/SymTF/">
+    <meta property="twitter:title" content="SymTF - Symbolic Circuit Analyzer | 回路の伝達関数を記号解析">
+    <meta property="twitter:description"
+        content="受動・能動回路の伝達関数をブラウザ上で記号的に導出する回路解析ツールです。回路図エディタから入力し、伝達関数の導出、極・零点の算出、Bodeプロットに対応します。">
+    <meta property="twitter:image" content="https://ice458.github.io/tools/SymTF/SymTF.png">
+
+    <!-- ファビコン設定 -->
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/favicon-180x180.png">
+    <link rel="manifest" href="/site.webmanifest">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+    
+    <!-- KaTeX -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+
+    <!-- Plotly -->
+    <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
+
+    <!-- Konva.js (Schematic Editor) -->
+    <script src="https://unpkg.com/konva@9.3.6/konva.min.js"></script>
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="style.css?v=5">
+</head>
+<body>
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-MMZ5XH4V"
+height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+<!-- End Google Tag Manager (noscript) -->
+
+    <!-- Global Error Banner -->
+    <div id="global-error-banner" class="global-error-banner hidden">
+        <div class="error-content">
+            <span class="error-icon">⚠️</span>
+            <span id="global-error-text" class="error-text">An error occurred.</span>
+        </div>
+        <button id="close-error-btn" class="close-error-btn">&times;</button>
+    </div>
+
+    <div id="app-container">
+        <header>
+            <div class="header-content">
+                <div class="logo">
+                    <span class="logo-icon">∿</span>
+                    <h1>SymTF Analyzer</h1>
+                </div>
+                <div class="header-actions">
+                    <!-- The editor needs no Pyodide, so it is usable from the
+                         first paint. Only analysis waits, and this says so. -->
+                    <div id="engine-status" class="engine-status loading">
+                        <span class="engine-dot"></span>
+                        <span id="engine-status-text">Loading SymPy…</span>
+                    </div>
+                    <button id="share-btn" class="secondary-btn small-btn" title="Copy a link to this circuit">Share Link</button>
+                    <button id="import-btn" class="secondary-btn small-btn">Import</button>
+                    <button id="export-btn" class="secondary-btn small-btn">Export</button>
+                    <input type="file" id="import-file" accept=".json" class="hidden">
+                </div>
+            </div>
+        </header>
+
+        <main class="split-layout">
+            <!-- Left Pane: Input -->
+            <section class="pane left-pane glass-panel">
+                <div class="pane-header">
+                    <h2>Circuit Setup</h2>
+                    <div class="tabs">
+                        <button class="tab-btn active" data-left-tab="schematic">Schematic</button>
+                        <button class="tab-btn" data-left-tab="text">Netlist</button>
+                    </div>
+                </div>
+
+                <!-- Schematic Editor Tab -->
+                <div class="left-tab-content" id="left-tab-schematic">
+                    <div class="palette">
+                        <select id="schematic-sample-select" class="palette-select" title="Load an example circuit">
+                            <option value="">Examples…</option>
+                        </select>
+                        <button id="schematic-clear-btn" class="palette-btn" title="Clear the canvas">Clear</button>
+                        <div class="palette-separator"></div>
+                        <button class="palette-btn" data-type="R" title="Resistor (R)">R</button>
+                        <button class="palette-btn" data-type="C" title="Capacitor (C)">C</button>
+                        <button class="palette-btn" data-type="L" title="Inductor (L)">L</button>
+                        <button class="palette-btn" data-type="GND" title="Ground (0)">GND</button>
+                        <button class="palette-btn" data-type="LABEL" title="Netname (N)">Label</button>
+                        <div class="palette-separator"></div>
+                        <button class="palette-btn" data-type="E" title="VCVS (E)">E</button>
+                        <button class="palette-btn" data-type="G" title="VCCS (G)">G</button>
+                        <div class="palette-separator"></div>
+                        <button class="palette-btn" data-type="O" title="OpAmp (O)">OpAmp</button>
+                        <button class="palette-btn" data-type="WIRE" title="Wire (W)">Wire</button>
+                    </div>
+                    <!-- The overlay is a sibling of the Konva mount, both inside
+                         a positioned wrapper, so the buttons always paint above
+                         the canvas. -->
+                    <div class="canvas-wrap">
+                        <div id="schematic-container"></div>
+                        <div class="canvas-overlay">
+                            <button id="autoscale-btn" class="canvas-btn" title="Autoscale — fit circuit to view (Space)">⤢ Autoscale</button>
+                            <button id="fullscreen-btn" class="canvas-btn" title="Full screen editor (F)">⛶ Full screen</button>
+                            <button id="shortcuts-btn" class="canvas-btn" title="Keyboard shortcuts (?)">?</button>
+                        </div>
+                        <!-- Toggled by the ? button / key. Static content: the
+                             single place the shortcuts are written down. -->
+                        <div id="shortcuts-panel" class="shortcuts-panel hidden">
+                            <table>
+                                <tr><td>R C L</td><td>Resistor / Capacitor / Inductor</td></tr>
+                                <tr><td>G E</td><td>VCCS / VCVS — press again to flip polarity</td></tr>
+                                <tr><td>0</td><td>Ground</td></tr>
+                                <tr><td>N</td><td>Netname (label)</td></tr>
+                                <tr><td>W</td><td>Wire mode</td></tr>
+                                <tr><td>Ctrl+R / Ctrl+E</td><td>Rotate / Mirror</td></tr>
+                                <tr><td>M</td><td>Move selected part</td></tr>
+                                <tr><td>Del</td><td>Delete selection</td></tr>
+                                <tr><td>Ctrl+C / Ctrl+V</td><td>Copy / Paste</td></tr>
+                                <tr><td>Ctrl+Z / Ctrl+Y</td><td>Undo / Redo</td></tr>
+                                <tr><td>Space</td><td>Autoscale</td></tr>
+                                <tr><td>F</td><td>Full screen editor</td></tr>
+                                <tr><td>Dbl / right click</td><td>Edit part properties</td></tr>
+                                <tr><td>Esc</td><td>Cancel</td></tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Netlist Tab: what the schematic generates, for checking.
+                     Read-only -- the schematic is the single source of truth,
+                     and a hand-edit here would be silently overwritten by the
+                     next extraction. -->
+                <div class="left-tab-content hidden" id="left-tab-text">
+                    <div class="netlist-header">
+                        <p class="subtitle-text">Generated from the schematic. This is exactly what the engine receives.</p>
+                        <button id="copy-netlist-btn" class="secondary-btn small-btn">Copy</button>
+                    </div>
+                    <textarea id="netlist-input" readonly spellcheck="false"
+                              placeholder="Draw a circuit to see its netlist here."></textarea>
+                </div>
+
+                <!-- Shared I/O and Analyze button (Always visible) -->
+                <div class="io-section" style="margin-top: 1rem; border-top: 1px solid var(--border-color); padding-top: 1rem;">
+                    <h3>Port Configuration</h3>
+                    <div class="io-controls">
+                        <div class="control-group">
+                            <label for="input-source">Input voltage source at node</label>
+                            <select id="input-source"></select>
+                        </div>
+                        <div class="control-group">
+                            <label for="output-node">Output voltage at node</label>
+                            <select id="output-node"></select>
+                        </div>
+                    </div>
+                    <!-- No Analyze button: analysis runs automatically -- on
+                         load, on every edit, and on port changes. Problems
+                         surface here instead. -->
+                    <div id="parse-error-box" class="error-box hidden" style="margin-top: 0.75rem;"></div>
+                </div>
+            </section>
+
+            <!-- Right Pane: Results -->
+            <section class="pane right-pane glass-panel">
+                <!-- H(s) is the answer the user came for, so it stays put rather
+                     than hiding behind a tab. -->
+                <div class="tf-banner">
+                    <div id="result-placeholder" class="placeholder-text">
+                        Draw a circuit and press Analyze
+                    </div>
+                    <div id="result-container" class="hidden">
+                        <div class="result-header">
+                            <h3 id="tf-kind-label">Voltage Gain</h3>
+                            <div class="badges">
+                                <span class="badge" id="num-degree-badge">Num Deg: -</span>
+                                <span class="badge" id="den-degree-badge">Den Deg: -</span>
+                                <button id="toggle-coeffs-btn" class="link-btn">View Coefficients</button>
+                                <button id="toggle-pz-btn" class="link-btn">View Poles &amp; Zeros</button>
+                            </div>
+                        </div>
+                        <div class="math-display-container">
+                            <div id="latex-output" class="math-display"></div>
+                        </div>
+                        <div id="coeffs-container" class="hidden coeff-section">
+                            <h4>Numerator Coefficients</h4>
+                            <div id="num-coeffs-list" class="coeff-list"></div>
+                            <h4>Denominator Coefficients</h4>
+                            <div id="den-coeffs-list" class="coeff-list"></div>
+                        </div>
+                        <div id="pz-container" class="hidden coeff-section">
+                            <h4>Zeros <span class="pz-count" id="zeros-count"></span></h4>
+                            <div id="zeros-list" class="pz-list"></div>
+                            <h4>Poles <span class="pz-count" id="poles-count"></span></h4>
+                            <div id="poles-list" class="pz-list"></div>
+                            <div id="pz-notes" class="pz-notes hidden"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pane-header">
+                    <div class="tabs">
+                        <button class="tab-btn active" data-tab="workbench">Values &amp; Plot</button>
+                        <button class="tab-btn" data-tab="approximation">Approximation</button>
+                    </div>
+                </div>
+
+                <!-- Values and Plot are one loop: type a number, look at the
+                     curve, adjust. Splitting them across tabs made the main use
+                     of this tool a tab round-trip. -->
+                <div class="tab-content active" id="tab-workbench">
+                    <div class="workbench">
+                        <div class="workbench-values">
+                            <div id="subs-placeholder" class="placeholder-text">
+                                Analyze first to list the symbols
+                            </div>
+                            <div id="subs-container" class="hidden">
+                                <p class="subtitle-text">Live: type a value and H(s) and the plot follow. SI prefixes work: 1k, 4.7u, 2.2n</p>
+                                <table class="subs-table">
+                                    <thead>
+                                        <tr><th>Symbol</th><th>Value</th></tr>
+                                    </thead>
+                                    <tbody id="subs-tbody"></tbody>
+                                </table>
+                                <div class="action-row">
+                                    <button id="clear-subs-btn" class="secondary-btn">Clear</button>
+                                </div>
+                                <div id="subs-error" class="error-box hidden"></div>
+                            </div>
+                        </div>
+
+                        <div class="workbench-plot">
+                            <div id="plot-warning" class="error-box">
+                                Give every symbol a number to plot.
+                            </div>
+                            <div id="plot-config-container" class="hidden">
+                                <div class="plot-config-row">
+                                    <div class="control-group">
+                                        <label for="plot-fmin">f_min (Hz)</label>
+                                        <input type="text" id="plot-fmin" class="text-input" value="1">
+                                    </div>
+                                    <div class="control-group">
+                                        <label for="plot-fmax">f_max (Hz)</label>
+                                        <input type="text" id="plot-fmax" class="text-input" value="1Meg">
+                                    </div>
+                                    <div class="control-group">
+                                        <label for="plot-points">Points</label>
+                                        <input type="number" id="plot-points" class="text-input" value="200" min="10" max="1000">
+                                    </div>
+                                    <div class="control-group">
+                                        <label for="plot-type">Type</label>
+                                        <select id="plot-type">
+                                            <option value="bode">Bode</option>
+                                            <option value="nyquist">Nyquist</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="plots-wrapper">
+                                    <div id="bode-plots" class="plot-area">
+                                        <div id="bode-readout" class="plot-readout">Hover a plot to read values</div>
+                                        <div id="bode-mag-plot" class="plotly-container"></div>
+                                        <div id="bode-phase-plot" class="plotly-container"></div>
+                                    </div>
+                                    <div id="nyquist-plots" class="plot-area hidden">
+                                        <div id="nyquist-plot" class="plotly-container"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Approximation Tab -->
+                <div class="tab-content hidden" id="tab-approximation">
+                    <div class="approx-header">
+                        <h3>Circuit Approximation</h3>
+                        <p class="subtitle-text">Simplify complex equations using limits, truncation, or assumptions.</p>
+                    </div>
+
+                    <div id="approx-warning" class="error-box">
+                        Run circuit analysis first to use approximation.
+                    </div>
+
+                    <div id="approx-config-container" class="hidden">
+                        <div class="config-row">
+                            <div class="control-group" style="flex: 1;">
+                                <label for="approx-mode">Approximation Mode</label>
+                                <select id="approx-mode">
+                                    <option value="limit">Limit (s -> 0 or inf)</option>
+                                    <option value="truncate">Polynomial Truncation</option>
+                                    <option value="assumption">Symbolic Assumptions</option>
+                                    <option value="numerical">Numerical Guide</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Limit Config -->
+                        <div id="approx-cfg-limit" class="approx-cfg">
+                            <div class="control-group">
+                                <label><input type="radio" name="limit_dir" value="dc" checked> DC (s -> 0)</label>
+                                <label><input type="radio" name="limit_dir" value="hf"> High Freq (s -> ∞)</label>
+                            </div>
+                        </div>
+
+                        <!-- Truncate Config -->
+                        <div id="approx-cfg-truncate" class="approx-cfg hidden">
+                            <div class="config-row">
+                                <div class="control-group">
+                                    <label for="trunc-num">Max Numerator Degree</label>
+                                    <input type="number" id="trunc-num" class="text-input" value="1" min="0">
+                                </div>
+                                <div class="control-group">
+                                    <label for="trunc-den">Max Denominator Degree</label>
+                                    <input type="number" id="trunc-den" class="text-input" value="1" min="0">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Assumption Config -->
+                        <div id="approx-cfg-assumption" class="approx-cfg hidden">
+                            <div class="control-group">
+                                <label for="assume-input">Assumptions (comma separated, e.g. "gm*ro >> 1, ro >> RL")</label>
+                                <input type="text" id="assume-input" class="text-input" placeholder="e.g. gm*ro >> 1">
+                            </div>
+                        </div>
+
+                        <!-- Numerical Config -->
+                        <div id="approx-cfg-numerical" class="approx-cfg hidden">
+                            <p class="subtitle-text" style="margin-bottom:0.5rem; color:var(--accent-primary)">Uses values currently entered in the Substitution tab.</p>
+                            <div class="control-group">
+                                <label for="num-thresh">Threshold Ratio (0 to 1)</label>
+                                <input type="number" id="num-thresh" class="text-input" value="0.01" step="0.01" min="0.001" max="1">
+                            </div>
+                        </div>
+
+                        <!-- Approximations chain: each Add Step applies the mode
+                             above to the PREVIOUS step's result, so different
+                             modes combine (e.g. an assumption, then truncate,
+                             then the DC limit). -->
+                        <div class="action-row" style="margin-top: 1rem;">
+                            <button id="run-approx-btn" class="primary-btn">
+                                <span>Add Step</span>
+                                <div class="btn-spinner hidden"></div>
+                            </button>
+                            <button id="undo-approx-btn" class="secondary-btn">Undo Step</button>
+                            <button id="reset-approx-btn" class="secondary-btn">Reset</button>
+                        </div>
+
+                        <div id="approx-results-container" class="hidden" style="margin-top: 1.25rem;">
+                            <h4>Steps applied</h4>
+                            <ol id="approx-steps" class="approx-steps"></ol>
+                            <h4>Approximated Transfer Function</h4>
+                            <div class="math-display-container">
+                                <div id="approx-latex-output" class="math-display"></div>
+                            </div>
+
+                            <div id="approx-pz-container" class="coeff-section" style="margin-top: 1.25rem;">
+                                <h4>Zeros <span class="pz-count" id="approx-zeros-count"></span></h4>
+                                <div id="approx-zeros-list" class="pz-list"></div>
+                                <h4>Poles <span class="pz-count" id="approx-poles-count"></span></h4>
+                                <div id="approx-poles-list" class="pz-list"></div>
+                                <div id="approx-pz-notes" class="pz-notes hidden"></div>
+                            </div>
+
+                            <div id="dropped-terms-container" class="hidden">
+                                <h4>Dropped Terms</h4>
+                                <ul id="dropped-terms-list" class="dropped-list"></ul>
+                            </div>
+
+                            <div style="margin-top: 2rem; border-top: 1px solid var(--border-color); padding-top: 1.5rem;">
+                                <h4>Compare with Original</h4>
+                                <p class="subtitle-text" style="margin-bottom: 1rem;">Verify the approximation by overlaying Bode plots. Requires fully numeric substitution values.</p>
+                                <button id="compare-plot-btn" class="secondary-btn">Compare Bode Plots</button>
+                                
+                                <div id="compare-plot-wrapper" class="hidden" style="margin-top: 1.5rem;">
+                                    <div id="compare-readout" class="plot-readout">Hover a plot to read values</div>
+                                    <div id="compare-mag-plot" class="plotly-container"></div>
+                                    <div id="compare-phase-plot" class="plotly-container"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </section>
+        </main>
+
+        <footer class="site-footer">
+            <p>
+                <a href="../../index.html">ice458の物置き</a> |
+                <a href="../../tools.html">Webツール一覧</a> |
+                <a href="../../privacy.html">プライバシーポリシー</a>
+            </p>
+        </footer>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.26.1/full/pyodide.js"></script>
+    <!-- App Logic -->
+    <!-- Order matters: app.js drives the editor, so schematic.js must have
+         registered its DOMContentLoaded handler first. -->
+    <script src="pyodide_bridge.js?v=5"></script>
+    <script src="samples.js?v=5"></script>
+    <script src="netlist.js?v=5"></script>
+    <script src="schematic.js?v=5"></script>
+    <script src="app.js?v=5"></script>
+    <script src="/consent.js" defer></script>
+</body>
+</html>

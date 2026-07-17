@@ -1,0 +1,1204 @@
+:root {
+    /* Color Palette */
+    --bg-base: #0f111a;
+    --bg-panel: rgba(26, 29, 41, 0.6);
+    --bg-input: rgba(15, 17, 26, 0.8);
+    --text-primary: #e2e8f0;
+    --text-secondary: #94a3b8;
+    --accent-primary: #6366f1;
+    --accent-hover: #4f46e5;
+    --accent-glow: rgba(99, 102, 241, 0.4);
+    --border-color: rgba(255, 255, 255, 0.1);
+    --error-color: #ef4444;
+    --success-color: #10b981;
+
+    /* Shadows & Effects */
+    --shadow-panel: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    --glass-blur: blur(12px);
+    --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background-color: var(--bg-base);
+    background-image: 
+        radial-gradient(circle at 15% 50%, rgba(99, 102, 241, 0.08), transparent 25%),
+        radial-gradient(circle at 85% 30%, rgba(168, 85, 247, 0.08), transparent 25%);
+    background-attachment: fixed;
+    color: var(--text-primary);
+    font-family: 'Inter', -apple-system, sans-serif;
+    line-height: 1.6;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+@keyframes spin { 
+    to { transform: rotate(360deg); } 
+}
+
+/* Header -- one slim bar. It is chrome, not content, so it stays out of the way
+   on every screen size; the schematic and results get the height. */
+header {
+    padding: 0.35rem 1rem;
+    border-bottom: 1px solid var(--border-color);
+    background: rgba(15, 17, 26, 0.6);
+    backdrop-filter: var(--glass-blur);
+    flex-shrink: 0;
+}
+
+.header-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.logo-icon {
+    font-size: 1.1rem;
+    color: #a5b4fc;
+    line-height: 1;
+}
+
+.logo h1 {
+    font-size: 0.95rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    background: linear-gradient(to right, #818cf8, #c084fc);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.header-actions .small-btn {
+    padding: 0.3rem 0.6rem;
+    font-size: 0.78rem;
+}
+
+.subtitle {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+/* Main Layout */
+#app-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+.split-layout {
+    display: flex;
+    flex: 1;
+    padding: 1rem;
+    gap: 1rem;
+    min-height: 0;      /* let the panes shrink so their own scrollers work */
+    overflow: hidden;
+}
+
+/* Site Footer */
+.site-footer {
+    flex-shrink: 0;
+    padding: 0.75rem 1rem;
+    border-top: 1px solid var(--border-color);
+    text-align: center;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.site-footer a {
+    color: var(--text-secondary);
+    text-decoration: none;
+    transition: var(--transition);
+}
+
+.site-footer a:hover {
+    color: var(--accent-primary);
+}
+
+/* Glass Panels */
+.glass-panel {
+    background: var(--bg-panel);
+    backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    box-shadow: var(--shadow-panel);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* The schematic is the primary input, so it gets real estate instead of a
+   fixed 500px column. Both panes are flex columns whose children scroll, which
+   is what lets the canvas simply grow to fill the window. */
+.left-pane, .right-pane {
+    min-width: 0;
+    min-height: 0;
+}
+
+.left-pane {
+    flex: 1 1 46%;
+    min-width: 380px;
+}
+
+.right-pane {
+    flex: 1 1 54%;
+}
+
+/* Below this the two panes stop being side by side and stack, so each keeps a
+   usable width rather than both becoming unusable. */
+@media (max-width: 1100px) {
+    .split-layout {
+        flex-direction: column;
+        overflow: auto;
+    }
+    .left-pane, .right-pane {
+        flex: none;
+        min-width: 0;
+    }
+}
+
+.pane-header {
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(0, 0, 0, 0.2);
+}
+
+.pane-header h2 {
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+/* Form Controls */
+.control-group {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+label {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+select {
+    appearance: none;
+    background: var(--bg-input);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    padding: 0.4rem 2rem 0.4rem 0.75rem;
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 0.85rem;
+    cursor: pointer;
+    outline: none;
+    transition: var(--transition);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.5rem center;
+    background-size: 1rem;
+}
+
+select:focus, textarea:focus {
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 0 2px var(--accent-glow);
+}
+
+textarea {
+    flex: 1;
+    background: var(--bg-input);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    color: #a5b4fc;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.9rem;
+    padding: 1rem;
+    resize: none;
+    outline: none;
+    transition: var(--transition);
+    white-space: pre;
+    overflow-wrap: normal;
+    overflow-x: auto;
+}
+
+.config-row {
+    display: flex;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.config-row .control-group {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.4rem;
+    flex: 1;
+}
+
+.config-row select {
+    width: 100%;
+}
+
+.primary-btn {
+    background: var(--accent-primary);
+    color: white;
+    border: none;
+    box-shadow: 0 4px 14px rgba(99, 102, 241, 0.3);
+    padding: 0.75rem;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.primary-btn:hover:not(:disabled) {
+    background: var(--accent-hover);
+    transform: translateY(-1px);
+}
+
+.primary-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.secondary-btn {
+    background: transparent;
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: var(--transition);
+}
+
+.secondary-btn:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.small-btn {
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
+}
+
+.btn-spinner {
+    width: 18px;
+    height: 18px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+.hidden {
+    display: none !important;
+}
+
+.error-box {
+    margin-top: 1rem;
+    padding: 0.75rem;
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    border-radius: 6px;
+    color: var(--accent-danger);
+    font-size: 0.85rem;
+    white-space: pre-wrap;
+    animation: fade-in 0.3s ease;
+}
+
+/* --- Schematic Editor (M6) --- */
+.palette {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    padding: 0.5rem;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 6px;
+    overflow-x: auto;
+    align-items: center;
+}
+
+.palette-btn {
+    background: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    padding: 0.5rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: bold;
+    min-width: 40px;
+    text-align: center;
+    transition: all 0.2s;
+}
+
+.palette-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: var(--accent-primary);
+}
+
+.palette-separator {
+    width: 1px;
+    height: 24px;
+    background: var(--border-color);
+    margin: 0 0.25rem;
+}
+
+#schematic-container {
+    width: 100%;
+    /* Fills whatever the wrap gives it. A schematic editor pinned to 400px is
+       a peephole -- and this is the tool's primary input. */
+    flex: 1;
+    min-height: 260px;
+    background-color: #1a1a1a;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    overflow: hidden;
+    position: relative;
+    /* The grid is drawn on a Konva layer, not here: a CSS background is fixed
+       to the container and would stay put while the circuit pans and zooms. */
+}
+
+/* Floated over the canvas at the position of the text being edited. */
+.schematic-inline-edit {
+    position: absolute;
+    z-index: 10;
+    min-width: 60px;
+    padding: 1px 4px;
+    background: #0f172a;
+    border: 1px solid var(--accent-primary);
+    border-radius: 3px;
+    color: var(--text-primary);
+    font-family: 'JetBrains Mono', monospace;
+    line-height: 1.2;
+    outline: none;
+}
+
+/* Op-amp properties popover */
+.schematic-opamp-editor {
+    position: absolute;
+    z-index: 30;
+    width: 210px;
+    padding: 0.6rem 0.7rem;
+    background: #0f172a;
+    border: 1px solid var(--accent-primary);
+    border-radius: 8px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    font-size: 0.8rem;
+    color: var(--text-primary);
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.oae-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.oae-row > span { width: 34px; color: var(--text-secondary); }
+.oae-row > small { color: var(--text-secondary); }
+
+.schematic-opamp-editor input[type="text"],
+.schematic-opamp-editor .oae-name,
+.schematic-opamp-editor .oae-a0,
+.schematic-opamp-editor .oae-gbw {
+    flex: 1;
+    min-width: 0;
+    background: var(--bg-input);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    color: var(--text-primary);
+    font-family: 'JetBrains Mono', monospace;
+    padding: 0.25rem 0.4rem;
+    outline: none;
+}
+
+.oae-check {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    cursor: pointer;
+}
+
+.oae-params { display: flex; flex-direction: column; gap: 0.4rem; }
+.oae-actions { display: flex; justify-content: flex-end; }
+.oae-ok {
+    background: var(--accent-primary);
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    padding: 0.25rem 0.9rem;
+    cursor: pointer;
+    font-size: 0.8rem;
+}
+
+/* Tabs */
+.tabs {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.tab-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: var(--transition);
+}
+
+.tab-btn:hover {
+    color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.tab-btn.active {
+    color: white;
+    background: rgba(99, 102, 241, 0.2);
+    border: 1px solid rgba(99, 102, 241, 0.3);
+}
+
+.tab-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+/* --- Left pane: the schematic fills whatever is left over --- */
+.left-tab-content {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    padding: 1rem 1.25rem 0;
+    overflow: hidden;
+}
+
+#left-tab-text textarea {
+    min-height: 200px;
+    margin-bottom: 1rem;
+}
+
+/* Read-only: the schematic is the source of truth and a hand-edit here would be
+   overwritten by the next extraction. Styled to read as output, not a field. */
+#netlist-input[readonly] {
+    background: rgba(0, 0, 0, 0.25);
+    cursor: text;
+}
+
+#netlist-input[readonly]:focus {
+    border-color: var(--border-color);
+    box-shadow: none;
+}
+
+.netlist-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 0.75rem;
+}
+
+.netlist-header .subtitle-text { margin: 0; }
+
+.palette-select {
+    font-size: 0.8rem;
+    padding: 0.4rem 1.75rem 0.4rem 0.6rem;
+}
+
+/* The canvas and its overlay share a positioned wrapper that fills the pane. */
+.canvas-wrap {
+    position: relative;
+    flex: 1;
+    min-height: 0;
+    display: flex;
+}
+
+/* Overlaid controls, top-right of the canvas. The overlay ignores the pointer
+   so only its buttons are clickable; z-index keeps it above the Konva canvas. */
+.canvas-overlay {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    z-index: 20;
+    display: flex;
+    gap: 6px;
+    pointer-events: none;
+}
+
+.canvas-btn {
+    pointer-events: auto;
+    background: rgba(15, 23, 42, 0.82);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    font-size: 0.8rem;
+    padding: 0.35rem 0.7rem;
+    border-radius: 6px;
+    cursor: pointer;
+    backdrop-filter: blur(4px);
+    transition: var(--transition);
+}
+
+.canvas-btn:hover {
+    background: rgba(30, 41, 59, 0.95);
+    border-color: var(--accent-primary);
+}
+
+/* Full-screen editor: the left pane covers the whole window, the results pane
+   steps aside. The ResizeObserver on the container resizes the Konva stage to
+   match. Toggled by the Full screen button or the F key. */
+body.schematic-full .right-pane { display: none; }
+body.schematic-full .split-layout { padding: 0; }
+body.schematic-full .left-pane {
+    position: fixed;
+    inset: 0;
+    z-index: 500;
+    border-radius: 0;
+    max-width: none;
+}
+
+/* Shared cursor readout above the linked Bode plots. Monospace so the numbers
+   do not jitter as the cursor moves. */
+.plot-readout {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    background: rgba(0, 0, 0, 0.25);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 0.4rem 0.7rem;
+    margin-bottom: 0.5rem;
+    min-height: 1.9rem;
+    white-space: nowrap;
+    overflow-x: auto;
+}
+
+.plot-readout b { color: var(--text-primary); font-weight: 600; }
+
+/* Marks a Values row whose number lives on the schematic (e.g. R2 = 1k), as
+   opposed to a free symbol being substituted. */
+/* The approximation chain: one line per applied step. */
+.approx-steps {
+    margin: 0.25rem 0 1rem 1.25rem;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.approx-steps li {
+    padding: 0.1rem 0;
+    font-family: 'JetBrains Mono', monospace;
+}
+
+.subs-fixed-tag {
+    font-size: 0.65rem;
+    color: var(--text-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    padding: 0 0.3rem;
+    margin-left: 0.3rem;
+    vertical-align: middle;
+}
+
+/* --- Right pane: H(s) stays put above the tabs --- */
+.tf-banner {
+    /* Kept tight: H(s) is a reference line, the plots are the workspace. On an
+       FHD screen every rem here is a rem the graphs don't get. */
+    padding: 0.5rem 1rem;
+    border-bottom: 1px solid var(--border-color);
+    background: rgba(0, 0, 0, 0.15);
+    max-height: 30%;
+    overflow-y: auto;
+    flex-shrink: 0;
+}
+
+.tf-banner .math-display-container {
+    padding: 0.5rem 0.9rem;
+    margin-bottom: 0.4rem;
+}
+
+.tf-banner .math-display {
+    font-size: 1rem;
+}
+
+.tf-banner .result-header {
+    margin-bottom: 0.35rem;
+}
+
+.tf-banner .result-header h3 {
+    font-size: 0.9rem;
+}
+
+.tf-banner .placeholder-text {
+    padding: 1rem 0;
+}
+
+.link-btn {
+    background: none;
+    border: none;
+    color: var(--accent-primary);
+    font-size: 0.8rem;
+    cursor: pointer;
+    padding: 0 0.25rem;
+    text-decoration: underline;
+}
+
+.link-btn:hover { color: #a5b4fc; }
+
+/* --- Workbench: values beside the plot ---
+   Typing a number and reading the curve is one loop, so the two halves sit
+   side by side and each scrolls on its own. */
+#tab-workbench {
+    padding: 0;
+    overflow: hidden;
+}
+
+.workbench {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+    gap: 0;
+}
+
+.workbench-values {
+    flex: 0 0 240px;
+    padding: 1.25rem;
+    overflow-y: auto;
+    border-right: 1px solid var(--border-color);
+    background: rgba(0, 0, 0, 0.12);
+}
+
+.workbench-plot {
+    flex: 1;
+    min-width: 0;
+    padding: 1.25rem;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.workbench .subs-table { width: 100%; }
+.workbench .action-row { margin-top: 1rem; display: flex; gap: 0.5rem; }
+.workbench .action-row .primary-btn { flex: 1; padding: 0.5rem; font-size: 0.9rem; }
+
+/* Narrow: stack the values above the plot rather than crushing both. */
+@media (max-width: 1400px) {
+    .workbench { flex-direction: column; }
+    .workbench-values {
+        flex: none;
+        border-right: none;
+        border-bottom: 1px solid var(--border-color);
+    }
+}
+
+/* --- Engine status: the editor works before SymPy lands, so say so --- */
+.engine-status {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+    padding-right: 0.5rem;
+}
+
+.engine-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--text-secondary);
+}
+
+.engine-status.loading .engine-dot {
+    background: #f59e0b;
+    animation: pulse 1.2s ease-in-out infinite;
+}
+
+.engine-status.ready .engine-dot { background: var(--success-color); }
+.engine-status.failed .engine-dot { background: var(--error-color); }
+
+@keyframes pulse {
+    50% { opacity: 0.25; }
+}
+
+.placeholder-text {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-secondary);
+    font-style: italic;
+}
+
+/* Results Area */
+#result-container {
+    animation: fade-in 0.4s ease;
+}
+
+@keyframes fade-in {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.result-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.result-header h3 {
+    font-weight: 400;
+    color: var(--accent-primary);
+}
+
+.badges {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.badge {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-family: 'JetBrains Mono', monospace;
+}
+
+.math-display-container {
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 12px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    overflow-x: auto;
+    box-shadow: inset 0 2px 10px rgba(0,0,0,0.2);
+}
+
+.math-display {
+    font-size: 1.4rem;
+    color: #e2e8f0;
+}
+
+/* Coefficients Section */
+.coeff-section {
+    border-top: 1px solid var(--border-color);
+    padding-top: 1.5rem;
+}
+
+#coeffs-container {
+    margin-top: 1.5rem;
+    animation: fade-in 0.3s ease;
+}
+
+#coeffs-container h4 {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.75rem;
+    margin-top: 1.5rem;
+}
+
+#coeffs-container h4:first-child {
+    margin-top: 0;
+}
+
+.coeff-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.coeff-item {
+    background: rgba(255, 255, 255, 0.03);
+    padding: 0.75rem 1rem;
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.coeff-power {
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--accent-primary);
+    min-width: 3rem;
+}
+
+.coeff-expr {
+    flex: 1;
+    overflow-x: auto;
+}
+
+/* --- Poles & Zeros --- */
+#pz-container {
+    margin-top: 1.5rem;
+    animation: fade-in 0.3s ease;
+}
+
+#pz-container h4 {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.75rem;
+    margin-top: 1.5rem;
+}
+
+#pz-container h4:first-child {
+    margin-top: 0;
+}
+
+.pz-count {
+    color: var(--text-secondary);
+    font-weight: 400;
+    opacity: 0.7;
+}
+
+.pz-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.pz-item {
+    background: rgba(255, 255, 255, 0.03);
+    padding: 0.75rem 1rem;
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.pz-index {
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--accent-primary);
+    min-width: 2.5rem;
+}
+
+.pz-value {
+    flex: 1;
+    overflow-x: auto;
+}
+
+.pz-freq {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    white-space: nowrap;
+}
+
+.pz-empty {
+    color: var(--text-secondary);
+    font-style: italic;
+    padding: 0.25rem 0;
+}
+
+.pz-notes {
+    margin-top: 1rem;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+
+/* --- M3: Substitution --- */
+.substitution-header, .plot-header {
+    margin-bottom: 1.5rem;
+}
+
+.substitution-header h3, .plot-header h3 {
+    font-weight: 400;
+    color: var(--accent-primary);
+}
+
+.subtitle-text {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin-top: 0.25rem;
+}
+
+.subs-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 1.5rem;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.subs-table th, .subs-table td {
+    padding: 0.75rem 1rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.subs-table th {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.subs-table td {
+    font-family: 'JetBrains Mono', monospace;
+}
+
+.text-input {
+    width: 100%;
+    background: var(--bg-input);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    padding: 0.5rem 0.75rem;
+    border-radius: 6px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85rem;
+    outline: none;
+    transition: var(--transition);
+}
+
+.text-input:focus {
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 0 2px var(--accent-glow);
+}
+
+.action-row {
+    display: flex;
+    gap: 1rem;
+}
+
+.action-row button {
+    flex: 1;
+}
+
+/* --- M3: Plot Tab --- */
+.plot-config-row {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    align-items: flex-end;
+}
+
+.plot-config-row .control-group {
+    flex: 1;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.4rem;
+}
+
+.flex-auto {
+    flex: auto;
+}
+
+.plots-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    flex: 1;
+}
+
+.plot-area {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    min-height: 400px;
+}
+
+.plotly-container {
+    width: 100%;
+    height: 300px;
+    border-radius: 8px;
+    overflow: hidden;
+    /* Positioning context for the DOM cursor line. */
+    position: relative;
+}
+
+/* In the workbench the plots are the point, so they scale with the window
+   instead of sitting at a fixed 300px -- on FHD each Bode pane gets ~380px. */
+.workbench-plot .plotly-container {
+    height: clamp(260px, 36vh, 480px);
+}
+
+/* The shared hover cursor: a plain DOM line, deliberately not a Plotly shape
+   (a shape's relayout would wipe the partner's hover tooltip). */
+/* Keyboard cheat sheet, overlaid on the canvas. */
+.shortcuts-panel {
+    position: absolute;
+    top: 44px;
+    right: 8px;
+    z-index: 25;
+    background: rgba(15, 23, 42, 0.95);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 0.6rem 0.8rem;
+    font-size: 0.75rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    max-height: calc(100% - 56px);
+    overflow-y: auto;
+}
+
+.shortcuts-panel td {
+    padding: 0.1rem 0.5rem 0.1rem 0;
+    color: var(--text-secondary);
+    white-space: nowrap;
+}
+
+.shortcuts-panel td:first-child {
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--text-primary);
+}
+
+.plot-cursor-line {
+    position: absolute;
+    width: 0;
+    border-left: 1px dotted #e2e8f0;
+    pointer-events: none;
+    z-index: 5;
+    display: none;
+}
+
+/* The frequency/value chip riding the cursor line, one per plot. */
+.plot-cursor-chip {
+    position: absolute;
+    z-index: 6;
+    pointer-events: none;
+    background: rgba(15, 23, 42, 0.9);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    padding: 0.1rem 0.4rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--text-primary);
+    white-space: nowrap;
+    display: none;
+}
+
+/* --- M4: Approximation Tab --- */
+.approx-header {
+    margin-bottom: 1.5rem;
+}
+
+.approx-header h3 {
+    font-weight: 400;
+    color: var(--accent-primary);
+}
+
+.config-row {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.approx-cfg {
+    background: rgba(255,255,255,0.03);
+    padding: 1rem;
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+    margin-bottom: 1rem;
+}
+
+.approx-cfg label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    margin-bottom: 0.5rem;
+}
+
+.dropped-list {
+    margin: 0;
+    padding: 0.5rem 1rem 0.5rem 2rem;
+    background: rgba(239, 68, 68, 0.1);
+    border-left: 3px solid var(--accent-danger);
+    border-radius: 4px;
+    color: var(--text-primary);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85rem;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.dropped-list li {
+    margin-bottom: 0.25rem;
+}
+
+/* --- M5: Global Error Banner --- */
+.global-error-banner {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: rgba(239, 68, 68, 0.95);
+    color: white;
+    padding: 0.75rem 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 9999;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(10px);
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.global-error-banner.hidden {
+    display: flex !important; /* Override general .hidden */
+    transform: translateY(-100%);
+}
+
+.error-content {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.error-icon {
+    font-size: 1.25rem;
+}
+
+.error-text {
+    font-size: 0.95rem;
+    font-family: 'JetBrains Mono', monospace;
+    white-space: pre-wrap;
+}
+
+.close-error-btn {
+    background: transparent;
+    border: none;
+    color: white;
+    font-size: 1.5rem;
+    cursor: pointer;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+    padding: 0 0.5rem;
+}
+
+.close-error-btn:hover {
+    opacity: 1;
+}
+
