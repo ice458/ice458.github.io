@@ -69,6 +69,14 @@ CONSENT_GEO_SNIPPET = (
 )
 GEO_MARKER = "Consent geo override"
 
+# Detect the geo override by its own logic, not just its comment. A page whose
+# markup has been reformatted keeps the behaviour but loses the exact comment,
+# and marker-only detection would then inject a second, redundant copy.
+# Matches the EEA test itself: the variable, or the Atlantic timezone list.
+CONSENT_GEO_RE = re.compile(
+    r"\bisEEA\b|Reykjavik\|Madeira\|Azores\|Canary"
+)
+
 # 2) GTM loader snippet (must come AFTER consent default)
 HEAD_SNIPPET = (
     "<!-- Google Tag Manager -->\n"
@@ -104,6 +112,32 @@ COOKIE_DOMAIN_BLOCK_RE = re.compile(
     r"<script\b[^>]*>.*?</script>\s*",
     re.DOTALL | re.IGNORECASE,
 )
+
+
+def _indent_at(text: str, pos: int) -> str:
+    """Leading whitespace of the line `pos` sits on, so a snippet inserted there
+    lines up with the markup it displaces instead of sitting flush-left."""
+    line_start = text.rfind("\n", 0, pos) + 1
+    prefix = text[line_start:pos]
+    return prefix if prefix.strip() == "" else ""
+
+
+def _indented(snippet: str, indent: str) -> str:
+    if not indent:
+        return snippet
+    return "".join(
+        indent + ln if ln.strip() else ln for ln in snippet.splitlines(keepends=True)
+    )
+
+
+def _indent_of_prev_line(text: str, pos: int) -> str:
+    """Indentation of the last non-blank line before `pos`, so a tag appended at
+    the end of <body> lines up with the tags it follows rather than </body>,
+    which usually sits at column 0."""
+    for line in reversed(text[:pos].splitlines()):
+        if line.strip():
+            return line[: len(line) - len(line.lstrip())]
+    return ""
 
 
 def _find_pre_gtm_insert_pos(text: str) -> int:
@@ -174,7 +208,8 @@ def inject_into_html(content: str) -> tuple[str, bool]:
             if not COOKIE_DOMAIN_SET_RE.search(text):
                 insert_pos = _find_pre_gtm_insert_pos(text)
                 if insert_pos != -1:
-                    text = text[:insert_pos] + COOKIE_DOMAIN_SET_SNIPPET + text[insert_pos:]
+                    snippet = _indented(COOKIE_DOMAIN_SET_SNIPPET, _indent_at(text, insert_pos))
+                    text = text[:insert_pos] + snippet + text[insert_pos:]
                     changed_here = True
                 else:
                     head_open = re.search(r"<head[^>]*>", text, flags=re.IGNORECASE)
@@ -191,7 +226,8 @@ def inject_into_html(content: str) -> tuple[str, bool]:
         # No consent default present: insert one right before the GTM loader
         insert_pos = _find_pre_gtm_insert_pos(text)
         if insert_pos != -1:
-            return text[:insert_pos] + CONSENT_DEFAULT_SNIPPET + text[insert_pos:], True
+            snippet = _indented(CONSENT_DEFAULT_SNIPPET, _indent_at(text, insert_pos))
+            return text[:insert_pos] + snippet + text[insert_pos:], True
         # Fallback: try to put into <head> start
         head_open = re.search(r"<head[^>]*>", text, flags=re.IGNORECASE)
         if head_open:
@@ -233,10 +269,11 @@ def inject_into_html(content: str) -> tuple[str, bool]:
         changed = changed or did_inject
 
     # Ensure geo override snippet is present, placed right before GTM loader
-    if GEO_MARKER not in new_content:
+    if GEO_MARKER not in new_content and not CONSENT_GEO_RE.search(new_content):
         insert_pos = _find_pre_gtm_insert_pos(new_content)
         if insert_pos != -1:
-            new_content = new_content[:insert_pos] + CONSENT_GEO_SNIPPET + new_content[insert_pos:]
+            snippet = _indented(CONSENT_GEO_SNIPPET, _indent_at(new_content, insert_pos))
+            new_content = new_content[:insert_pos] + snippet + new_content[insert_pos:]
             changed = True
 
     # Insert noscript after <body> if missing
@@ -269,7 +306,10 @@ def inject_into_html(content: str) -> tuple[str, bool]:
         body_close = re.search(r"</body>", new_content, flags=re.IGNORECASE)
         if body_close:
             idx = body_close.start()
-            new_content = new_content[:idx] + "\n  " + CONSENT_JS_TAG + "\n" + new_content[idx:]
+            indent = _indent_of_prev_line(new_content, idx)
+            # </body> normally starts its own line; only break the line when it does not.
+            lead = "" if new_content[:idx].endswith("\n") else "\n"
+            new_content = new_content[:idx] + lead + indent + CONSENT_JS_TAG + "\n" + new_content[idx:]
             changed = True
         else:
             # append at end

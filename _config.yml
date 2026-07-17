@@ -7,7 +7,9 @@ description: ice458の製作物等を紹介するサイトです
 url: https://ice458.github.io
 baseurl: ""
 
-# 除外設定（サイトマップから除外）
+# 除外設定（ビルド成果物から除外＝公開されない）
+# パターンは FNM_PATHNAME なしの fnmatch で照合されるため "*" が "/" にもマッチし、
+# "*.py" はネストした .py（tools/SymTF/test_engine.py 等）にも及ぶ。
 exclude:
   - README.md
   - "*.py"
@@ -15,6 +17,12 @@ exclude:
   - __pycache__/
   - templates/
   - "*.md"
+
+# include は exclude より優先される（Jekyll は included? を先に評価して打ち切る）。
+# engine.py は SymTF が実行時に fetch するため、上の "*.py" から除外し返す必要がある。
+# 照合はベース名に対して行われるので test_engine.py は巻き込まれない。
+include:
+  - engine.py
 
 # ビルド設定
 markdown: kramdown
