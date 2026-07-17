@@ -1,153 +1,138 @@
 /**
  * pyodide_bridge.js
- * Handles Pyodide initialization and exposes engine.py JSON APIs to JavaScript.
+ * RPC front-end for the engine Web Worker (engine_worker.js).
+ *
+ * Pyodide used to run on the main thread, which froze the whole page for the
+ * duration of every solve — seconds to minutes on larger circuits. All engine
+ * calls now go through a worker and return Promises; the UI keeps painting,
+ * and a runaway computation can be cancelled (worker terminate + respawn).
+ *
+ * Every method resolves (never rejects) with the engine's parsed JSON, or with
+ * {ok:false, errors:[...]} on transport-level failure — so call sites only
+ * ever check result.ok.
  */
 
 const Bridge = {
-    pyodide: null,
+    worker: null,
     isReady: false,
-    
+
     // Callbacks for UI updates
-    onInitComplete: null,
-    onInitFailed: null,
-    
-    // Expose Python functions
-    api: {
-        parse_netlist: null,
-        solve: null,
-        substitute: null,
-        approximate: null,
-        freq_response: null,
-        poles_zeros: null
+    onInitComplete: null,   // (isRestart) => void
+    onInitFailed: null,     // (error) => void
+    onBusyChange: null,     // (busyCount) => void
+
+    _pending: new Map(),    // id -> resolve
+    _nextId: 1,
+    _isRestart: false,
+
+    init() {
+        this._spawn();
     },
 
-    async init() {
-        try {
-            console.log("Loading Pyodide...");
-            // loadPyodide is available globally from CDN script
-            this.pyodide = await loadPyodide({
-                indexURL: "https://cdn.jsdelivr.net/pyodide/v0.26.1/full/"
-            });
-            
-            console.log("Loading SymPy package...");
-            await this.pyodide.loadPackage("sympy");
-            await this.pyodide.loadPackage("numpy");
+    _spawn() {
+        this.worker = new Worker('engine_worker.js?v=6');
 
-            console.log("Fetching engine.py...");
-            // cache: 'no-cache' forces revalidation. engine.py is fetched (not a
-            // <script src>), so it does not get the ?v= bust the tags do, and a
-            // stale copy silently runs old analysis code -- e.g. a pi-dropping
-            // display-rounding that made the transfer function lose its pi while
-            // the coefficient list (plain strings) still showed it.
-            const response = await fetch('engine.py', { cache: 'no-cache' });
-            if (!response.ok) {
-                throw new Error(`Failed to fetch engine.py: ${response.statusText}`);
+        this.worker.onmessage = (e) => {
+            const msg = e.data;
+
+            if (msg.type === 'ready') {
+                this.isReady = true;
+                console.log("Engine worker ready.");
+                if (this.onInitComplete) this.onInitComplete(this._isRestart);
+                return;
             }
-            const engineCode = await response.text();
-
-            console.log("Mounting engine.py to Pyodide virtual FS...");
-            // Write to virtual filesystem so we can import it
-            this.pyodide.FS.writeFile('/engine.py', engineCode);
-
-            console.log("Importing engine module...");
-            // Import the module and keep a reference
-            this.pyodide.runPython(`
-import sys
-if '/' not in sys.path:
-    sys.path.append('/')
-sys.setrecursionlimit(3000)
-import engine
-            `);
-
-            // Map python functions to JS via globals
-            this.api.parse_netlist = this.pyodide.runPython("engine.parse_netlist");
-            this.api.solve = this.pyodide.runPython("engine.solve");
-            this.api.substitute = this.pyodide.runPython("engine.substitute");
-            this.api.approximate = this.pyodide.runPython("engine.approximate");
-            this.api.freq_response = this.pyodide.runPython("engine.freq_response");
-            this.api.poles_zeros = this.pyodide.runPython("engine.poles_zeros");
-
-            this.isReady = true;
-            console.log("Pyodide bridge initialized successfully.");
-            
-            if (this.onInitComplete) {
-                this.onInitComplete();
+            if (msg.type === 'init_error') {
+                console.error("Engine worker init error:", msg.error);
+                if (this.onInitFailed) this.onInitFailed(new Error(msg.error));
+                return;
             }
-            
-        } catch (error) {
-            console.error("Pyodide Initialization Error:", error);
-            // Report through the UI's own status rather than a modal alert: the
-            // editor still works without the engine, so this must not be a wall.
-            if (this.onInitFailed) this.onInitFailed(error);
+
+            const resolve = this._pending.get(msg.id);
+            if (!resolve) return;   // cancelled / stale
+            this._pending.delete(msg.id);
+            this._notifyBusy();
+
+            if (msg.ok) {
+                try {
+                    resolve(JSON.parse(msg.result));
+                } catch (err) {
+                    resolve({ ok: false, errors: ["Bridge error: " + err.message] });
+                }
+            } else {
+                resolve({ ok: false, errors: ["Engine error: " + msg.error] });
+            }
+        };
+
+        this.worker.onerror = (e) => {
+            // A worker-level crash fails every in-flight call; the page keeps
+            // working for editing, and analysis reports the error.
+            console.error("Engine worker error:", e);
+            this._failAllPending("Engine worker crashed: " + (e.message || "unknown error"));
+        };
+    },
+
+    _notifyBusy() {
+        if (this.onBusyChange) this.onBusyChange(this._pending.size);
+    },
+
+    _failAllPending(message) {
+        for (const resolve of this._pending.values()) {
+            resolve({ ok: false, errors: [message] });
         }
+        this._pending.clear();
+        this._notifyBusy();
     },
 
-    // Wrapper functions to handle JSON string conversions automatically
+    /**
+     * Abandon whatever the engine is doing. Pyodide cannot be interrupted
+     * mid-computation without cross-origin isolation (unavailable on GitHub
+     * Pages), so cancel = terminate the worker and start a fresh one. SymPy
+     * reloads in the background; in-flight calls resolve as cancelled.
+     */
+    cancel() {
+        if (!this.worker) return;
+        this.worker.terminate();
+        this.isReady = false;
+        this._isRestart = true;
+        this._failAllPending("Cancelled");
+        this._spawn();
+    },
+
+    _call(fn, ...args) {
+        if (!this.isReady) {
+            return Promise.resolve({ ok: false, errors: ["Engine not ready"] });
+        }
+        return new Promise((resolve) => {
+            const id = this._nextId++;
+            this._pending.set(id, resolve);
+            this._notifyBusy();
+            this.worker.postMessage({ id, fn, args });
+        });
+    },
+
+    // Same method names as the old synchronous bridge, now Promise-returning.
     parseNetlist(text) {
-        if (!this.isReady) return {ok: false, errors: ["Engine not ready"]};
-        try {
-            const resultStr = this.api.parse_netlist(text);
-            return JSON.parse(resultStr);
-        } catch (e) {
-            return {ok: false, errors: ["Bridge error: " + e.message]};
-        }
+        return this._call('parse_netlist', text);
     },
 
     solveCircuit(circuitJsonObj) {
-        if (!this.isReady) return {ok: false, errors: ["Engine not ready"]};
-        try {
-            console.log("Calling engine.solve...");
-            const resultStr = this.api.solve(JSON.stringify(circuitJsonObj));
-            console.log("engine.solve returned successfully.");
-            return JSON.parse(resultStr);
-        } catch (e) {
-            console.error("Bridge Error in solveCircuit:", e);
-            return {ok: false, errors: ["Bridge error: " + e.message]};
-        }
+        return this._call('solve', JSON.stringify(circuitJsonObj));
     },
 
     substitute(tfJsonObj, subsMapObj) {
-        if (!this.isReady) return {ok: false, errors: ["Engine not ready"]};
-        try {
-            const resultStr = this.api.substitute(JSON.stringify(tfJsonObj), JSON.stringify(subsMapObj));
-            return JSON.parse(resultStr);
-        } catch (e) {
-            console.error("Bridge Error in substitute:", e);
-            return {ok: false, errors: ["Bridge error: " + e.message]};
-        }
+        return this._call('substitute', JSON.stringify(tfJsonObj), JSON.stringify(subsMapObj));
     },
 
     freqResponse(tfJsonObj, rangeObj) {
-        if (!this.isReady) return {ok: false, errors: ["Engine not ready"]};
-        try {
-            const resultStr = this.api.freq_response(JSON.stringify(tfJsonObj), JSON.stringify(rangeObj));
-            return JSON.parse(resultStr);
-        } catch (e) {
-            console.error("Bridge Error in freqResponse:", e);
-            return {ok: false, errors: ["Bridge error: " + e.message]};
-        }
+        return this._call('freq_response', JSON.stringify(tfJsonObj), JSON.stringify(rangeObj));
     },
 
     approximate(tfJsonObj, specObj) {
-        if (!this.isReady) return {ok: false, errors: ["Engine not ready"]};
-        try {
-            const resultStr = this.api.approximate(JSON.stringify(tfJsonObj), JSON.stringify(specObj));
-            return JSON.parse(resultStr);
-        } catch (e) {
-            console.error("Bridge Error in approximate:", e);
-            return {ok: false, errors: ["Bridge error: " + e.message]};
-        }
+        return this._call('approximate', JSON.stringify(tfJsonObj), JSON.stringify(specObj));
     },
 
     polesZeros(tfJsonObj) {
-        if (!this.isReady) return {ok: false, errors: ["Engine not ready"]};
-        try {
-            const resultStr = this.api.poles_zeros(JSON.stringify(tfJsonObj));
-            return JSON.parse(resultStr);
-        } catch (e) {
-            console.error("Bridge Error in polesZeros:", e);
-            return {ok: false, errors: ["Bridge error: " + e.message]};
-        }
+        return this._call('poles_zeros', JSON.stringify(tfJsonObj));
     }
 };
 

@@ -746,6 +746,13 @@ body.schematic-full .left-pane {
 .engine-status.ready .engine-dot { background: var(--success-color); }
 .engine-status.failed .engine-dot { background: var(--error-color); }
 
+/* Engine worker has a computation in flight. Distinct from .loading (startup):
+   the app is fully usable, just waiting on a result. */
+.engine-status.busy .engine-dot {
+    background: #6366f1;
+    animation: pulse 0.8s ease-in-out infinite;
+}
+
 @keyframes pulse {
     50% { opacity: 0.25; }
 }

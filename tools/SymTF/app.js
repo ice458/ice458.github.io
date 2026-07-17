@@ -15,6 +15,7 @@ let isFullyNumeric = false;
 const els = {
     engineStatus: document.getElementById('engine-status'),
     engineStatusText: document.getElementById('engine-status-text'),
+    engineCancelBtn: document.getElementById('engine-cancel-btn'),
     shareBtn: document.getElementById('share-btn'),
     schematicSampleSelect: document.getElementById('schematic-sample-select'),
     schematicClearBtn: document.getElementById('schematic-clear-btn'),
@@ -149,9 +150,12 @@ function setEngineStatus(state, text) {
     els.engineStatusText.textContent = text;
 }
 
-Bridge.onInitComplete = () => {
+Bridge.onInitComplete = (isRestart) => {
     engineReady = true;
     setEngineStatus('ready', 'SymPy ready');
+    // After a user cancel the worker restarts; re-analysing here would
+    // immediately re-launch the very computation that was just cancelled.
+    if (isRestart) return;
     // The circuit is already on screen (the editor does not wait for SymPy), so
     // analyse it right away: opening the page ends with H(s) visible, no click.
     // Silent -- a half-drawn restored circuit just doesn't produce a result yet.
@@ -164,6 +168,31 @@ Bridge.onInitFailed = (err) => {
     setEngineStatus('failed', 'SymPy failed to load');
     showGlobalError('The analysis engine failed to load. Reload the page to try again.\n' + (err?.message || ''));
 };
+
+// Engine runs in a worker, so the page never freezes -- but the user still
+// needs to see that a computation is in flight, and a way out of one that
+// grows without bound. The status chip doubles as that indicator, and the
+// Cancel button appears only while something is actually running.
+Bridge.onBusyChange = (busyCount) => {
+    if (!engineReady) return;   // init progress owns the chip until ready
+    if (busyCount > 0) {
+        setEngineStatus('busy', 'Computing…');
+        els.engineCancelBtn?.classList.remove('hidden');
+    } else {
+        setEngineStatus('ready', 'SymPy ready');
+        els.engineCancelBtn?.classList.add('hidden');
+    }
+};
+
+els.engineCancelBtn?.addEventListener('click', () => {
+    // terminate + respawn: SymPy reloads in the background; the editor is
+    // unaffected. In-flight calls resolve as cancelled errors.
+    Bridge.cancel();
+    engineReady = false;
+    lastSolvedKey = null;
+    els.engineCancelBtn.classList.add('hidden');
+    setEngineStatus('loading', 'Cancelled — restarting engine…');
+});
 
 // --- Persistence -----------------------------------------------------------
 // A public page gets reloaded, refreshed and closed by accident, and losing a
@@ -362,7 +391,7 @@ els.outputNode.addEventListener('change', () => analyzeSchematic(true));
 // suppresses the error banners and placeholder changes a manual click makes, so
 // re-analysing after an edit never nags mid-drawing -- it just updates or quietly
 // does nothing.
-function analyzeSchematic(silent = false) {
+async function analyzeSchematic(silent = false) {
     // The schematic is the only input path now; the Netlist tab is a view.
     // updateNetlistPreview is the one place that extracts, writes the preview,
     // and sets the gate + error box -- reuse it so the click cannot disagree
@@ -381,9 +410,6 @@ function analyzeSchematic(silent = false) {
     const inOption = els.inputSource.selectedOptions[0];
     const outNode = els.outputNode.value;
 
-    handleNetlistChange();               // engine parse -> currentCircuitJson
-    if (analyzeBlocked) return;          // engine rejected the netlist
-
     // Pass the ports explicitly. The element the engine wants is the injected
     // V_in, whose name exists only in the generated netlist -- the dropdown
     // holds the label the user picked.
@@ -392,6 +418,16 @@ function analyzeSchematic(silent = false) {
         if (!silent) showGlobalError("Please specify both input and output.");
         return;
     }
+
+    // The silent auto-refresh fires on EVERY schematic edit, including pure
+    // moves that leave the netlist identical. Re-solving those wastes seconds
+    // of SymPy time for a result already on screen -- skip when nothing the
+    // engine sees has changed.
+    if (silent && solveKey(inputName, outNode) === lastSolvedKey) return;
+
+    await handleNetlistChange();         // engine parse -> currentCircuitJson
+    if (analyzeBlocked) return;          // engine rejected the netlist
+
     runAnalysis({ kind: 'V', name: inputName }, { node: outNode }, silent).catch(() => {});
 }
 
@@ -599,7 +635,7 @@ function hideGlobalError() {
 // does not touch the port dropdowns: those are built from the schematic's
 // labels by syncSchematicIoOptions, and having this rebuild them too meant two
 // systems overwriting the same <select> in turn.
-function handleNetlistChange() {
+async function handleNetlistChange() {
     if (!engineReady) return;
 
     const text = els.netlistInput.value.trim();
@@ -609,7 +645,7 @@ function handleNetlistChange() {
         return;
     }
 
-    const result = Bridge.parseNetlist(text);
+    const result = await Bridge.parseNetlist(text);
 
     if (!result.ok) {
         setParseError(result.errors);
@@ -651,80 +687,96 @@ function hideParseError() {
     els.parseErrorBox.classList.add('hidden');
 }
 
-function runAnalysis(forceInput = null, forceOutput = null, silent = false) {
-    return new Promise((resolve, reject) => {
-        if (!currentCircuitJson) {
-            reject(new Error("No valid circuit JSON"));
-            return;
+// Identity of a solved problem: what the engine reads (the generated netlist)
+// plus the ports asked about. Matching key = the result on screen is already
+// the answer, so the silent auto-refresh can skip the solve entirely.
+let lastSolvedKey = null;
+function solveKey(inName, outNode) {
+    // '\n*' cannot appear inside a netlist line, so the join is unambiguous.
+    return `${els.netlistInput.value}\n*IN=${inName}\n*OUT=${outNode}`;
+}
+
+// Rapid edits can queue several solves in the worker; they complete in order,
+// but only the newest one may write to the screen. Each call takes a ticket
+// and checks it still holds the newest before rendering.
+let solveSeq = 0;
+
+async function runAnalysis(forceInput = null, forceOutput = null, silent = false) {
+    if (!currentCircuitJson) {
+        throw new Error("No valid circuit JSON");
+    }
+
+    // Build complete spec
+    let inKind, inName, outNode;
+
+    if (forceInput && forceOutput) {
+        inKind = forceInput.kind;
+        inName = forceInput.name;
+        outNode = forceOutput.node;
+    } else {
+        const inOption = els.inputSource.selectedOptions[0];
+        outNode = els.outputNode.value;
+        if (!inOption || !outNode) {
+            showGlobalError("Please specify both input and output.");
+            throw new Error("Missing I/O");
         }
+        inKind = inOption.dataset.kind;
+        inName = inOption.value;
+    }
 
-        // Build complete spec
-        let inKind, inName, outNode;
-        
-        if (forceInput && forceOutput) {
-            inKind = forceInput.kind;
-            inName = forceInput.name;
-            outNode = forceOutput.node;
-        } else {
-            const inOption = els.inputSource.selectedOptions[0];
-            outNode = els.outputNode.value;
-            if (!inOption || !outNode) {
-                showGlobalError("Please specify both input and output.");
-                reject(new Error("Missing I/O"));
-                return;
-            }
-            inKind = inOption.dataset.kind;
-            inName = inOption.value;
+    currentCircuitJson.input = { kind: inKind, name: inName };
+    currentCircuitJson.output = { kind: "node_voltage", node: outNode };
+
+    // Pre-check size to set expectations. The UI no longer freezes (the solve
+    // runs in a worker), but a big system can still take long -- say so, and
+    // point at the Cancel that has appeared in the header.
+    const elements = currentCircuitJson.elements || [];
+    const nodeSet = new Set();
+    let nBranch = 0;
+    for (const el of elements) {
+        for (const key of ["n1", "n2", "np", "nn", "ncp", "ncn", "nout"]) {
+            if (el[key] && el[key] !== "0") nodeSet.add(el[key]);
         }
+        if (["V", "E", "O"].includes(el.type)) nBranch++;
+    }
+    const nTotal = nodeSet.size + nBranch;
+    if (nTotal > 12) {
+        setParseError(`Analysis: WARNING: system size ${nTotal} may take a while (>12). You can keep editing; Cancel is in the header.`);
+    } else {
+        hideParseError();
+    }
 
-        currentCircuitJson.input = { kind: inKind, name: inName };
-        currentCircuitJson.output = { kind: "node_voltage", node: outNode };
+    const key = solveKey(inName, outNode);
+    const seq = ++solveSeq;
+    const result = await Bridge.solveCircuit(currentCircuitJson);
 
-        // Pre-check size to warn before UI freezes
-        const elements = currentCircuitJson.elements || [];
-        const nodeSet = new Set();
-        let nBranch = 0;
-        for (const el of elements) {
-            for (const key of ["n1", "n2", "np", "nn", "ncp", "ncn", "nout"]) {
-                if (el[key] && el[key] !== "0") nodeSet.add(el[key]);
-            }
-            if (["V", "E", "O"].includes(el.type)) nBranch++;
-        }
-        const nTotal = nodeSet.size + nBranch;
-        if (nTotal > 12) {
-            setParseError(`Analysis: WARNING: system size ${nTotal} may be slow (>12). Browser may freeze for a moment.`);
-        } else {
-            hideParseError();
-        }
+    // A newer solve was issued while this one ran: its result owns the screen.
+    if (seq !== solveSeq) throw new Error("Superseded by a newer analysis");
 
-        // Use setTimeout to allow UI to render spinner and warnings
-        setTimeout(() => {
-            try {
-                const result = Bridge.solveCircuit(currentCircuitJson);
+    if (!result.ok) {
+        // With no Analyze button there is no manual retry, so solve
+        // failures always land in the persistent parse-error box
+        // rather than being swallowed (silent) or modal (manual).
+        lastSolvedKey = null;
+        setParseError(result.errors.map(m => "Analysis: " + m));
+        throw new Error("Analysis failed");
+    }
 
-                if (!result.ok) {
-                    // With no Analyze button there is no manual retry, so solve
-                    // failures always land in the persistent parse-error box
-                    // rather than being swallowed (silent) or modal (manual).
-                    setParseError(result.errors.map(m => "Analysis: " + m));
-                    reject(new Error("Analysis failed"));
-                } else {
-                    hasAnalyzed = true;   // enables auto-refresh on later edits
-                    if (result.errors && result.errors.length > 0) {
-                        setParseError(result.errors.map(m => "Analysis: " + m));
-                    } else {
-                        hideParseError();
-                    }
-                    renderResults(result.tf);
-                    resolve(result.tf);
-                }
-            } catch (err) {
-                console.error("Error during rendering:", err);
-                showGlobalError("UI Error: " + err.message);
-                reject(err);
-            }
-        }, 50);
-    });
+    hasAnalyzed = true;   // enables auto-refresh on later edits
+    lastSolvedKey = key;
+    if (result.errors && result.errors.length > 0) {
+        setParseError(result.errors.map(m => "Analysis: " + m));
+    } else {
+        hideParseError();
+    }
+    try {
+        renderResults(result.tf);
+    } catch (err) {
+        console.error("Error during rendering:", err);
+        showGlobalError("UI Error: " + err.message);
+        throw err;
+    }
+    return result.tf;
 }
 
 // A fresh solve: this transfer function is the symbolic ground truth. It stays
@@ -805,9 +857,9 @@ const PZ_APPROX = () => ({
 // Fills a Poles & Zeros panel from the engine's root solver. Zeros are the
 // numerator roots, poles the denominator roots; for a fully-numeric H(s) each
 // carries the corner frequency it maps to on the Bode axis.
-function renderPolesZeros(tf, target = PZ_MAIN()) {
+async function renderPolesZeros(tf, target = PZ_MAIN()) {
     if (!tf) return;
-    const result = Bridge.polesZeros(tf);
+    const result = await Bridge.polesZeros(tf);
     if (!result.ok) {
         target.zerosList.innerHTML = '';
         target.polesList.innerHTML = '';
@@ -1015,7 +1067,8 @@ function clearSubsError() {
 // one and the rest keep their values, clear one and its symbol comes back, clear
 // them all and the fully symbolic form returns -- no re-analyse. Called on the
 // button and, debounced, on every keystroke.
-function applySubstitution() {
+let subsSeq = 0;
+async function applySubstitution() {
     if (!currentTf) return;
 
     const subsMap = {};
@@ -1032,7 +1085,10 @@ function applySubstitution() {
         return;
     }
 
-    const result = Bridge.substitute(currentTf, subsMap);
+    const seq = ++subsSeq;
+    const result = await Bridge.substitute(currentTf, subsMap);
+    // Keystrokes can outrun the worker; only the newest substitution renders.
+    if (seq !== subsSeq) return;
     if (!result.ok) {
         setSubsError(result.errors.join('; '));
         return;
@@ -1064,7 +1120,8 @@ function updatePlotTabState() {
 // button: this runs whenever the values become fully numeric or a range field
 // changes. Auto-triggered, so invalid/mid-typed configuration is a silent skip
 // rather than an error banner.
-function handlePlotting() {
+let plotSeq = 0;
+async function handlePlotting() {
     if (!currentSubstitutedTf || !isFullyNumeric) return;
 
     const f_min = parseFloat(parseSIValue(els.plotFmin.value));
@@ -1074,8 +1131,11 @@ function handlePlotting() {
 
     const range = { f_min, f_max, points: Math.min(Math.max(points, 10), 1000) };
     try {
-        const result = Bridge.freqResponse(currentSubstitutedTf, range);
-        if (result.ok) renderPlotly(result.data, currentSubstitutedTf.kind);
+        const tf = currentSubstitutedTf;
+        const seq = ++plotSeq;
+        const result = await Bridge.freqResponse(tf, range);
+        if (seq !== plotSeq) return;   // a newer plot request superseded this one
+        if (result.ok) renderPlotly(result.data, tf.kind);
         else console.warn('freq_response:', result.errors);
     } catch (e) {
         console.warn('plot error:', e);
@@ -1342,7 +1402,7 @@ function buildApproxSpec() {
     return { spec, label };
 }
 
-function handleApproximation() {
+async function handleApproximation() {
     if (!currentTf) return;
     const built = buildApproxSpec();
     if (!built) return;
@@ -1350,28 +1410,26 @@ function handleApproximation() {
     els.runApproxBtn.disabled = true;
     els.runApproxBtn.querySelector('.btn-spinner').classList.remove('hidden');
 
-    setTimeout(() => {
-        try {
-            // The step applies to where the chain currently stands.
-            const base = approxChain.length ? approxChain[approxChain.length - 1].tf : currentTf;
-            const result = Bridge.approximate(base, built.spec);
-            if (!result.ok) {
-                showGlobalError("Approximation Error:\n" + result.errors.join("\n"));
-            } else {
-                approxChain.push({
-                    label: built.label,
-                    tf: result.tf_approx,
-                    dropped: result.dropped_terms || []
-                });
-                renderApproxChain();
-            }
-        } catch (e) {
-            showGlobalError("UI Error: " + e.message);
-        } finally {
-            els.runApproxBtn.disabled = false;
-            els.runApproxBtn.querySelector('.btn-spinner').classList.add('hidden');
+    try {
+        // The step applies to where the chain currently stands.
+        const base = approxChain.length ? approxChain[approxChain.length - 1].tf : currentTf;
+        const result = await Bridge.approximate(base, built.spec);
+        if (!result.ok) {
+            showGlobalError("Approximation Error:\n" + result.errors.join("\n"));
+        } else {
+            approxChain.push({
+                label: built.label,
+                tf: result.tf_approx,
+                dropped: result.dropped_terms || []
+            });
+            renderApproxChain();
         }
-    }, 50);
+    } catch (e) {
+        showGlobalError("UI Error: " + e.message);
+    } finally {
+        els.runApproxBtn.disabled = false;
+        els.runApproxBtn.querySelector('.btn-spinner').classList.add('hidden');
+    }
 }
 
 // Redraws everything the chain implies: the steps list, the resulting H(s),
@@ -1436,11 +1494,14 @@ function handleComparePlots() {
     els.comparePlotBtn.disabled = true;
     els.comparePlotBtn.textContent = "Plotting...";
 
-    setTimeout(() => {
+    (async () => {
         try {
-            // Substitute into both TFs
-            const origSubRes = Bridge.substitute(currentTf, subsMap);
-            const approxSubRes = Bridge.substitute(currentApproxTf, subsMap);
+            // Substitute into both TFs. Independent calls, so issue them
+            // together; the worker runs them back to back.
+            const [origSubRes, approxSubRes] = await Promise.all([
+                Bridge.substitute(currentTf, subsMap),
+                Bridge.substitute(currentApproxTf, subsMap)
+            ]);
 
             if (!origSubRes.ok || !approxSubRes.ok) {
                 showGlobalError("Substitution failed during plot compare.");
@@ -1459,9 +1520,11 @@ function handleComparePlots() {
                 f_max: parseFloat(parseSIValue(els.plotFmax.value)) || 1e6,
                 points: parseInt(els.plotPoints.value) || 200
             };
-            
-            const origPlotRes = Bridge.freqResponse(origSubRes.tf, range);
-            const approxPlotRes = Bridge.freqResponse(approxSubRes.tf, range);
+
+            const [origPlotRes, approxPlotRes] = await Promise.all([
+                Bridge.freqResponse(origSubRes.tf, range),
+                Bridge.freqResponse(approxSubRes.tf, range)
+            ]);
 
             if (!origPlotRes.ok || !approxPlotRes.ok) {
                 showGlobalError("Freq Response generation failed.");
@@ -1506,7 +1569,7 @@ function handleComparePlots() {
             els.comparePlotBtn.disabled = false;
             els.comparePlotBtn.textContent = "Compare Bode Plots";
         }
-    }, 50);
+    })();
 }
 
 // --- M5: Export / Import Logic ---
@@ -1584,7 +1647,7 @@ function handleImport(e) {
             window.Schematic.setModel(data.schematic);
             syncSchematicIoOptions();
             updateNetlistPreview();
-            handleNetlistChange();
+            await handleNetlistChange();
             
             // 2. Run Analysis to populate symbols (Wait for it)
             if (data.input && data.output && currentCircuitJson) {
@@ -1606,7 +1669,7 @@ function handleImport(e) {
                     }
                 });
                 // Apply them through the live path.
-                applySubstitution();
+                await applySubstitution();
             }
 
             // 4. Restore Approximation

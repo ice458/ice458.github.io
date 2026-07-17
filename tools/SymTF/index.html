@@ -99,7 +99,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     <script src="https://unpkg.com/konva@9.3.6/konva.min.js"></script>
 
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="style.css?v=5">
+    <link rel="stylesheet" href="style.css?v=6">
 </head>
 <body>
 <!-- Google Tag Manager (noscript) -->
@@ -130,6 +130,11 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                         <span class="engine-dot"></span>
                         <span id="engine-status-text">Loading SymPy…</span>
                     </div>
+                    <!-- Visible only while the engine worker is computing.
+                         Terminates the worker and restarts it, so a runaway
+                         symbolic solve cannot hold the session hostage. -->
+                    <button id="engine-cancel-btn" class="secondary-btn small-btn hidden"
+                            title="Abort the running computation (the engine restarts in the background)">Cancel</button>
                     <button id="share-btn" class="secondary-btn small-btn" title="Copy a link to this circuit">Share Link</button>
                     <button id="import-btn" class="secondary-btn small-btn">Import</button>
                     <button id="export-btn" class="secondary-btn small-btn">Export</button>
@@ -470,15 +475,17 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     </div>
 
     <!-- Scripts -->
-    <script src="https://cdn.jsdelivr.net/pyodide/v0.26.1/full/pyodide.js"></script>
+    <!-- Pyodide loads inside the engine Web Worker (engine_worker.js), not
+         here: the main thread never runs SymPy, so analysis cannot freeze
+         the page and first paint no longer waits on the runtime script. -->
     <!-- App Logic -->
     <!-- Order matters: app.js drives the editor, so schematic.js must have
          registered its DOMContentLoaded handler first. -->
-    <script src="pyodide_bridge.js?v=5"></script>
+    <script src="pyodide_bridge.js?v=6"></script>
     <script src="samples.js?v=5"></script>
     <script src="netlist.js?v=5"></script>
     <script src="schematic.js?v=5"></script>
-    <script src="app.js?v=5"></script>
+    <script src="app.js?v=6"></script>
     <script src="/consent.js" defer></script>
 </body>
 </html>
