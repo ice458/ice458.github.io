@@ -680,7 +680,24 @@ function runAnalysis(forceInput = null, forceOutput = null, silent = false) {
         currentCircuitJson.input = { kind: inKind, name: inName };
         currentCircuitJson.output = { kind: "node_voltage", node: outNode };
 
-        // Use setTimeout to allow UI to render spinner
+        // Pre-check size to warn before UI freezes
+        const elements = currentCircuitJson.elements || [];
+        const nodeSet = new Set();
+        let nBranch = 0;
+        for (const el of elements) {
+            for (const key of ["n1", "n2", "np", "nn", "ncp", "ncn", "nout"]) {
+                if (el[key] && el[key] !== "0") nodeSet.add(el[key]);
+            }
+            if (["V", "E", "O"].includes(el.type)) nBranch++;
+        }
+        const nTotal = nodeSet.size + nBranch;
+        if (nTotal > 12) {
+            setParseError(`Analysis: WARNING: system size ${nTotal} may be slow (>12). Browser may freeze for a moment.`);
+        } else {
+            hideParseError();
+        }
+
+        // Use setTimeout to allow UI to render spinner and warnings
         setTimeout(() => {
             try {
                 const result = Bridge.solveCircuit(currentCircuitJson);
@@ -693,6 +710,11 @@ function runAnalysis(forceInput = null, forceOutput = null, silent = false) {
                     reject(new Error("Analysis failed"));
                 } else {
                     hasAnalyzed = true;   // enables auto-refresh on later edits
+                    if (result.errors && result.errors.length > 0) {
+                        setParseError(result.errors.map(m => "Analysis: " + m));
+                    } else {
+                        hideParseError();
+                    }
                     renderResults(result.tf);
                     resolve(result.tf);
                 }
