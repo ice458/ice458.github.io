@@ -151,8 +151,8 @@ class ProjectManager:
             with open(self.html_file, 'r', encoding='utf-8') as f:
                 content = f.read()
 
-            # プロジェクト行を抽出する正規表現パターン
-            pattern = r'<tr class="project-row" data-category="([^"]*)" data-search="([^"]*)">\s*<td><a href="([^"]*)">(.*?)</a></td>\s*<td>(.*?)</td>\s*<td>(.*?)</td>\s*</tr>'
+            # プロジェクト行を抽出する正規表現パターン（data-video属性はオプション）
+            pattern = r'<tr class="project-row" data-category="([^"]*)" data-search="([^"]*)"(?:\s+data-video="([^"]*)")?>\s*<td><a href="([^"]*)">(.*?)</a></td>\s*<td>(.*?)</td>\s*<td>(.*?)</td>\s*</tr>'
 
             matches = re.findall(pattern, content, re.DOTALL)
 
@@ -208,6 +208,8 @@ class ProjectManager:
             detail += f"カテゴリ: {', '.join(project['categories'])}\n\n"
             detail += f"リンク: {project['link']}\n\n"
             detail += f"検索キーワード: {project['search_terms']}\n\n"
+            if project.get('video_url'):
+                detail += f"YouTube動画: {project['video_url']}\n\n"
             detail += f"説明:\n{project['description']}"
 
             self.detail_text.insert(1.0, detail)
@@ -355,7 +357,12 @@ class ProjectManager:
                 # データ属性用のカテゴリ文字列
                 data_categories = ','.join([cat.strip() for cat in project['categories']])
 
-                row = f'''                            <tr class="project-row" data-category="{data_categories}" data-search="{project['search_terms']}">
+                # data-video属性（YouTube URLがある場合のみ）
+                video_attr = ''
+                if project.get('video_url'):
+                    video_attr = f' data-video="{project["video_url"]}"'
+
+                row = f'''                            <tr class="project-row" data-category="{data_categories}" data-search="{project['search_terms']}"{video_attr}>
                                 <td><a href="{project['link']}">{project['title']}</a></td>
                                 <td>{category_html}</td>
                                 <td>{project['description']}</td>
@@ -684,13 +691,8 @@ class ProjectManager:
             from datetime import datetime
             current_date = datetime.now().strftime('%Y年%m月%d日')
 
-            # プレースホルダーを置換
-            content = template_content.replace('{{TITLE}}', project['title'])
-            content = content.replace('{{DESCRIPTION}}', project['description'])
-            content = content.replace('{{CATEGORIES}}', ', '.join(project['categories']))
-            content = content.replace('{{CATEGORY_TAGS}}', category_tags_html)
-            content = content.replace('{{DATE}}', current_date)
-            content = content.replace('VIDEO_ID_HERE', 'VIDEO_ID_PLACEHOLDER')
+            # YouTube Video IDを抽出
+            video_id = self.extract_video_id(project.get('video_url', ''))
 
             # SEO関連のプレースホルダーを置換
             description = project.get('description', project['title'] + ' - ice458の電子工作・製作物')
@@ -701,10 +703,41 @@ class ProjectManager:
             canonical_url = f"https://ice458.github.io/{project_slug}/"
             permalink = f"/{project_slug}/"
 
+            # プレースホルダーを置換
+            content = template_content.replace('{{TITLE}}', project['title'])
             content = content.replace('{{DESCRIPTION}}', description)
+            content = content.replace('{{CATEGORIES}}', ', '.join(project['categories']))
+            content = content.replace('{{CATEGORY_TAGS}}', category_tags_html)
+            content = content.replace('{{DATE}}', current_date)
             content = content.replace('{{KEYWORDS}}', keywords)
             content = content.replace('{{CANONICAL_URL}}', canonical_url)
             content = content.replace('{{PERMALINK}}', permalink)
+
+            # YouTube動画のプレースホルダーを置換
+            if video_id:
+                content = content.replace('{{VIDEO_ID}}', video_id)
+                # VideoObject JSON-LD構造化データを生成
+                import json
+                video_structured_data = (
+                    '    <!-- Video structured data for Google -->\r\n'
+                    '    <script type="application/ld+json">\r\n'
+                    '    {\r\n'
+                    '      "@context": "https://schema.org",\r\n'
+                    '      "@type": "VideoObject",\r\n'
+                    f'      "name": {json.dumps(project["title"], ensure_ascii=False)},\r\n'
+                    f'      "description": {json.dumps(description, ensure_ascii=False)},\r\n'
+                    f'      "thumbnailUrl": "https://img.youtube.com/vi/{video_id}/hqdefault.jpg",\r\n'
+                    f'      "contentUrl": "https://www.youtube.com/watch?v={video_id}",\r\n'
+                    f'      "embedUrl": "https://www.youtube.com/embed/{video_id}"\r\n'
+                    '    }\r\n'
+                    '    </script>\r\n'
+                )
+                content = content.replace('{{VIDEO_STRUCTURED_DATA}}\r\n', video_structured_data)
+                content = content.replace('{{VIDEO_STRUCTURED_DATA}}', video_structured_data)
+            else:
+                content = content.replace('{{VIDEO_ID}}', 'VIDEO_ID_HERE')
+                content = content.replace('{{VIDEO_STRUCTURED_DATA}}\r\n', '')
+                content = content.replace('{{VIDEO_STRUCTURED_DATA}}', '')
 
             # 記事ファイルを保存
             article_file = project_dir / "index.html"
@@ -741,6 +774,21 @@ class ProjectManager:
 
         except Exception as e:
             messagebox.showerror("エラー", f"記事ページの生成に失敗しました: {str(e)}")
+
+    @staticmethod
+    def extract_video_id(url):
+        """YouTube URLからVideo IDを抽出する"""
+        if not url:
+            return ''
+        import re
+        # youtube.com/watch?v=VIDEO_ID
+        match = re.search(r'(?:youtube\.com/watch\?.*v=|youtu\.be/|youtube\.com/embed/)([a-zA-Z0-9_-]{11})', url)
+        if match:
+            return match.group(1)
+        # 直接Video IDが入力された場合（11文字の英数字+ハイフン+アンダースコア）
+        if re.match(r'^[a-zA-Z0-9_-]{11}$', url.strip()):
+            return url.strip()
+        return ''
 
     def create_project_slug(self, title):
         """プロジェクトタイトルからURLスラッグを生成（一貫性のあるハッシュ）"""
@@ -843,6 +891,20 @@ class ProjectDialog:
         ttk.Entry(main_frame, textvariable=self.search_var, width=40).grid(row=row, column=1, sticky=(tk.W, tk.E), pady=5)
         row += 1
 
+        # YouTube動画URL
+        ttk.Label(main_frame, text="YouTube動画:").grid(row=row, column=0, sticky=tk.W, pady=5)
+        video_frame = ttk.Frame(main_frame)
+        video_frame.grid(row=row, column=1, sticky=(tk.W, tk.E), pady=5)
+        video_frame.columnconfigure(0, weight=1)
+
+        self.video_var = tk.StringVar()
+        ttk.Entry(video_frame, textvariable=self.video_var, width=40).grid(row=0, column=0, sticky=(tk.W, tk.E))
+        
+        hint_label2 = ttk.Label(video_frame, text="例: https://www.youtube.com/watch?v=xxxx",
+                               font=("Arial", 8), foreground="gray")
+        hint_label2.grid(row=1, column=0, sticky=tk.W)
+        row += 1
+
         # 説明
         ttk.Label(main_frame, text="説明:").grid(row=row, column=0, sticky=(tk.W, tk.N), pady=5)
         text_frame = ttk.Frame(main_frame)
@@ -872,6 +934,7 @@ class ProjectDialog:
         self.title_var.set(project['title'])
         self.link_var.set(project['link'])
         self.search_var.set(project['search_terms'])
+        self.video_var.set(project.get('video_url', ''))
         self.description_text.insert(1.0, project['description'])
 
         # カテゴリを設定
@@ -913,6 +976,7 @@ class ProjectDialog:
             'link': self.link_var.get().strip() or f"#{title.lower().replace(' ', '-')}",
             'categories': categories,
             'search_terms': self.search_var.get().strip(),
+            'video_url': self.video_var.get().strip(),
             'description': self.description_text.get(1.0, tk.END).strip()
         }
 

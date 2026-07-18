@@ -99,6 +99,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     
     <!-- MathJax for mathematical expressions -->
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    {{VIDEO_STRUCTURED_DATA}}
 </head>
 
 <body>
@@ -162,7 +163,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 <div class="article-section">
                     <h2>動画</h2>
                     <div class="video-container">
-                        <iframe src="https://www.youtube.com/embed/VIDEO_ID_HERE"
+                        <iframe src="https://www.youtube.com/embed/{{VIDEO_ID}}"
                             title="{{TITLE}}" frameborder="0"
                             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                             allowfullscreen>
