@@ -84,31 +84,33 @@ _MAX_TERMS = 500
 #   quick — the default, tuned for the interactive loop (auto re-analysis on
 #           every edit): a small entry cap aborts hopeless circuits in well
 #           under a second.
-#   long  — user-invoked "spend up to a minute on it": a much larger entry cap
+#   long  — user-invoked "spend real time on it": a much larger entry cap
 #           admits bigger intermediates (an 8-stage RC ladder passes through
 #           ~8600-term entries on its way to a 29s solve), and a *product* cap
 #           bounds the cost of each individual fraction op instead. The product
-#           cap is what actually keeps the wall time honest: gcd-heavy systems
+#           cap is what actually keeps a runaway op in check: gcd-heavy systems
 #           (a 4-stage MFB cascade) have single reductions that run for minutes
 #           uninterruptibly, and they reach large×large operand products long
 #           before the entry cap trips -- while the ladder's big entries only
 #           ever multiply small partners (~large×20), far under the cap.
-# max_vars bounds the number of ring generators (s + free symbols) admitted:
-# multivariate gcd cost is exponential in the variable count, and a single gcd
-# is uninterruptible -- a 21-generator system (4-stage MFB, 20 free symbols)
-# was measured spending 17s on ONE subtraction of 126×629-term fractions and
-# minutes on later ones, while a 17-generator ladder chews through 8600-term
-# entries to finish in ~30s. Term/product caps cannot see this, so variable
-# count is checked up front, refusing immediately with "give more components
-# values" instead of burning minutes. 18 = the measured-safe 17 plus one.
-# No wall-clock budget: a long solve runs in a Web Worker without freezing the
-# UI, and the user cancels it if it takes too long. The guards below are all
-# structural (they predict an explosion from the size of the operands) and fire
-# in well under a second, so a hopeless symbolic solve is still rejected fast
-# and routed to numeric mode -- that is prediction, not a timeout.
+# max_vars (bounding the number of ring generators) used to refuse a long solve
+# up front once too many symbols were left free -- the argument being that
+# multivariate gcd is exponential in the variable count and a single gcd is
+# uninterruptible, so a 20-symbol system could burn minutes on one op with no
+# way to stop it. That argument no longer holds: Cancel terminates the whole
+# Web Worker (SymPy cannot be interrupted in-process on GitHub Pages, so cancel
+# has always meant terminate + respawn), which kills even a mid-flight gcd. So
+# there is no element/symbol-count ceiling any more -- if the user asks for a
+# large fully-symbolic solve, we attempt it and let them press Cancel when they
+# decide it is taking too long. This is the same call made when the wall-clock
+# budget was removed: the UI never freezes, so the user, not a structural count,
+# owns the stop. The remaining term/product caps are cheap explosion predictors
+# (they fire in well under a second and route the interactive 'quick' path to
+# numeric mode fast); they are size guards, not a limit on how big a circuit may
+# be. max_vars is kept as None so the field stays explicit at every call site.
 _EFFORT_LIMITS = {
     "quick": {"max_terms": _MAX_TERMS, "max_product": None, "max_vars": None},
-    "long": {"max_terms": 12000, "max_product": 1_000_000, "max_vars": 18},
+    "long": {"max_terms": 12000, "max_product": 1_000_000, "max_vars": None},
 }
 
 
@@ -734,10 +736,10 @@ def _frac_solve_H(
     if not names:
         names = ["s"]   # a fully-numeric system still needs a ring variable
 
-    # Refuse up front when there are too many ring variables for this effort
-    # level: multivariate gcd cost is exponential in the variable count and a
-    # single gcd cannot be interrupted, so this is the one blow-up that must be
-    # rejected before elimination starts rather than caught during it.
+    # Optional up-front refusal when there are too many ring variables. No preset
+    # sets this any more (Cancel terminates the worker, so even an uninterruptible
+    # multivariate gcd can be stopped), but the guard is kept for a caller that
+    # wants to cap generators before elimination starts rather than during it.
     if max_vars is not None and len(names) > max_vars:
         n_free = len([x for x in syms if x != s and x != _PI_SYM])
         raise _SolverTooLarge(f"{n_free} symbols still free")

@@ -176,22 +176,37 @@ def test_partial_values_keep_symbols_symbolic():
     assert solved["tf"]["den_degree"] == 20   # 10 cascaded biquads
 
 
-def test_effort_long_admits_more_and_refuses_by_var_count():
-    """effort='long' raises the budget but refuses immediately (no minutes of
-    burn) when too many symbols are still free -- the refusal names the count."""
-    from bench.circuits import get
-    netlist, inp, out = get("mfb4")   # 20 free symbols: over even the long cap
-    import time
-    t0 = time.perf_counter()
-    r = _solve_opts(netlist, inp, {"kind": "node_voltage", "node": out},
-                    {"method": "auto", "effort": "long"})
-    elapsed = time.perf_counter() - t0
-    assert r["ok"] is False
-    assert r.get("reason") == "too_large"
-    assert "symbols still free" in r["errors"][0]
-    assert elapsed < 5.0, f"refusal must be immediate, took {elapsed:.1f}s"
+def test_effort_long_has_no_symbol_count_refusal():
+    """effort='long' no longer refuses a solve up front by free-symbol count.
 
-    # And an unknown effort value falls back to quick rather than erroring.
+    That refusal existed only because a single multivariate gcd is
+    uninterruptible, so a high-variable-count solve could burn minutes with no
+    way to stop it. Cancel terminates the whole worker (killing even a mid-flight
+    gcd), so the user, not a structural element count, owns the stop -- the same
+    call already made for the wall-clock budget. The size guards (term/product
+    caps) stay: they are what still route a genuinely explosive flat form to
+    numeric mode, and they fire in well under a second."""
+    import engine
+    assert engine._EFFORT_LIMITS["long"]["max_vars"] is None
+    assert engine._EFFORT_LIMITS["quick"]["max_vars"] is None
+    assert engine._EFFORT_LIMITS["long"]["max_terms"] == 12000
+    assert engine._EFFORT_LIMITS["long"]["max_product"] == 1_000_000
+
+    # The direct solver still honours an explicit max_vars if a caller passes one
+    # (the mechanism is kept, just unused by the presets): a 2-symbol RC divider
+    # capped at 1 generator must refuse by count.
+    import sympy as sp
+    from engine import _frac_solve_H, _SolverTooLarge
+    s, R, C = sp.symbols("s R C", positive=True)
+    A = sp.Matrix([[1 / R + s * C, -s * C], [-s * C, s * C]])
+    z = sp.Matrix([1 / R, 0])
+    try:
+        _frac_solve_H(A, z, 0, None, max_vars=1)
+        assert False, "max_vars=1 should have refused this 3-generator system"
+    except _SolverTooLarge as exc:
+        assert "symbols still free" in str(exc)
+
+    # An unknown effort value falls back to quick rather than erroring.
     ok = _solve_opts("Vin in 0 Vin\nR1 in out R1\nC1 out 0 C1", "Vin",
                      {"kind": "node_voltage", "node": "out"},
                      {"method": "auto", "effort": "bogus"})

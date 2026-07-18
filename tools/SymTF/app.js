@@ -874,13 +874,15 @@ function enterNumericMode(symbols, errors) {
 
     els.resultPlaceholder.classList.remove('hidden');
     els.resultPlaceholder.textContent =
-        'Too large for a fully symbolic result — enter component values below. ' +
-        'A few fields (about 3–4, more with "Solve harder") may be left blank ' +
-        'to keep those symbols symbolic in H(s).';
+        'Too large for a quick fully symbolic result — enter component values below, ' +
+        'or press "Solve harder" to attempt the full symbolic H(s). ' +
+        'Any field left blank stays symbolic; the more you leave blank, the longer ' +
+        'the solve can take (no time limit — press Cancel in the header to stop it).';
     els.resultContainer.classList.add('hidden');
 
     setParseError(errors.concat(
-        ['Enter values below. Leaving a few fields blank keeps those symbols symbolic in H(s).']));
+        ['Enter values below, or press "Solve harder" for the full symbolic H(s). ' +
+         'Blank fields stay symbolic; a large symbolic solve can run a while — Cancel stops it.']));
 
     populateSubstitutionTable(symbols);
     els.subsPlaceholder.classList.add('hidden');
@@ -895,7 +897,7 @@ function enterNumericMode(symbols, errors) {
 }
 
 // The Solve harder button: same solve, engine effort 'long' -- much more
-// generous structural guards and a higher free-symbol allowance, no time
+// generous structural guards and no element/symbol-count refusal, no time
 // limit. Explicit user action only: the automatic per-keystroke attempts stay
 // on the quick guards so editing never silently queues a heavy job. It can run
 // a while; Cancel (in the header, shown while computing) stops it.
@@ -914,12 +916,12 @@ els.solveLongBtn?.addEventListener('click', async () => {
 
 // In numeric mode the value fields drive re-solves with options.values: the
 // engine substitutes into the MNA and solves whatever stays symbolic. Not all
-// fields are required -- a handful of symbols (engine-guarded) may be left
-// blank to keep them symbolic in H(s), which is how a 50-element filter can
-// still be swept over 3-6 chosen components. Debounced through the same live
-// path as substitution, and guarded by the solve sequence so stale results
-// never land. effort='long' (the Solve harder button) relaxes the engine's
-// guards and admits more free symbols, with no time cap -- Cancel stops it.
+// fields are required -- any symbol left blank stays symbolic in H(s), which is
+// how a 50-element filter can still be swept over a chosen handful of
+// components. Debounced through the same live path as substitution, and guarded
+// by the solve sequence so stale results never land. effort='long' (the Solve
+// harder button) relaxes the engine's size guards and drops the symbol-count
+// refusal entirely, with no time cap -- Cancel stops it.
 async function maybeRunNumericSolve(effort = 'quick') {
     if (!numericMode || !currentCircuitJson) return;
 
