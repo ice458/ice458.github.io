@@ -220,9 +220,15 @@ Bridge.onBusyChange = (busyCount) => {
     }
 };
 
+// The Cancel button is the only stop the engine needs. A long solve does not
+// freeze anything -- it runs in the worker while the page stays live -- so
+// there is no automatic time limit: if the user decides a computation is
+// taking too long, they press Cancel. (There is no way to interrupt Pyodide
+// mid-computation anyway; Cancel terminates and respawns the worker, which is
+// exactly what this does.) Fast structural guards in the engine still reject a
+// genuinely explosive symbolic solve in well under a second and route it to
+// numeric mode -- that is prediction, not a timeout, so it stays.
 els.engineCancelBtn?.addEventListener('click', () => {
-    // terminate + respawn: SymPy reloads in the background; the editor is
-    // unaffected. In-flight calls resolve as cancelled errors.
     Bridge.cancel();
     engineReady = false;
     lastSolvedKey = null;
@@ -888,15 +894,16 @@ function enterNumericMode(symbols, errors) {
     maybeRunNumericSolve();
 }
 
-// The Solve harder button: same solve, engine effort 'long' -- up to about a
-// minute of computation and a higher free-symbol allowance. Explicit user
-// action only: the automatic per-keystroke attempts stay on the quick budget
-// so editing never silently queues minute-long jobs in the worker.
+// The Solve harder button: same solve, engine effort 'long' -- much more
+// generous structural guards and a higher free-symbol allowance, no time
+// limit. Explicit user action only: the automatic per-keystroke attempts stay
+// on the quick guards so editing never silently queues a heavy job. It can run
+// a while; Cancel (in the header, shown while computing) stops it.
 els.solveLongBtn?.addEventListener('click', async () => {
     const btn = els.solveLongBtn;
     const prev = btn.textContent;
     btn.disabled = true;
-    btn.textContent = 'Solving… (up to ~1 min)';
+    btn.textContent = 'Solving… (Cancel in header)';
     try {
         await maybeRunNumericSolve('long');
     } finally {
@@ -911,8 +918,8 @@ els.solveLongBtn?.addEventListener('click', async () => {
 // blank to keep them symbolic in H(s), which is how a 50-element filter can
 // still be swept over 3-6 chosen components. Debounced through the same live
 // path as substitution, and guarded by the solve sequence so stale results
-// never land. effort='long' (the Solve harder button) lets the engine spend up
-// to ~a minute and admit more free symbols.
+// never land. effort='long' (the Solve harder button) relaxes the engine's
+// guards and admits more free symbols, with no time cap -- Cancel stops it.
 async function maybeRunNumericSolve(effort = 'quick') {
     if (!numericMode || !currentCircuitJson) return;
 
@@ -940,7 +947,7 @@ async function maybeRunNumericSolve(effort = 'quick') {
         if (result.reason === 'too_large') {
             setSubsError((result.errors || []).join(' ') +
                 (effort === 'quick'
-                    ? ' — fill more fields, or press "Solve harder (~1 min)".'
+                    ? ' — fill more fields, or press "Solve harder".'
                     : ''));
         } else {
             setSubsError((result.errors || ['Numeric solve failed.']).join('; '));

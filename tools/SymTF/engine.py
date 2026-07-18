@@ -101,11 +101,14 @@ _MAX_TERMS = 500
 # entries to finish in ~30s. Term/product caps cannot see this, so variable
 # count is checked up front, refusing immediately with "give more components
 # values" instead of burning minutes. 18 = the measured-safe 17 plus one.
+# No wall-clock budget: a long solve runs in a Web Worker without freezing the
+# UI, and the user cancels it if it takes too long. The guards below are all
+# structural (they predict an explosion from the size of the operands) and fire
+# in well under a second, so a hopeless symbolic solve is still rejected fast
+# and routed to numeric mode -- that is prediction, not a timeout.
 _EFFORT_LIMITS = {
-    "quick": {"max_terms": _MAX_TERMS, "time_budget": 20.0, "max_product": None,
-              "max_vars": None},
-    "long": {"max_terms": 12000, "time_budget": 60.0, "max_product": 1_000_000,
-             "max_vars": 18},
+    "quick": {"max_terms": _MAX_TERMS, "max_product": None, "max_vars": None},
+    "long": {"max_terms": 12000, "max_product": 1_000_000, "max_vars": 18},
 }
 
 
@@ -691,7 +694,6 @@ def _frac_solve_H(
     out_idx: Optional[int],
     out_idx2: Optional[int],
     max_terms: int = 50000,
-    time_budget: float = 20.0,
     max_product: Optional[int] = None,
     max_vars: Optional[int] = None,
 ) -> sp.Expr:
@@ -701,21 +703,17 @@ def _frac_solve_H(
       = x[out_idx] - x[out_idx2]            (differential; a None index is ground)
 
     Raises :class:`_SolverFallback` if the entries cannot be embedded in a
-    polynomial ring; :class:`_SolverTooLarge` if an intermediate fraction grows
-    past *max_terms* monomials, or the elimination exceeds *time_budget* seconds.
-    The time budget matters because the cost is dominated by gcd reductions on
-    the fraction entries -- a moderate-size but dense answer (a long RC ladder)
-    can run for tens of seconds while never tripping the term count, so wall
-    time is the guard that actually bounds it.
+    polynomial ring; :class:`_SolverTooLarge` if the operand guards
+    (*max_terms* monomials, *max_product* op cost, *max_vars* generators) trip.
+    All guards are structural and fire fast -- there is no wall-clock limit;
+    a long solve is bounded by the user pressing Cancel, not by a timer.
     """
-    import time as _time
     from sympy.polys.fields import field
     from sympy import ZZ
     from sympy.polys.polyerrors import CoercionFailed, GeneratorsError, PolynomialError
 
     _EMBED_ERRORS = (CoercionFailed, GeneratorsError, PolynomialError, ValueError, TypeError)
 
-    deadline = _time.perf_counter() + time_budget
     n = A.rows
 
     # pi -> placeholder so the ring embedding sees only Symbols.
@@ -806,8 +804,6 @@ def _frac_solve_H(
             f = rows[i].get(pc)
             if f is None:
                 continue   # zero in pivot column: row untouched, sparsity kept
-            if _time.perf_counter() > deadline:
-                raise _SolverTooLarge("exceeded time budget")
             _op_guard(f, piv)
             factor = _guard(f / piv)
             row_i = rows[i]
@@ -834,8 +830,6 @@ def _frac_solve_H(
     # elimination.
     x: Dict[int, Any] = {}
     for pi, pc in reversed(pivots):
-        if _time.perf_counter() > deadline:
-            raise _SolverTooLarge("exceeded time budget")
         r = rows[pi]
         acc = r.get(n, F.zero)
         for c, v in r.items():
@@ -1080,7 +1074,6 @@ def solve(circuit_json: str) -> str:
                 H_raw = _frac_solve_H(
                     A, z_tf, output_idx, output_idx2,
                     max_terms=limits["max_terms"],
-                    time_budget=limits["time_budget"],
                     max_product=limits["max_product"],
                     max_vars=limits["max_vars"],
                 )
