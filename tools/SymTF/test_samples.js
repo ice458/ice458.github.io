@@ -67,6 +67,7 @@ const EXPECTED = {
 // check instead (below): it exists to prove the circuit analyses to the right
 // shape, not to pin an exact node numbering.
 const STRUCTURAL = {
+  active_lpf_x3: { elements: 15, opamps: 3, stages: 3 },
   active_lpf_fb3: { elements: 16, opamps: 3, stages: 3, feedback: true },
 };
 
