@@ -62,12 +62,37 @@ const EXPECTED = {
             "ro1 <n> 0 ro1", "ro2 out <n> ro2", "V_in in 0 V_in"]
 };
 
+// The big cascade has ~29 auto-assigned internal nets, so the single-<n>
+// collapse used for the small samples does not apply. It gets a structural
+// check instead (below): it exists to prove a 50-element circuit analyses, not
+// to pin an exact node numbering.
+const STRUCTURAL = {
+  active_lpf_x10: { elements: 50, opamps: 10, stages: 10 },
+};
+
 for (const [key, sample] of Object.entries(window.Samples)) {
   const res = Netlist.extract(loadAsBrowserWould(sample.model), { virtualInput: "in" });
 
   eq(`${key}: extracts cleanly`, { ok: res.ok, errors: res.errors.map(e => e.msg) },
      { ok: true, errors: [] });
   if (!res.ok) continue;
+
+  if (STRUCTURAL[key]) {
+    const spec = STRUCTURAL[key];
+    const lines = res.text.split("\n").filter(Boolean);
+    const count = (re) => lines.filter(l => re.test(l)).length;
+    const rco = count(/^[RCO]/);      // Ra*/Rb*/Ca*/Cb*/O* element lines
+    const opamps = count(/^O\d/);
+    // Chain check: stage k's op-amp output node feeds stage k+1's Ra input.
+    const raIns = lines.filter(l => /^Ra\d/.test(l)).map(l => l.split(" ")[1]);
+    const opOuts = lines.filter(l => /^O\d/.test(l)).map(l => l.split(" ")[3]);
+    const chained = raIns.filter(n => opOuts.includes(n)).length; // internal links
+    eq(`${key}: element count`, rco, spec.elements);
+    eq(`${key}: op-amp count`, opamps, spec.opamps);
+    eq(`${key}: stages chain (internal links)`, chained, spec.stages - 1);
+    eq(`${key}: labels offered as ports`, res.labels.sort(), ["in", "out"]);
+    continue;
+  }
 
   // Collapse auto node names (N001...) to <n> so the test pins the topology
   // rather than the numbering, which is an implementation detail.
