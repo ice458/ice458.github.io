@@ -1291,11 +1291,13 @@ def _block_compose(elements, input_name, out_nodes, limits):
 
     ``out_nodes`` is ``[node]`` for a single-ended output or ``[from, to]`` for a
     differential one (H = T(from) - T(to)). Returns
-    ``(H_expr, factors, symbols)`` where ``factors`` are the per-block transfer
-    functions used along the path (for a flat-size estimate and, later, factored
-    display), or ``None`` when the circuit is not worth tearing (fewer than two
-    blocks, an unsupported output, or a structural surprise -- the caller then
-    uses the flat solver)."""
+    ``(H_expr, factors, symbols, is_chain)`` where ``factors`` are the per-block
+    transfer functions used along the path (for a flat-size estimate and factored
+    display) and ``is_chain`` is True when every block has exactly one input so
+    the composition is a clean product H1*H2*... (the case whose factored form is
+    a simple readable chain). Returns ``None`` when the circuit is not worth
+    tearing (fewer than three blocks, an unsupported output, or a structural
+    surprise -- the caller then uses the flat solver)."""
     C = _cut_nodes(elements)
     if not C:
         return None
@@ -1383,8 +1385,13 @@ def _block_compose(elements, input_name, out_nodes, limits):
     if len(out_nodes) == 2:
         H_expr = H_expr - transfer_to(out_nodes[1])
 
+    # A clean chain (every block driven by exactly one input) composes as a
+    # simple product H1*H2*..., which is what makes a readable factored form; a
+    # single-ended output on such a chain keeps the factors in stage order.
+    is_chain = (len(out_nodes) == 1
+                and all(len(block_inputs(k)) == 1 for k in range(len(merged))))
     symbols = sorted(str(x) for x in H_expr.free_symbols if x != s)
-    return H_expr, factors, symbols
+    return H_expr, factors, symbols, is_chain
 
 
 def _flatten_estimate(factors: List[sp.Expr]) -> int:
@@ -1403,6 +1410,56 @@ def _flatten_estimate(factors: List[sp.Expr]) -> int:
         if est > 10 ** 9:
             break
     return est
+
+
+def _tf_fields_factored(H_expr: sp.Expr, factors: List[sp.Expr], kind: str) -> Dict[str, Any]:
+    """Build a *factored* tf for a cascade whose flat H(s) is too large to form.
+
+    The stage transfer functions are kept as separate small fractions -- their
+    product is H(s) -- so the result is linear in stage count instead of
+    exponential. Each stage carries its own coefficient lists and latex (small,
+    readable, and enough to root per-stage poles/zeros); the flat coefficient
+    lists are ``None`` (the whole point is not forming them). ``H_expr`` is kept
+    unexpanded so substitution/plotting collapse the product numerically through
+    the normal path.
+
+    Distinct factors only, in composition order, dropping any trivial ``1`` (a
+    unity stage contributes nothing to display).
+    """
+    stage_tfs = []
+    seen = set()
+    num_deg = den_deg = 0
+    for f in factors:
+        key = str(f)
+        if key in seen or f == 1:
+            continue
+        seen.add(key)
+        st = _tf_fields_from_expr(f)
+        st.pop("den_terms", None)
+        stage_tfs.append({
+            "num_coeffs": st["num_coeffs"], "den_coeffs": st["den_coeffs"],
+            "num_degree": st["num_degree"], "den_degree": st["den_degree"],
+            "latex": st["latex"], "symbols": st["symbols"],
+        })
+        num_deg += st["num_degree"]
+        den_deg += st["den_degree"]
+
+    # Combined display latex: the product of the stage fractions (unexpanded).
+    combined_latex = r" \cdot ".join(f"\\left({st['latex']}\\right)"
+                                     for st in stage_tfs) or "1"
+    symbols = sorted(str(x) for x in H_expr.free_symbols if x != s)
+    return {
+        "factored": True,
+        "factors": stage_tfs,
+        "num_coeffs": None,
+        "den_coeffs": None,
+        "num_degree": num_deg,
+        "den_degree": den_deg,
+        "symbols": symbols,
+        "latex": combined_latex,
+        "kind": kind,
+        "H_expr": str(H_expr),
+    }
 
 
 def _value_subs_map(A: sp.Matrix, z_tf: sp.Matrix, values: Dict[str, Any]) -> Dict[sp.Symbol, sp.Expr]:
@@ -1638,13 +1695,23 @@ def solve(circuit_json: str) -> str:
             except Exception:
                 composed = None   # any surprise -> flat solver owns it
             if composed is not None:
-                H_expr_c, factors_c, _syms_c = composed
+                H_expr_c, factors_c, syms_c, is_chain_c = composed
                 if _flatten_estimate(factors_c) <= _FLATTEN_TERM_CAP:
                     try:
                         tf_fields = _tf_fields_from_expr(H_expr_c)
                         used_method = "block"
                     except Exception:
                         tf_fields = None   # fall through to the flat solver
+                elif is_chain_c:
+                    # Flat form would explode, but it is a clean cascade: return
+                    # the factored H (product of small stages) rather than a
+                    # numeric-mode prompt. Linear in stage count, so a 50-element
+                    # filter stays fully symbolic.
+                    kind = _determine_tf_kind(input_elem, output_type)
+                    tf = _tf_fields_factored(H_expr_c, factors_c, kind)
+                    stats["method"] = "block-factored"
+                    return _ok({"tf": tf, "errors": warnings, "stats": stats})
+                # else: fan-in cascade past the cap -> fall through to flat/too_large.
 
         if tf_fields is None and method != "legacy":
             try:

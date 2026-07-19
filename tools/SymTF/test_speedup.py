@@ -134,10 +134,12 @@ def test_numeric_first_matches_symbolic_then_substitute():
 
 
 def test_too_large_reports_reason_and_symbols():
-    """A deep symbolic cascade overflows the guard and reports the numeric
-    escape hatch: reason='too_large' plus the symbols that still need values."""
+    """A large NON-decomposable circuit (a passive ladder -- no op-amp cuts, so
+    the block path can't tear it) overflows the guard and reports the numeric
+    escape hatch: reason='too_large' plus the symbols that still need values.
+    (Cascades now factor instead; only genuinely untearable systems land here.)"""
     from bench.circuits import get
-    netlist, inp, out = get("mfb4")
+    netlist, inp, out = get("rc8")
     r = _solve_opts(netlist, inp, {"kind": "node_voltage", "node": out}, {"method": "auto"})
     assert r["ok"] is False
     assert r.get("reason") == "too_large"
@@ -145,35 +147,35 @@ def test_too_large_reports_reason_and_symbols():
 
 
 def test_too_large_becomes_solvable_with_values():
-    """The same over-large circuit solves once values are supplied."""
+    """The same over-large ladder solves once values are supplied."""
     from bench.circuits import get
-    netlist, inp, out = get("mfb4")
+    netlist, inp, out = get("rc8")
     r = _solve_opts(netlist, inp, {"kind": "node_voltage", "node": out}, {"method": "auto"})
     vals = {name: "1000" if name.startswith("R") else "1e-9" for name in r["symbols"]}
     solved = _solve_opts(netlist, inp, {"kind": "node_voltage", "node": out},
                          {"method": "auto", "values": vals})
     assert solved["ok"], solved.get("errors")
     assert solved["tf"]["symbols"] == []
-    assert solved["tf"]["den_degree"] == 8   # 4 cascaded biquads
+    assert solved["tf"]["den_degree"] == 8   # 8-stage ladder
 
 
 def test_partial_values_keep_symbols_symbolic():
     """Values for a subset of components: the rest stay symbolic in H(s).
 
-    This is the 50-element partial-sweep workflow: fix most components
+    The partial-sweep workflow on a non-decomposable ladder: fix most components
     numerically, keep the interesting few symbolic."""
     from bench.circuits import get
-    netlist, inp, out = get("sk10")   # ~51 elements, 40 symbols
+    netlist, inp, out = get("rc8")
     r = _solve_opts(netlist, inp, {"kind": "node_voltage", "node": out}, {"method": "auto"})
     assert r.get("reason") == "too_large"
-    keep = {"R1a", "C1a"}
+    keep = {"R1", "C1"}
     vals = {name: "1000" if name.startswith("R") else "1e-9"
             for name in r["symbols"] if name not in keep}
     solved = _solve_opts(netlist, inp, {"kind": "node_voltage", "node": out},
                          {"method": "auto", "values": vals})
     assert solved["ok"], solved.get("errors")
     assert set(solved["tf"]["symbols"]) == keep
-    assert solved["tf"]["den_degree"] == 20   # 10 cascaded biquads
+    assert solved["tf"]["den_degree"] == 8   # 8-stage ladder
 
 
 def test_effort_long_has_no_symbol_count_refusal():
@@ -422,10 +424,51 @@ def test_block_path_matches_flat_solve_numerically():
             assert abs(a - b) <= 1e-6 * max(abs(b), 1e-300), (name, w)
 
 
-def test_deep_cascade_beyond_cap_still_too_large():
-    """A cascade whose flat form would explode (mfb6) is left as a numeric-mode
-    prompt -- the block path composes it but declines to flatten past the cap,
-    falling through to the flat solver's too_large verdict (unchanged)."""
-    r = _solve_full("mfb6", "o6")
+# --- Phase 4b: factored form for deep cascades ------------------------------
+
+def test_deep_cascade_returns_factored():
+    """A cascade whose flat form would explode (mfb8, sk10) is returned as a
+    factored H -- one small fraction per stage -- instead of a numeric-mode
+    prompt. The result is fully symbolic and linear in stage count."""
+    for name, out, stages, den_deg in (("mfb8", "o8", 8, 16), ("sk10", "o10", 10, 20)):
+        r = _solve_full(name, out)
+        assert r["ok"], r.get("errors")
+        assert r["stats"]["method"] == "block-factored"
+        tf = r["tf"]
+        assert tf["factored"] is True
+        assert len(tf["factors"]) == stages
+        assert tf["num_coeffs"] is None and tf["den_coeffs"] is None
+        assert tf["den_degree"] == den_deg
+        assert len(tf["symbols"]) > 0
+        # Every stage carries its own small coefficient lists (for per-stage P/Z).
+        for st in tf["factors"]:
+            assert st["num_coeffs"] and st["den_coeffs"]
+
+
+def test_factored_substitution_collapses_to_numeric():
+    """Substituting all component values into a factored H must reproduce the
+    numeric-first solve of the same circuit -- the product collapses to the same
+    small numeric rational, which is what makes plotting a deep cascade work."""
+    import cmath
+    from engine import substitute
+    name, out = "mfb8", "o8"
+    tf = _solve_full(name, out)["tf"]
+    vals = {nm: ("1000" if nm[0] == "R" else "1e-9") for nm in tf["symbols"]}
+    sub = json.loads(substitute(json.dumps(tf), json.dumps(vals)))
+    assert sub["ok"] and sub["fully_numeric"]
+    assert sub["tf"]["den_degree"] == 16
+    ref = _solve_full(name, out, {"method": "auto", "values": vals})
+    assert ref["ok"]
+    Ha = sympify(sub["tf"]["H_expr"]); Hb = sympify(ref["tf"]["H_expr"])
+    for w in (1e2, 1e4, 1e6):
+        a = complex(Ha.subs(s, 1j * w)); b = complex(Hb.subs(s, 1j * w))
+        assert abs(a - b) <= 1e-6 * max(abs(b), 1e-300), w
+
+
+def test_non_decomposable_large_circuit_still_too_large():
+    """A circuit with no op-amp cuts (a long passive ladder) cannot be torn, so
+    the block path never engages and the flat solver's too_large verdict stands
+    -- the factored escape hatch only applies to genuine cascades."""
+    r = _solve_full("rc8", "n8")
     assert r["ok"] is False and r.get("reason") == "too_large"
     assert len(r.get("symbols", [])) > 0

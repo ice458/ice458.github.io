@@ -981,18 +981,27 @@ function renderTf(tf) {
         'transimpedance': 'Transimpedance (V/I)',
         'admittance_transfer': 'Admittance Transfer (I/V)'
     };
-    els.tfKindLabel.textContent = kindMap[tf.kind] || 'Transfer Function';
+    els.tfKindLabel.textContent = (kindMap[tf.kind] || 'Transfer Function')
+        + (tf.factored ? ` — factored, ${tf.factors.length} stages` : '');
     els.numDegreeBadge.textContent = `Num Deg: ${tf.num_degree}`;
     els.denDegreeBadge.textContent = `Den Deg: ${tf.den_degree}`;
 
-    // Render main LaTeX
-    // Format: H(s) = \frac{num}{den}
-    // tf.latex already contains the RHS latex representation from SymPy
-    const displayLatex = `H(s) = ${tf.latex}`;
-    katex.render(displayLatex, els.latexOutput, {
-        displayMode: true,
-        throwOnError: false
-    });
+    // Render main LaTeX. A factored H(s) is a cascade too large to expand flat,
+    // so render it as a stacked product of its stages (each a small readable
+    // biquad) rather than one wall-of-text fraction.
+    if (tf.factored) {
+        const stages = tf.factors.map((st, i) =>
+            `H_{${i + 1}}(s) &= ${st.latex}`).join(' \\\\[4pt] ');
+        katex.render(`\\begin{aligned} ${stages} \\end{aligned}`, els.latexOutput, {
+            displayMode: true, throwOnError: false
+        });
+    } else {
+        const displayLatex = `H(s) = ${tf.latex}`;
+        katex.render(displayLatex, els.latexOutput, {
+            displayMode: true,
+            throwOnError: false
+        });
+    }
 
     // Render Coefficients
     renderCoeffsList(els.numCoeffsList, tf.num_coeffs, tf.num_degree);
@@ -1022,6 +1031,30 @@ const PZ_APPROX = () => ({
 // carries the corner frequency it maps to on the Bode axis.
 async function renderPolesZeros(tf, target = PZ_MAIN()) {
     if (!tf) return;
+
+    // A factored H(s) has no flat coefficient lists to root, but the poles and
+    // zeros of a product are just the union of each stage's -- and every stage
+    // is small. Root each stage and concatenate, so the panel still works on a
+    // deep symbolic cascade (the flat solve could never reach it).
+    if (tf.factored) {
+        const zeros = [], poles = [];
+        const notes = [];
+        for (let i = 0; i < tf.factors.length; i++) {
+            const r = await Bridge.polesZeros(tf.factors[i]);
+            if (!r.ok) { notes.push(`Stage ${i + 1}: ${(r.errors || []).join(' ')}`); continue; }
+            zeros.push(...r.zeros);
+            poles.push(...r.poles);
+            (r.notes || []).forEach(n => notes.push(`Stage ${i + 1}: ${n}`));
+        }
+        renderRootList(target.zerosList, zeros);
+        renderRootList(target.polesList, poles);
+        target.zerosCount.textContent = zeros.length ? `(${zeros.length})` : '';
+        target.polesCount.textContent = poles.length ? `(${poles.length})` : '';
+        target.notes.classList.toggle('hidden', notes.length === 0);
+        target.notes.textContent = notes.join(' ');
+        return;
+    }
+
     const result = await Bridge.polesZeros(tf);
     if (!result.ok) {
         target.zerosList.innerHTML = '';
@@ -1098,7 +1131,19 @@ function subscript(n) {
 
 function renderCoeffsList(container, coeffsStrArray, degree) {
     container.innerHTML = '';
-    
+
+    // A factored H(s) never forms its flat coefficient lists (that expansion is
+    // exactly what the factored form avoids). Say so instead of crashing on null.
+    if (!coeffsStrArray) {
+        const note = document.createElement('div');
+        note.className = 'coeff-item';
+        note.style.color = 'var(--text-secondary)';
+        note.textContent = 'Factored form — flat coefficients not expanded. '
+            + 'Enter component values to get the numeric coefficients.';
+        container.appendChild(note);
+        return;
+    }
+
     // coeffsStrArray is ordered highest degree first (from SymPy Poly.all_coeffs())
     coeffsStrArray.forEach((exprStr, index) => {
         const currentDegree = degree - index;
@@ -1518,7 +1563,10 @@ function renderPlotly(data, kind) {
 // --- M4: Approximation Logic ---
 
 function updateApproxTabState() {
-    if (currentTf) {
+    // Approximation works on the flat H(s). A factored cascade has none (its flat
+    // form is what it deliberately avoids), so disable it there -- entering values
+    // to get a numeric H re-enables it.
+    if (currentTf && !currentTf.factored) {
         els.approxWarning.classList.add('hidden');
         els.approxConfigContainer.classList.remove('hidden');
         els.approxResultsContainer.classList.add('hidden');
