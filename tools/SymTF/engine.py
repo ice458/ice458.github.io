@@ -1092,6 +1092,319 @@ def _tf_fields_from_expr(H_raw: sp.Expr) -> Dict[str, Any]:
     }
 
 
+# ===================================================================
+#  Block decomposition (cascade tearing at op-amp / VCVS outputs)
+# ===================================================================
+#
+# An ideal or finite-gain op-amp output node -- and a grounded-output VCVS node
+# -- is driven by a (controlled) voltage source with zero output impedance, so
+# whatever a downstream stage draws from it cannot change its voltage. Cutting
+# the circuit there tears a cascade into independent blocks whose transfer
+# functions MULTIPLY: H = H1(in->c1) * H2(c1->c2) * ...  The flat (expanded)
+# H(s) of a deep cascade is exponentially large (mfb_n has ~5^n denominator
+# terms), but each block is tiny, so composing block-by-block keeps a 50-element
+# filter solvable in tens of milliseconds where the flat solve overflows.
+#
+# Global feedback (a downstream node wired back into an upstream input, as in a
+# state-variable filter) makes the block graph cyclic; those blocks are merged
+# into one strongly-connected component and solved together, so correctness is
+# preserved -- the tear only ever happens where it is truly one-directional.
+#
+# The whole attempt is wrapped by its caller in a try/except that falls back to
+# the flat solver, so a decomposition that mis-analyses a circuit can only be
+# slower, never wrong.
+
+# Product of per-block denominator term counts above which the flattened cascade
+# is not worth forming. Set so the block path only ever *accelerates* cascades
+# whose flat H(s) is already what the tool shows (mfb3 ~ 125, sk4 ~ 256), never
+# introducing a new, wall-of-text flat H for a deeper filter: mfb4 ~ 5^4 = 625
+# and up fall through to the flat solver unchanged (they stay a numeric-mode
+# prompt until the factored-form UI lands). Below the cap the full flat tf is
+# built and the existing UI works on it verbatim.
+_FLATTEN_TERM_CAP = 300
+
+
+def _block_terminals(el: dict):
+    """Return (current-carrying terminals, all terminals) of an element."""
+    t = el["type"]
+    if t in ("R", "L", "C", "V", "I"):
+        return [el["n1"], el["n2"]], [el["n1"], el["n2"]]
+    if t in ("G", "E"):
+        return [el["np"], el["nn"]], [el["np"], el["nn"], el["ncp"], el["ncn"]]
+    if t == "O":
+        return [el["np"], el["nn"]], [el["np"], el["nn"], el["nout"]]
+    return [], []
+
+
+def _cut_nodes(elements: List[dict]) -> set:
+    """Nodes driven by a zero-output-impedance source: op-amp outputs and
+    grounded-output VCVS outputs. These are where a cascade can be torn."""
+    C = set()
+    for el in elements:
+        if el["type"] == "O":
+            C.add(el["nout"])
+        elif el["type"] == "E" and el.get("nn") == "0":
+            C.add(el["np"])
+    C.discard("0")
+    return C
+
+
+def _block_components(elements: List[dict], C: set) -> Dict[str, str]:
+    """Union-find on non-ground, non-cut nodes: two nodes share a block core if
+    an element's real terminals connect them (an op-amp's two inputs, a passive's
+    two nodes, a controlled source's output+sense nodes)."""
+    parent: Dict[str, str] = {}
+
+    def find(x):
+        parent.setdefault(x, x)
+        while parent[x] != x:
+            parent[x] = parent[parent[x]]
+            x = parent[x]
+        return x
+
+    def union(a, b):
+        ra, rb = find(a), find(b)
+        if ra != rb:
+            parent[ra] = rb
+
+    def real(n):
+        return n != "0" and n not in C
+
+    for el in elements:
+        reals = [n for n in _block_terminals(el)[1] if real(n)]
+        for n in reals[1:]:
+            union(reals[0], n)
+    for el in elements:
+        for n in _block_terminals(el)[1]:
+            if real(n):
+                find(n)
+    return {n: find(n) for n in parent}
+
+
+def _driver_of(elements: List[dict], C: set, comp_of: Dict[str, str]) -> Dict[str, str]:
+    """Map each cut node to the component id of the block that drives it."""
+    drv: Dict[str, str] = {}
+    for el in elements:
+        if el["type"] == "O":
+            ins = [n for n in (el["np"], el["nn"]) if n != "0" and n not in C]
+            drv[el["nout"]] = comp_of[ins[0]] if ins else None
+        elif el["type"] == "E" and el.get("nn") == "0":
+            ins = [n for n in (el["ncp"], el["ncn"]) if n != "0" and n not in C]
+            drv[el["np"]] = comp_of[ins[0]] if ins else None
+    return drv
+
+
+def _assign_blocks(elements, C, comp_of, drv):
+    """Group elements by block, recording each block's driven / consumed cuts."""
+    blocks: Dict[str, dict] = {}
+    for el in elements:
+        reals = [n for n in _block_terminals(el)[1] if n != "0" and n not in C]
+        if el["type"] == "O":
+            comp = drv[el["nout"]]
+        elif el["type"] == "E" and el.get("nn") == "0":
+            comp = drv[el["np"]]
+        elif reals:
+            comp = comp_of[reals[0]]
+        else:
+            comp = None
+        b = blocks.setdefault(comp, {"elements": [], "drives": set(), "consumes": set()})
+        b["elements"].append(el)
+    for comp, b in blocks.items():
+        for el in b["elements"]:
+            for n in _block_terminals(el)[1]:
+                if n in C:
+                    (b["drives"] if drv.get(n) == comp else b["consumes"]).add(n)
+    return blocks
+
+
+def _condense_sccs(blocks, drv):
+    """Tarjan SCC of the producer->consumer block graph, in topological order."""
+    ids = [c for c in blocks if c is not None]
+    consumers: Dict[str, List[str]] = {c: [] for c in ids}
+    for c in ids:
+        for cut in blocks[c]["consumes"]:
+            p = drv.get(cut)
+            if p in consumers and p != c:
+                consumers[p].append(c)   # p -> c
+    index, low, onstack, stack, sccs, ctr = {}, {}, {}, [], [], [0]
+
+    def dfs(v):
+        index[v] = low[v] = ctr[0]; ctr[0] += 1
+        stack.append(v); onstack[v] = True
+        for w in consumers[v]:
+            if w not in index:
+                dfs(w); low[v] = min(low[v], low[w])
+            elif onstack.get(w):
+                low[v] = min(low[v], index[w])
+        if low[v] == index[v]:
+            comp = []
+            while True:
+                w = stack.pop(); onstack[w] = False; comp.append(w)
+                if w == v:
+                    break
+            sccs.append(comp)
+
+    for v in ids:
+        if v not in index:
+            dfs(v)
+    sccs.reverse()
+    return sccs
+
+
+def _block_solve_tf(block_elements, active_src, zeroed_nodes, output_node, limits):
+    """V(output_node) with a unit source at active_src and other input ports
+    shorted to ground -- one term of a block's superposition.
+
+    active_src is a node name (a torn input cut) or ``('elem', name)`` naming a
+    real source element already inside the block."""
+    els = list(block_elements)
+    for i, nd in enumerate(zeroed_nodes):
+        els.append({"name": f"_Z{i}", "type": "V", "n1": nd, "n2": "0", "value": "0"})
+    if isinstance(active_src, tuple):
+        input_name = active_src[1]
+    else:
+        els.append({"name": "_SRC", "type": "V", "n1": active_src, "n2": "0", "value": "1"})
+        input_name = "_SRC"
+
+    A, z, node_list, var_names, errs = _build_mna(els)
+    if any(not e.startswith("WARNING") for e in errs):
+        raise _SolverFallback("block MNA error")
+    node_idx = {nd: i for i, nd in enumerate(node_list)}
+    if output_node not in node_idx:
+        raise _SolverFallback("block output not a node")
+    group2 = [el["name"] for el in els if el["type"] in ("V", "E", "O")]
+    branch_map = {nm: len(node_list) + i for i, nm in enumerate(group2)}
+    z_tf = zeros(A.rows, 1)
+    z_tf[branch_map[input_name]] = sp.Integer(1)
+    H_field, F, has_pi = _frac_solve_field(
+        A, z_tf, node_idx[output_node], None,
+        max_terms=limits["max_terms"], max_product=limits["max_product"],
+        max_vars=limits["max_vars"])
+    H = H_field.as_expr()
+    if has_pi:
+        H = H.subs(_PI_SYM, sp.pi)
+    return H
+
+
+def _block_compose(elements, input_name, out_nodes, limits):
+    """Compose H for a decomposable cascade, tearing at op-amp / VCVS outputs.
+
+    ``out_nodes`` is ``[node]`` for a single-ended output or ``[from, to]`` for a
+    differential one (H = T(from) - T(to)). Returns
+    ``(H_expr, factors, symbols)`` where ``factors`` are the per-block transfer
+    functions used along the path (for a flat-size estimate and, later, factored
+    display), or ``None`` when the circuit is not worth tearing (fewer than two
+    blocks, an unsupported output, or a structural surprise -- the caller then
+    uses the flat solver)."""
+    C = _cut_nodes(elements)
+    if not C:
+        return None
+    comp_of = _block_components(elements, C)
+    drv = _driver_of(elements, C, comp_of)
+    if any(v is None for v in drv.values()):
+        return None   # an op-amp with both inputs grounded: leave to flat solver
+    blocks = _assign_blocks(elements, C, comp_of, drv)
+    sccs = _condense_sccs(blocks, drv)
+    # Only worth tearing a genuine cascade (>= 3 stages). A one- or two-block
+    # circuit's flat solve is already sub-100ms, and composing it -- several
+    # small block MNAs plus a flatten -- costs more than it saves, so leave those
+    # to the flat path. The win starts at three stages, where the flat solve runs
+    # into seconds (mfb3: 2.4s -> 0.35s).
+    if len(sccs) < 3:
+        return None
+
+    scc_of = {cid: k for k, comp in enumerate(sccs) for cid in comp}
+
+    def consumers_of(c):
+        return [cc for cc in blocks if cc is not None and c in blocks[cc]["consumes"]]
+
+    merged = []
+    for k, comp in enumerate(sccs):
+        els, drives, consumes = [], set(), set()
+        for cid in comp:
+            els += blocks[cid]["elements"]
+            drives |= blocks[cid]["drives"]
+            consumes |= blocks[cid]["consumes"]
+        boundary_out = {c for c in drives
+                        if any(scc_of[cc] != k for cc in consumers_of(c))}
+        boundary_in = {c for c in consumes
+                       if drv.get(c) is not None and scc_of.get(drv[c]) != k}
+        merged.append({"elements": els, "drives": boundary_out, "consumes": boundary_in})
+
+    src_elem = next(el for el in elements if el["name"] == input_name)
+    src_node = src_elem["n1"] if src_elem["n1"] != "0" else src_elem["n2"]
+
+    def scc_of_node(nd):
+        for k, m in enumerate(merged):
+            for el in m["elements"]:
+                if nd in _block_terminals(el)[1]:
+                    return k
+        return None
+
+    src_scc = scc_of_node(src_node)
+    factors: List[sp.Expr] = []
+
+    def block_inputs(k):
+        ins = []
+        if k == src_scc:
+            ins.append(("src", ("elem", input_name)))
+        for c in sorted(merged[k]["consumes"]):
+            ins.append(("cut", c))
+        return ins
+
+    T: Dict[str, sp.Expr] = {}
+    for k, m in enumerate(merged):
+        ins = block_inputs(k)
+        for oc in sorted(m["drives"]):
+            acc = sp.Integer(0)
+            for kind, src in ins:
+                zeroed = [c for (kk, c) in ins if kk == "cut" and not (kk == kind and c == src)]
+                Hpart = _block_solve_tf(m["elements"], src, zeroed, oc, limits)
+                factors.append(Hpart)
+                acc += Hpart if kind == "src" else Hpart * T[src]
+            T[oc] = acc
+
+    def transfer_to(node):
+        if node in T:
+            return T[node]
+        k = scc_of_node(node)
+        if k is None:
+            raise _SolverFallback("output node not in any block")
+        ins = block_inputs(k)
+        acc = sp.Integer(0)
+        for kind, src in ins:
+            zeroed = [c for (kk, c) in ins if kk == "cut" and not (kk == kind and c == src)]
+            Hpart = _block_solve_tf(merged[k]["elements"], src, zeroed, node, limits)
+            factors.append(Hpart)
+            acc += Hpart if kind == "src" else Hpart * T[src]
+        return acc
+
+    H_expr = transfer_to(out_nodes[0])
+    if len(out_nodes) == 2:
+        H_expr = H_expr - transfer_to(out_nodes[1])
+
+    symbols = sorted(str(x) for x in H_expr.free_symbols if x != s)
+    return H_expr, factors, symbols
+
+
+def _flatten_estimate(factors: List[sp.Expr]) -> int:
+    """Rough upper bound on the flattened denominator's term count: the product
+    of each distinct factor's denominator term count. Used to decide whether the
+    flat H is small enough to form (see :data:`_FLATTEN_TERM_CAP`)."""
+    est = 1
+    seen = set()
+    for f in factors:
+        key = str(f)
+        if key in seen:
+            continue
+        seen.add(key)
+        _, den = fraction(f)
+        est *= max(1, len(sp.Add.make_args(sp.expand(den))))
+        if est > 10 ** 9:
+            break
+    return est
+
+
 def _value_subs_map(A: sp.Matrix, z_tf: sp.Matrix, values: Dict[str, Any]) -> Dict[sp.Symbol, sp.Expr]:
     """Build an exact substitution dict for the numeric-first solve.
 
@@ -1308,7 +1621,32 @@ def solve(circuit_json: str) -> str:
         stats: Dict[str, Any] = {"n": n_total}
         tf_fields = None
         used_method = method
-        if method != "legacy":
+
+        # Block-cascade accelerator: tear the circuit at op-amp / VCVS outputs
+        # and compose H as a product of small per-stage transfer functions. This
+        # is a pure speedup -- it only ever takes over when the composed cascade
+        # flattens cheaply (a 2-4 stage filter), producing exactly the flat tf
+        # the direct solve would, but in tens of ms instead of seconds (and it
+        # reaches 4-stage all-symbolic filters the flat solve cannot). Anything
+        # bigger, or any structural surprise, falls straight through to the flat
+        # path below unchanged -- so this can never change a result, only beat it
+        # to one. Gated to a pure symbolic node-voltage solve (the common case).
+        if method != "legacy" and not values and "node" in output_spec:
+            try:
+                composed = _block_compose(
+                    elements, input_name, [_node_key(output_spec["node"])], limits)
+            except Exception:
+                composed = None   # any surprise -> flat solver owns it
+            if composed is not None:
+                H_expr_c, factors_c, _syms_c = composed
+                if _flatten_estimate(factors_c) <= _FLATTEN_TERM_CAP:
+                    try:
+                        tf_fields = _tf_fields_from_expr(H_expr_c)
+                        used_method = "block"
+                    except Exception:
+                        tf_fields = None   # fall through to the flat solver
+
+        if tf_fields is None and method != "legacy":
             try:
                 # The elimination is independent of the output port, so cache the
                 # solved vector keyed by everything else (elements, input, values,
