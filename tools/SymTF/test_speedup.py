@@ -329,3 +329,55 @@ def test_sympify_cache_isolates_distinct_exprs():
     assert rb["tf"]["den_degree"] == 8 and rb["ok"]                       # sk4: 4 biquads
     # A hit really occurred (mfb2's H_expr is resident).
     assert tf_a["H_expr"] in engine._SYMPIFY_CACHE
+
+
+# --- Phase 3: the eliminated-vector cache ----------------------------------
+
+def _solve_full(name, out_node, options=None):
+    from bench.circuits import get
+    netlist, inp, out = get(name)
+    pr = json.loads(parse_netlist(netlist))
+    circuit = json.loads(pr["circuit_json"])
+    circuit["input"] = {"name": inp}
+    circuit["output"] = {"node": out_node}
+    if options:
+        circuit["options"] = options
+    return json.loads(solve(json.dumps(circuit)))
+
+
+def test_elim_cache_reuses_solution_across_output_ports():
+    """Changing only the output port must reuse the eliminated vector and give
+    a result identical to solving that port from scratch."""
+    import engine
+    engine._ELIM_CACHE.clear()
+
+    # mfb3 has several internal nodes; o3 is the filter output.
+    cold = _solve_full("mfb3", "o3")
+    assert cold["ok"] and not cold["stats"].get("elim_cached")
+
+    warm = _solve_full("mfb3", "a1")        # different port, same elimination
+    assert warm["ok"] and warm["stats"].get("elim_cached") is True
+
+    # Same port solved fresh (cache cleared) must match the cached result.
+    engine._ELIM_CACHE.clear()
+    fresh = _solve_full("mfb3", "a1")
+    assert fresh["ok"] and not fresh["stats"].get("elim_cached")
+    assert warm["tf"]["num_coeffs"] == fresh["tf"]["num_coeffs"]
+    assert warm["tf"]["den_coeffs"] == fresh["tf"]["den_coeffs"]
+
+
+def test_elim_cache_key_separates_values_and_effort():
+    """The cache key includes the substituted values (and effort), so a numeric
+    solve never returns another value set's vector."""
+    import engine
+    engine._ELIM_CACHE.clear()
+    a = _solve_full("mfb1", "o1", {"method": "auto", "values": {"R1a": "1000"}})
+    b = _solve_full("mfb1", "o1", {"method": "auto", "values": {"R1a": "2000"}})
+    assert a["ok"] and b["ok"]
+    # Different values -> different key -> neither is a cache hit off the other,
+    # and the two transfer functions genuinely differ.
+    assert a["tf"]["den_coeffs"] != b["tf"]["den_coeffs"]
+    # Re-solving the first value set now hits the cache and reproduces it.
+    a2 = _solve_full("mfb1", "o1", {"method": "auto", "values": {"R1a": "1000"}})
+    assert a2["stats"].get("elim_cached") is True
+    assert a2["tf"]["den_coeffs"] == a["tf"]["den_coeffs"]

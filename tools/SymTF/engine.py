@@ -232,6 +232,18 @@ def _cached_sympify(expr_str: str) -> sp.Expr:
     return expr
 
 
+# A small LRU of eliminated solution vectors, keyed by everything that fixes the
+# elimination -- the elements, the input source, any substituted values, and the
+# effort preset -- but NOT the output port. The Gaussian elimination solves for
+# every node voltage and branch current at once, so switching the output (or
+# round-tripping ports, or undo/redo landing on a prior circuit) only needs a
+# different component selected from the same vector. Caching it turns those
+# re-solves into a lookup. Small (a couple of entries) because each holds a full
+# symbolic solution; cleared with the worker on Cancel.
+_ELIM_CACHE: "OrderedDict[str, tuple]" = OrderedDict()
+_ELIM_CACHE_MAX = 3
+
+
 def _ok(payload: dict) -> str:
     payload["ok"] = True
     return json.dumps(payload, default=str)
@@ -713,27 +725,23 @@ def _markowitz_choose(rows, live_rows, live_cols):
     return best
 
 
-def _frac_solve_field(
+def _frac_eliminate(
     A: sp.Matrix,
     z_tf: sp.Matrix,
-    out_idx: Optional[int],
-    out_idx2: Optional[int],
     max_terms: int = 50000,
     max_product: Optional[int] = None,
     max_vars: Optional[int] = None,
 ):
-    """Solve A·x = z_tf over the fraction field, returning ``(H_field, F, has_pi)``.
+    """Solve A·x = z_tf over the fraction field, returning ``(x, F, has_pi)``.
 
-    ``H_field`` is the raw transfer function as a ``FracElement`` of the field
-    ``F`` (fractions of ``ZZ[s, R1, ...]``); ``has_pi`` records whether ``sp.pi``
-    was mapped to the placeholder generator on the way in (so it can be mapped
-    back). Keeping the answer as a field element -- rather than an ``Expr`` --
-    lets the caller read the numerator/denominator monomials directly and build
-    the s-coefficient lists with no ``cancel``/``expand``/``Poly`` round-trip
-    (see :func:`_tf_fields_from_field`).
+    ``x`` is the full solution vector as a ``{col_index: FracElement}`` dict over
+    the field ``F`` (fractions of ``ZZ[s, R1, ...]``); ``has_pi`` records whether
+    ``sp.pi`` was mapped to the placeholder generator on the way in.
 
-    H = x[out_idx]                          (single-ended output)
-      = x[out_idx] - x[out_idx2]            (differential; a None index is ground)
+    The elimination does not depend on which output is asked for -- every node
+    voltage and branch current ends up in ``x`` -- so a caller that changes only
+    the output port can reuse this result and just select a different component
+    (see the elimination cache in :func:`solve`).
 
     Raises :class:`_SolverFallback` if the entries cannot be embedded in a
     polynomial ring; :class:`_SolverTooLarge` if the operand guards
@@ -873,14 +881,41 @@ def _frac_solve_field(
         _op_guard(acc, r[pc])
         x[pc] = _guard(acc / r[pc])
 
+    return x, F, has_pi
+
+
+def _select_component(x, F, out_idx: Optional[int], out_idx2: Optional[int]):
+    """Pick the transfer function out of a solved vector ``x``.
+
+    H = x[out_idx]                          (single-ended output)
+      = x[out_idx] - x[out_idx2]            (differential; a None index is ground)
+    """
     def component(idx: Optional[int]):
         return x[idx] if idx is not None else F.zero
 
     H_field = component(out_idx)
     if out_idx2 is not None:
         H_field = H_field - component(out_idx2)
+    return H_field
 
-    return H_field, F, has_pi
+
+def _frac_solve_field(
+    A: sp.Matrix,
+    z_tf: sp.Matrix,
+    out_idx: Optional[int],
+    out_idx2: Optional[int],
+    max_terms: int = 50000,
+    max_product: Optional[int] = None,
+    max_vars: Optional[int] = None,
+):
+    """Eliminate and select in one call, returning ``(H_field, F, has_pi)``.
+
+    Convenience wrapper over :func:`_frac_eliminate` + :func:`_select_component`
+    for callers that do not cache the eliminated vector.
+    """
+    x, F, has_pi = _frac_eliminate(
+        A, z_tf, max_terms=max_terms, max_product=max_product, max_vars=max_vars)
+    return _select_component(x, F, out_idx, out_idx2), F, has_pi
 
 
 def _frac_solve_H(
@@ -1275,12 +1310,31 @@ def solve(circuit_json: str) -> str:
         used_method = method
         if method != "legacy":
             try:
-                H_field, F_ring, has_pi = _frac_solve_field(
-                    A, z_tf, output_idx, output_idx2,
-                    max_terms=limits["max_terms"],
-                    max_product=limits["max_product"],
-                    max_vars=limits["max_vars"],
-                )
+                # The elimination is independent of the output port, so cache the
+                # solved vector keyed by everything else (elements, input, values,
+                # effort). Changing only the output -- or an undo/redo/port
+                # round-trip landing on this same system -- then skips straight to
+                # selecting a different component.
+                elim_key = json.dumps(
+                    {"elements": elements, "input": input_name,
+                     "values": values, "effort": effort},
+                    sort_keys=True, default=str)
+                cached = _ELIM_CACHE.get(elim_key)
+                if cached is not None:
+                    _ELIM_CACHE.move_to_end(elim_key)
+                    x_vec, F_ring, has_pi = cached
+                    stats["elim_cached"] = True
+                else:
+                    x_vec, F_ring, has_pi = _frac_eliminate(
+                        A, z_tf,
+                        max_terms=limits["max_terms"],
+                        max_product=limits["max_product"],
+                        max_vars=limits["max_vars"],
+                    )
+                    _ELIM_CACHE[elim_key] = (x_vec, F_ring, has_pi)
+                    while len(_ELIM_CACHE) > _ELIM_CACHE_MAX:
+                        _ELIM_CACHE.popitem(last=False)
+                H_field = _select_component(x_vec, F_ring, output_idx, output_idx2)
                 # Read the s-coefficients straight from the solved field element
                 # -- no cancel/expand/Poly round-trip (see _tf_fields_from_field).
                 tf_fields = _tf_fields_from_field(H_field, F_ring, has_pi)
