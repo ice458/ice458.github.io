@@ -1411,6 +1411,97 @@ def _flatten_estimate(factors: List[sp.Expr]) -> int:
     return est
 
 
+def _section_standard_form(num_coeffs: List[str], den_coeffs: List[str]) -> Optional[Dict[str, Any]]:
+    """Cast one factored section into the analog-filter standard form.
+
+    A first- or second-order section has a canonical description every filter
+    text and op-amp cookbook uses: a corner frequency and (for a second-order
+    section) a Q, plus which kind of section it is. This reads those straight
+    off the section's coefficients -- a well-defined transformation for order <=
+    2, which is exactly what the factored form produces -- and returns the
+    section type, the standard-form formula (a KaTeX template in omega_0/Q/K),
+    and the parameter values as latex (f_0 in Hz, the analog convention, plus
+    omega_0 and Q). Returns ``None`` for order > 2 (a monolithic high-order block
+    has no unique section form -- see the module notes on the factored form).
+    """
+    try:
+        num = [sp.sympify(c) for c in num_coeffs]
+        den = [sp.sympify(c) for c in den_coeffs]
+    except Exception:
+        return None
+
+    dd = len(den) - 1
+
+    def by_power(coeffs):
+        d = len(coeffs) - 1
+        return {d - i: c for i, c in enumerate(coeffs)}
+
+    npow, dpow = by_power(num), by_power(den)
+    g = lambda pw, table: table.get(pw, sp.Integer(0))
+    L = _display_latex
+
+    def clean(e):
+        # sqrt(1/x) reads better as 1/sqrt(x); harmless elsewhere.
+        try:
+            return sp.powdenest(sp.simplify(e), force=True)
+        except Exception:
+            return sp.simplify(e)
+
+    if dd == 2:
+        a2, a1, a0 = g(2, dpow), g(1, dpow), g(0, dpow)
+        b2, b1, b0 = g(2, npow), g(1, npow), g(0, npow)
+        w0 = clean(sp.sqrt(a0 / a2))
+        Q = clean(sp.sqrt(a0 * a2) / a1) if a1 != 0 else None
+        params = []
+        if b1 == 0 and b2 == 0:
+            typ, K = "Low-pass", b0 / a0
+            formula = r"\frac{K}{1 + \dfrac{s}{Q\,\omega_0} + \left(\dfrac{s}{\omega_0}\right)^2}"
+        elif b1 == 0 and b0 == 0:
+            typ, K = "High-pass", b2 / a2
+            formula = r"\frac{K\left(\dfrac{s}{\omega_0}\right)^2}{1 + \dfrac{s}{Q\,\omega_0} + \left(\dfrac{s}{\omega_0}\right)^2}"
+        elif b2 == 0 and b0 == 0:
+            typ, K = "Band-pass", b1 / a1
+            formula = r"\frac{K\,\dfrac{s}{Q\,\omega_0}}{1 + \dfrac{s}{Q\,\omega_0} + \left(\dfrac{s}{\omega_0}\right)^2}"
+        elif b1 == 0 and b2 != 0 and b0 != 0:
+            typ, K = "Notch", b0 / a0
+            wz = clean(sp.sqrt(b0 / b2))
+            formula = r"K\,\frac{1 + \left(\dfrac{s}{\omega_z}\right)^2}{1 + \dfrac{s}{Q\,\omega_0} + \left(\dfrac{s}{\omega_0}\right)^2}"
+            params.append({"sym": r"\omega_z", "latex": L(wz)})
+        else:
+            typ, K, formula = "2nd-order", None, None
+        params = [{"sym": r"\omega_0", "latex": L(w0)},
+                  {"sym": "f_0", "latex": L(clean(w0 / (2 * sp.pi)))}] + params
+        params.append({"sym": "Q", "latex": (L(Q) if Q is not None else r"\infty")})
+        if K is not None:
+            params.append({"sym": "K", "latex": L(sp.simplify(K))})
+        return {"type": typ, "formula_latex": formula, "params": params}
+
+    if dd == 1:
+        a1, a0 = g(1, dpow), g(0, dpow)
+        b1, b0 = g(1, npow), g(0, npow)
+        wc = clean(a0 / a1)
+        if b1 == 0:
+            typ, K = "Low-pass (1st order)", b0 / a0
+            formula = r"\frac{K}{1 + \dfrac{s}{\omega_c}}"
+        elif b0 == 0:
+            typ, K = "High-pass (1st order)", b1 / a1
+            formula = r"\frac{K\,\dfrac{s}{\omega_c}}{1 + \dfrac{s}{\omega_c}}"
+        else:
+            typ, K, formula = "1st-order", None, None
+        params = [{"sym": r"\omega_c", "latex": L(wc)},
+                  {"sym": "f_c", "latex": L(clean(wc / (2 * sp.pi)))}]
+        if K is not None:
+            params.append({"sym": "K", "latex": L(sp.simplify(K))})
+        return {"type": typ, "formula_latex": formula, "params": params}
+
+    if dd == 0:
+        K = sp.simplify(g(0, npow) / g(0, dpow))
+        return {"type": "Gain", "formula_latex": "K",
+                "params": [{"sym": "K", "latex": L(K)}]}
+
+    return None
+
+
 def _tf_fields_factored(H_expr: sp.Expr, factors: List[sp.Expr], kind: str,
                         flat_available: bool = False) -> Dict[str, Any]:
     """Build a *factored* tf: H(s) as a product of small per-stage fractions.
@@ -1442,6 +1533,8 @@ def _tf_fields_factored(H_expr: sp.Expr, factors: List[sp.Expr], kind: str,
             "num_coeffs": st["num_coeffs"], "den_coeffs": st["den_coeffs"],
             "num_degree": st["num_degree"], "den_degree": st["den_degree"],
             "latex": st["latex"], "symbols": st["symbols"],
+            # Analog standard form (type + f0/Q/K) -- the textbook description.
+            "standard": _section_standard_form(st["num_coeffs"], st["den_coeffs"]),
         })
         num_deg += st["num_degree"]
         den_deg += st["den_degree"]

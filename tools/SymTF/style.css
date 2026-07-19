@@ -820,6 +820,32 @@ body.schematic-full .left-pane {
     color: #e2e8f0;
 }
 
+/* Analog standard-form sections: one labelled block per filter section. */
+.std-section {
+    padding: 0.85rem 0;
+}
+.std-section + .std-section {
+    border-top: 1px solid var(--border-color);
+    margin-top: 0.35rem;
+}
+.std-section-head {
+    color: var(--text-secondary);
+    font-size: 0.82rem;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+}
+.std-section-formula {
+    font-size: 1.25rem;
+    color: #e2e8f0;
+}
+.std-section-params {
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+    margin-top: 0.45rem;
+    overflow-x: auto;
+}
+
 /* Coefficients Section */
 .coeff-section {
     border-top: 1px solid var(--border-color);

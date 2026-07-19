@@ -77,6 +77,7 @@ const els = {
     latexOutput: document.getElementById('latex-output'),
     toggleCoeffsBtn: document.getElementById('toggle-coeffs-btn'),
     toggleFlatBtn: document.getElementById('toggle-flat-btn'),
+    toggleStdBtn: document.getElementById('toggle-std-btn'),
     coeffsContainer: document.getElementById('coeffs-container'),
     numCoeffsList: document.getElementById('num-coeffs-list'),
     denCoeffsList: document.getElementById('den-coeffs-list'),
@@ -840,9 +841,10 @@ function renderResults(tf) {
     currentTf = tf;
     currentSubstitutedTf = tf;
     currentApproxTf = null;
-    // A fresh solve resets the factored/flat view to the default (factored).
+    // A fresh solve resets the factored/flat and standard-form views to default.
     flatViewExpanded = false;
     flatCache = { key: null, tf: null };
+    standardFormView = false;
     // A fresh solve invalidates any approximation chain built on the old H(s).
     approxChain = [];
     if (els.approxSteps) renderApproxChain();
@@ -989,6 +991,43 @@ const _KIND_MAP = {
 let flatViewExpanded = false;
 let flatCache = { key: null, tf: null };
 
+// The factored sections can be shown either as their component-value fractions
+// (default) or in the analog standard form -- each section as its canonical
+// first/second-order template with f0, Q and gain. standardFormView is that
+// choice; the parameters ride along on each factor from the engine.
+let standardFormView = false;
+
+// Renders the factored sections in analog standard form: per section, its type,
+// the canonical formula (omega_0/Q/K template), and the parameter values.
+function renderStandardSections(factors) {
+    els.latexOutput.innerHTML = '';
+    factors.forEach((st, i) => {
+        const std = st.standard;
+        const block = document.createElement('div');
+        block.className = 'std-section';
+
+        const head = document.createElement('div');
+        head.className = 'std-section-head';
+        head.textContent = `Section ${i + 1}${std && std.type ? ' — ' + std.type : ''}`;
+        block.appendChild(head);
+
+        const formula = document.createElement('div');
+        formula.className = 'std-section-formula';
+        katex.render(`H_{${i + 1}}(s) = ${(std && std.formula_latex) || st.latex}`,
+            formula, { displayMode: true, throwOnError: false });
+        block.appendChild(formula);
+
+        if (std && std.params && std.params.length) {
+            const params = document.createElement('div');
+            params.className = 'std-section-params';
+            const pl = std.params.map(p => `${p.sym} = ${p.latex}`).join(',\\quad ');
+            katex.render(pl, params, { displayMode: true, throwOnError: false });
+            block.appendChild(params);
+        }
+        els.latexOutput.appendChild(block);
+    });
+}
+
 function renderTf(tf) {
     els.resultPlaceholder.classList.add('hidden');
     els.resultContainer.classList.remove('hidden');
@@ -1008,15 +1047,24 @@ function renderTf(tf) {
         els.toggleFlatBtn.textContent = showingFlat
             ? 'Show factored sections' : 'Expand to flat H(s)';
     }
+    // Standard-form control: only when factored sections are on screen.
+    if (els.toggleStdBtn) {
+        els.toggleStdBtn.classList.toggle('hidden', !factoredView);
+        els.toggleStdBtn.textContent = standardFormView
+            ? 'Component form' : 'Standard form (f₀, Q)';
+    }
 
     els.tfKindLabel.textContent = (_KIND_MAP[disp.kind] || 'Transfer Function')
         + (factoredView ? ` — factored, ${disp.factors.length} stages` : '');
     els.numDegreeBadge.textContent = `Num Deg: ${disp.num_degree}`;
     els.denDegreeBadge.textContent = `Den Deg: ${disp.den_degree}`;
 
-    // A factored H(s) renders as a stacked product of its stages (each a small
-    // readable biquad); a flat one as the single fraction.
-    if (factoredView) {
+    // A factored H(s) renders as its stacked stages -- either the component-value
+    // fractions or, in standard-form view, each section's canonical f0/Q form. A
+    // flat H(s) renders as the single fraction.
+    if (factoredView && standardFormView) {
+        renderStandardSections(disp.factors);
+    } else if (factoredView) {
         const stages = disp.factors.map((st, i) =>
             `H_{${i + 1}}(s) &= ${st.latex}`).join(' \\\\[4pt] ');
         katex.render(`\\begin{aligned} ${stages} \\end{aligned}`, els.latexOutput, {
@@ -1060,6 +1108,13 @@ els.toggleFlatBtn?.addEventListener('click', async () => {
         }
     }
     // Re-render whatever is current (a value edit may have moved it on).
+    if (currentSubstitutedTf) renderTf(currentSubstitutedTf);
+});
+
+// Toggle the factored sections between component-value fractions and the analog
+// standard form. No worker round-trip -- the parameters are already on the tf.
+els.toggleStdBtn?.addEventListener('click', () => {
+    standardFormView = !standardFormView;
     if (currentSubstitutedTf) renderTf(currentSubstitutedTf);
 });
 

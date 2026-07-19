@@ -469,6 +469,31 @@ def test_flatten_passes_through_already_flat_tf():
     assert r["ok"] and r["tf"]["den_degree"] == tf["den_degree"]
 
 
+def test_factored_sections_carry_standard_form():
+    """Each factored section carries its analog standard-form description: a
+    type, an f0/Q formula template, and the parameter values (omega_0, f_0, Q,
+    K). For the Sallen-Key sample every stage is a unity-gain low-pass."""
+    from engine import _section_standard_form
+    tf = _solve_full("mfb3", "o3")["tf"]
+    assert tf["factored"]
+    for st in tf["factors"]:
+        std = st["standard"]
+        assert std is not None
+        assert std["type"] in ("Low-pass", "High-pass", "Band-pass", "Notch",
+                                "2nd-order")
+        syms = {p["sym"] for p in std["params"]}
+        assert r"\omega_0" in syms and "Q" in syms and "f_0" in syms
+
+    # Classification is by the numerator's present powers (normalized coeffs).
+    def typ(nc, dc):
+        return _section_standard_form(nc, dc)["type"]
+    assert typ(["1"], ["1", "w1", "w0"]) == "Low-pass"
+    assert typ(["1", "0", "0"], ["1", "w1", "w0"]) == "High-pass"
+    assert typ(["1", "0"], ["1", "w1", "w0"]) == "Band-pass"
+    assert typ(["1"], ["1", "w0"]) == "Low-pass (1st order)"
+    assert typ(["5"], ["1"]) == "Gain"
+
+
 def test_approximate_works_on_factored_tf():
     """Approximation must run on a factored cascade (it flattens internally):
     a DC limit and a truncation both succeed on mfb3's factored H."""
