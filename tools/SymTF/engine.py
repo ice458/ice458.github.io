@@ -209,6 +209,29 @@ def _display_latex(expr: sp.Expr) -> str:
     return latex
 
 
+# A small LRU of parsed transfer functions, keyed by the exact H_expr string.
+# substitute() / freq_response() run on every value keystroke, and each re-parses
+# the same (possibly multi-kByte) H_expr from scratch -- sympify is 7-23% of a
+# substitute. The worker is long-lived, so caching the parse across calls turns
+# those repeats into a dict lookup. Keyed by the literal string, so it is
+# assumption-agnostic and never returns a stale expression for a changed H.
+_SYMPIFY_CACHE: "OrderedDict[str, sp.Expr]" = OrderedDict()
+_SYMPIFY_CACHE_MAX = 8
+
+
+def _cached_sympify(expr_str: str) -> sp.Expr:
+    """``sp.sympify(expr_str)`` with an LRU cache (plain, no ``locals``)."""
+    hit = _SYMPIFY_CACHE.get(expr_str)
+    if hit is not None:
+        _SYMPIFY_CACHE.move_to_end(expr_str)
+        return hit
+    expr = sp.sympify(expr_str)
+    _SYMPIFY_CACHE[expr_str] = expr
+    while len(_SYMPIFY_CACHE) > _SYMPIFY_CACHE_MAX:
+        _SYMPIFY_CACHE.popitem(last=False)
+    return expr
+
+
 def _ok(payload: dict) -> str:
     payload["ok"] = True
     return json.dumps(payload, default=str)
@@ -1316,7 +1339,7 @@ def substitute(tf_json: str, subs_map_json: str) -> str:
         tf_data = json.loads(tf_json)
         subs_map = json.loads(subs_map_json)
 
-        H_expr = sp.sympify(tf_data["H_expr"])
+        H_expr = _cached_sympify(tf_data["H_expr"])
 
         # Build substitution dict — match symbols by name from the expression
         # so that assumptions (positive=True vs. default) don't cause mismatches.
@@ -1330,7 +1353,12 @@ def substitute(tf_json: str, subs_map_json: str) -> str:
                 sub_dict[Symbol(name)] = sp.sympify(str(val))
                 sub_dict[Symbol(name, positive=True)] = sp.sympify(str(val))
 
-        H_sub = H_expr.subs(sub_dict)
+        # xreplace, not subs: substituting a symbol with a constant is a pure
+        # structural replacement, and xreplace does exactly that -- while subs
+        # walks the whole rational function re-evaluating as it rebuilds, which
+        # on a multi-kByte flat H(s) is ~50x slower for an identical result
+        # (cancel() below does the reduction either way).
+        H_sub = H_expr.xreplace(sub_dict)
         H_sub = cancel(H_sub)
         num_expr, den_expr = fraction(H_sub)
 
@@ -1852,7 +1880,7 @@ def freq_response(tf_json: str, range_json: str) -> str:
         tf_data = json.loads(tf_json)
         rng = json.loads(range_json)
 
-        H_expr = sp.sympify(tf_data["H_expr"])
+        H_expr = _cached_sympify(tf_data["H_expr"])
 
         # Substitute all remaining symbolic values
         values = rng.get("values", {})
@@ -1864,7 +1892,8 @@ def freq_response(tf_json: str, range_json: str) -> str:
             else:
                 sub_dict[Symbol(k)] = sp.Float(v)
                 sub_dict[Symbol(k, positive=True)] = sp.Float(v)
-        H_sub = H_expr.subs(sub_dict)
+        # xreplace: pure symbol->constant replacement (see substitute()).
+        H_sub = H_expr.xreplace(sub_dict)
 
         # Check that only s remains
         remaining = H_sub.free_symbols - {s}

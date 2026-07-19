@@ -271,3 +271,61 @@ def test_field_extraction_matches_expr_postproc():
         assert fast["num_degree"] == slow["num_degree"]
         assert fast["den_degree"] == slow["den_degree"]
         assert fast["symbols"] == slow["symbols"]
+
+
+# --- Phase 2: xreplace substitution and the sympify cache -------------------
+
+def _case(name):
+    from bench.circuits import get
+    netlist, inp, out = get(name)
+    return netlist, inp, {"kind": "node_voltage", "node": out}
+
+
+def test_substitute_equivalent_to_reference_subs():
+    """New xreplace-based substitute == an independent subs-based reference.
+
+    Values are floats, so the two paths differ only in last-digit rounding and
+    an exact ``== 0`` on the symbolic difference is the wrong test; compare the
+    two H(s) numerically at a spread of frequencies (relative tolerance). Covers
+    a full-numeric and a partial value map."""
+    import cmath
+    import engine
+    for name in ("mfb2", "mfb3", "sk4"):
+        tf = _solve(*_case(name), method="auto")
+        syms = tf["symbols"]
+        for keep in (set(), {syms[0]}):   # full-numeric, then partial
+            vals = {nm: ("1000" if nm[0] == "R" else "1e-9")
+                    for nm in syms if nm not in keep}
+            out = json.loads(engine.substitute(json.dumps(tf), json.dumps(vals)))
+            assert out["ok"], out.get("errors")
+            got = sympify(out["tf"]["H_expr"])
+            # Independent reference: subs (not xreplace) the same values.
+            ref = _H(tf).subs({Symbol(k, positive=True): sympify(v)
+                               for k, v in vals.items()})
+            # Pin any leftover (partial-map) symbol, matching each expression's
+            # own symbol objects (got has plain symbols, ref positive ones).
+            fill = {x: 3.3 for x in (got.free_symbols | ref.free_symbols) if x != s}
+            for w in (1.0, 1e3, 1e5, 1e7):
+                pt = {s: 1j * w, **fill}
+                gv = complex(got.subs(pt)); rv = complex(ref.subs(pt))
+                assert abs(gv - rv) <= 1e-9 * max(abs(rv), 1e-300), (name, keep, w)
+            assert (len(out["tf"]["symbols"]) == 0) == (len(keep) == 0)
+
+
+def test_sympify_cache_isolates_distinct_exprs():
+    """The H_expr cache must never return one transfer function's parse for
+    another. Two different H_exprs substituted in turn must each be right."""
+    import engine
+    engine._SYMPIFY_CACHE.clear()
+    tf_a = _solve(*_case("mfb2"), method="auto")
+    tf_b = _solve(*_case("sk4"), method="auto")
+    va = {nm: "1000" if nm[0] == "R" else "1e-9" for nm in tf_a["symbols"]}
+    vb = {nm: "2000" if nm[0] == "R" else "2e-9" for nm in tf_b["symbols"]}
+    ra1 = json.loads(engine.substitute(json.dumps(tf_a), json.dumps(va)))
+    rb = json.loads(engine.substitute(json.dumps(tf_b), json.dumps(vb)))
+    ra2 = json.loads(engine.substitute(json.dumps(tf_a), json.dumps(va)))  # cache hit
+    assert ra1["tf"]["den_coeffs"] == ra2["tf"]["den_coeffs"]
+    assert ra1["tf"]["num_degree"] == 0 and ra1["tf"]["den_degree"] == 4  # mfb2 biquad
+    assert rb["tf"]["den_degree"] == 8 and rb["ok"]                       # sk4: 4 biquads
+    # A hit really occurred (mfb2's H_expr is resident).
+    assert tf_a["H_expr"] in engine._SYMPIFY_CACHE
