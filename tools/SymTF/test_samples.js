@@ -62,12 +62,12 @@ const EXPECTED = {
             "ro1 <n> 0 ro1", "ro2 out <n> ro2", "V_in in 0 V_in"]
 };
 
-// The big cascade has ~29 auto-assigned internal nets, so the single-<n>
+// The cascade sample has several auto-assigned internal nets, so the single-<n>
 // collapse used for the small samples does not apply. It gets a structural
-// check instead (below): it exists to prove a 50-element circuit analyses, not
-// to pin an exact node numbering.
+// check instead (below): it exists to prove the circuit analyses to the right
+// shape, not to pin an exact node numbering.
 const STRUCTURAL = {
-  active_lpf_x10: { elements: 50, opamps: 10, stages: 10 },
+  active_lpf_fb3: { elements: 16, opamps: 3, stages: 3, feedback: true },
 };
 
 for (const [key, sample] of Object.entries(window.Samples)) {
@@ -91,6 +91,16 @@ for (const [key, sample] of Object.entries(window.Samples)) {
     eq(`${key}: op-amp count`, opamps, spec.opamps);
     eq(`${key}: stages chain (internal links)`, chained, spec.stages - 1);
     eq(`${key}: labels offered as ports`, res.labels.sort(), ["in", "out"]);
+    if (spec.feedback) {
+      // The overall feedback: an Rfb resistor with 'out' as one terminal and an
+      // internal (auto) node as the other. It is what makes the whole thing one
+      // strongly-connected block rather than a factorable chain.
+      const rfb = lines.find(l => /^Rfb\b/.test(l));
+      const terms = rfb ? rfb.split(" ").slice(1, 3) : [];
+      eq(`${key}: feedback resistor onto output`,
+         { hasRfb: !!rfb, touchesOut: terms.includes("out") },
+         { hasRfb: true, touchesOut: true });
+    }
     continue;
   }
 
