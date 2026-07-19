@@ -47,6 +47,7 @@ import engine
         parse_netlist: pyodide.runPython("engine.parse_netlist"),
         solve: pyodide.runPython("engine.solve"),
         substitute: pyodide.runPython("engine.substitute"),
+        flatten: pyodide.runPython("engine.flatten"),
         approximate: pyodide.runPython("engine.approximate"),
         freq_response: pyodide.runPython("engine.freq_response"),
         poles_zeros: pyodide.runPython("engine.poles_zeros"),

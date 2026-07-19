@@ -390,13 +390,16 @@ def test_elim_cache_key_separates_values_and_effort():
 
 # --- Phase 4a: block-cascade accelerator ------------------------------------
 
-def test_block_path_engages_on_deep_cascades():
-    """A >=3-stage cascade takes the block path; a 1-2 stage or non-cascaded
-    circuit does not (it stays on the flat solver)."""
-    assert _solve_full("mfb3", "o3")["stats"]["method"] == "block"   # 3 stages
-    assert _solve_full("sk4", "o4")["stats"]["method"] == "block"    # 4 stages
-    assert _solve_full("mfb2", "o2")["stats"]["method"] == "fast"    # 2 stages
-    assert _solve_full("svf1", "p1")["stats"]["method"] == "fast"    # global fb, 1 SCC
+def test_symbolic_cascades_default_to_factored():
+    """A decomposable symbolic chain of >=2 stages is returned FACTORED by
+    default (the preferred form for a filter). A single-SCC circuit (global
+    feedback, one section) stays on the flat solver."""
+    for name, out in (("mfb2", "o2"), ("mfb3", "o3"), ("sk4", "o4")):
+        r = _solve_full(name, out)
+        assert r["stats"]["method"] == "block-factored", name
+        assert r["tf"]["factored"] is True and r["tf"]["flat_available"] is True
+    assert _solve_full("svf1", "p1")["stats"]["method"] == "fast"   # global fb, 1 SCC
+    assert _solve_full("svf1", "p1")["tf"].get("factored") is None
 
 
 def test_block_path_matches_flat_solve_numerically():
@@ -422,6 +425,48 @@ def test_block_path_matches_flat_solve_numerically():
         for w in (1e2, 1e4, 1e6):
             a = complex(Hs.subs(s, 1j * w)); b = complex(Hn.subs(s, 1j * w))
             assert abs(a - b) <= 1e-6 * max(abs(b), 1e-300), (name, w)
+
+
+# --- Factored-by-default: flatten() on demand -------------------------------
+
+def test_flatten_expands_factored_to_flat():
+    """flatten() turns a factored tf into the single flat H(s), matching the
+    product it came from and matching a direct numeric spot-check."""
+    from engine import flatten
+    for name, out, deg in (("mfb2", "o2", 4), ("mfb3", "o3", 6), ("sk4", "o4", 8)):
+        tf = _solve_full(name, out)["tf"]
+        assert tf["factored"] and tf["flat_available"]
+        flat = json.loads(flatten(json.dumps(tf)))
+        assert flat["ok"], flat.get("errors")
+        ftf = flat["tf"]
+        assert not ftf.get("factored")
+        assert ftf["num_coeffs"] and ftf["den_coeffs"]
+        assert ftf["den_degree"] == deg
+        # The flat H equals the factored product, as rational functions.
+        Hp = sympify(tf["H_expr"]); Hf = sympify(ftf["H_expr"])
+        fill = {x: sympify("3.3") for x in (Hp.free_symbols | Hf.free_symbols) if x != s}
+        for w in (1e2, 1e5):
+            a = complex(Hp.subs({s: 1j * w, **fill}))
+            b = complex(Hf.subs({s: 1j * w, **fill}))
+            assert abs(a - b) <= 1e-6 * max(abs(a), 1e-300), (name, w)
+
+
+def test_flatten_refuses_when_flat_would_explode():
+    """A deep cascade reports flat_available=False, and flatten() declines it
+    (the factored form is the usable one) rather than trying to expand 5^n terms."""
+    from engine import flatten
+    tf = _solve_full("mfb8", "o8")["tf"]
+    assert tf["factored"] and tf["flat_available"] is False
+    r = json.loads(flatten(json.dumps(tf)))
+    assert r["ok"] is False and r.get("reason") == "too_large"
+
+
+def test_flatten_passes_through_already_flat_tf():
+    """flatten() on a non-factored tf just returns it (idempotent)."""
+    from engine import flatten
+    tf = _solve_full("svf1", "p1")["tf"]      # single SCC -> flat
+    r = json.loads(flatten(json.dumps(tf)))
+    assert r["ok"] and r["tf"]["den_degree"] == tf["den_degree"]
 
 
 # --- Phase 4b: factored form for deep cascades ------------------------------

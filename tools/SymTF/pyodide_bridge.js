@@ -30,7 +30,7 @@ const Bridge = {
     },
 
     _spawn() {
-        this.worker = new Worker('engine_worker.js?v=6');
+        this.worker = new Worker('engine_worker.js?v=7');
 
         this.worker.onmessage = (e) => {
             const msg = e.data;
@@ -121,6 +121,10 @@ const Bridge = {
 
     substitute(tfJsonObj, subsMapObj) {
         return this._call('substitute', JSON.stringify(tfJsonObj), JSON.stringify(subsMapObj));
+    },
+
+    flatten(tfJsonObj) {
+        return this._call('flatten', JSON.stringify(tfJsonObj));
     },
 
     freqResponse(tfJsonObj, rangeObj) {

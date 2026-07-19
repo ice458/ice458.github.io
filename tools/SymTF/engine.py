@@ -1307,12 +1307,11 @@ def _block_compose(elements, input_name, out_nodes, limits):
         return None   # an op-amp with both inputs grounded: leave to flat solver
     blocks = _assign_blocks(elements, C, comp_of, drv)
     sccs = _condense_sccs(blocks, drv)
-    # Only worth tearing a genuine cascade (>= 3 stages). A one- or two-block
-    # circuit's flat solve is already sub-100ms, and composing it -- several
-    # small block MNAs plus a flatten -- costs more than it saves, so leave those
-    # to the flat path. The win starts at three stages, where the flat solve runs
-    # into seconds (mfb3: 2.4s -> 0.35s).
-    if len(sccs) < 3:
+    # A genuine cascade is >= 2 blocks. A cascade that stays a chain is returned
+    # factored (the preferred form for a filter), which is cheap even at two
+    # stages because it never flattens; a single block is not a cascade and is
+    # left to the flat solver.
+    if len(sccs) < 2:
         return None
 
     scc_of = {cid: k for k, comp in enumerate(sccs) for cid in comp}
@@ -1412,16 +1411,19 @@ def _flatten_estimate(factors: List[sp.Expr]) -> int:
     return est
 
 
-def _tf_fields_factored(H_expr: sp.Expr, factors: List[sp.Expr], kind: str) -> Dict[str, Any]:
-    """Build a *factored* tf for a cascade whose flat H(s) is too large to form.
+def _tf_fields_factored(H_expr: sp.Expr, factors: List[sp.Expr], kind: str,
+                        flat_available: bool = False) -> Dict[str, Any]:
+    """Build a *factored* tf: H(s) as a product of small per-stage fractions.
 
-    The stage transfer functions are kept as separate small fractions -- their
-    product is H(s) -- so the result is linear in stage count instead of
-    exponential. Each stage carries its own coefficient lists and latex (small,
-    readable, and enough to root per-stage poles/zeros); the flat coefficient
-    lists are ``None`` (the whole point is not forming them). ``H_expr`` is kept
-    unexpanded so substitution/plotting collapse the product numerically through
-    the normal path.
+    This is the preferred form for a cascade -- the stages are kept as separate
+    readable fractions (their product is H(s)), so the result is linear in stage
+    count and exposes each stage's poles/zeros, where the flat H(s) is an
+    unreadable wall of terms (and exponentially large for a deep chain). Each
+    stage carries its own coefficient lists and latex; the flat coefficient lists
+    are ``None`` (they are formed on demand by :func:`flatten`). ``flat_available``
+    says whether that flat expansion is small enough to be worth offering.
+    ``H_expr`` is kept unexpanded so substitution/plotting collapse the product
+    numerically through the normal path.
 
     Distinct factors only, in composition order, dropping any trivial ``1`` (a
     unity stage contributes nothing to display).
@@ -1450,6 +1452,7 @@ def _tf_fields_factored(H_expr: sp.Expr, factors: List[sp.Expr], kind: str) -> D
     symbols = sorted(str(x) for x in H_expr.free_symbols if x != s)
     return {
         "factored": True,
+        "flat_available": flat_available,
         "factors": stage_tfs,
         "num_coeffs": None,
         "den_coeffs": None,
@@ -1679,15 +1682,19 @@ def solve(circuit_json: str) -> str:
         tf_fields = None
         used_method = method
 
-        # Block-cascade accelerator: tear the circuit at op-amp / VCVS outputs
-        # and compose H as a product of small per-stage transfer functions. This
-        # is a pure speedup -- it only ever takes over when the composed cascade
-        # flattens cheaply (a 2-4 stage filter), producing exactly the flat tf
-        # the direct solve would, but in tens of ms instead of seconds (and it
-        # reaches 4-stage all-symbolic filters the flat solve cannot). Anything
-        # bigger, or any structural surprise, falls straight through to the flat
-        # path below unchanged -- so this can never change a result, only beat it
-        # to one. Gated to a pure symbolic node-voltage solve (the common case).
+        # Block-cascade decomposition: tear the circuit at op-amp / VCVS outputs
+        # and compose H as a product of small per-stage transfer functions.
+        #
+        # For a clean chain (a plain multi-stage cascade) this is the PREFERRED
+        # form, not just a fallback: a product of readable biquads exposes the
+        # per-stage poles/zeros a filter designer wants, where the flat symbolic
+        # H(s) is an unreadable wall of terms even at two stages. So a symbolic
+        # chain of >=2 stages is returned FACTORED by default; the flat form is
+        # available on demand (flatten()), and 'flat_available' says whether it
+        # is small enough to expand. A fan-in cascade has no clean product, so it
+        # is flattened when cheap and otherwise left to the flat solver. All
+        # gated to a pure symbolic node-voltage solve; numeric solves and
+        # non-decomposable circuits keep the flat form.
         if method != "legacy" and not values and "node" in output_spec:
             try:
                 composed = _block_compose(
@@ -1696,22 +1703,21 @@ def solve(circuit_json: str) -> str:
                 composed = None   # any surprise -> flat solver owns it
             if composed is not None:
                 H_expr_c, factors_c, syms_c, is_chain_c = composed
-                if _flatten_estimate(factors_c) <= _FLATTEN_TERM_CAP:
+                est = _flatten_estimate(factors_c)
+                if is_chain_c:
+                    kind = _determine_tf_kind(input_elem, output_type)
+                    tf = _tf_fields_factored(
+                        H_expr_c, factors_c, kind, flat_available=(est <= _FLATTEN_TERM_CAP))
+                    stats["method"] = "block-factored"
+                    return _ok({"tf": tf, "errors": warnings, "stats": stats})
+                elif est <= _FLATTEN_TERM_CAP:
+                    # Fan-in cascade (no simple product): flatten when cheap.
                     try:
                         tf_fields = _tf_fields_from_expr(H_expr_c)
                         used_method = "block"
                     except Exception:
                         tf_fields = None   # fall through to the flat solver
-                elif is_chain_c:
-                    # Flat form would explode, but it is a clean cascade: return
-                    # the factored H (product of small stages) rather than a
-                    # numeric-mode prompt. Linear in stage count, so a 50-element
-                    # filter stays fully symbolic.
-                    kind = _determine_tf_kind(input_elem, output_type)
-                    tf = _tf_fields_factored(H_expr_c, factors_c, kind)
-                    stats["method"] = "block-factored"
-                    return _ok({"tf": tf, "errors": warnings, "stats": stats})
-                # else: fan-in cascade past the cap -> fall through to flat/too_large.
+                # else: fan-in past the cap -> fall through to flat/too_large.
 
         if tf_fields is None and method != "legacy":
             try:
@@ -1872,6 +1878,46 @@ def substitute(tf_json: str, subs_map_json: str) -> str:
 
     except Exception as exc:
         return _err([f"substitute failed: {exc}"])
+
+
+def flatten(tf_json: str) -> str:
+    """Expand a factored transfer function into its flat form on demand.
+
+    The default view of a cascade is factored (a product of per-stage
+    fractions); this forms the single flat rational H(s) -- one numerator and
+    denominator polynomial in s -- when the user asks to see it. Only called for
+    a factored tf whose ``flat_available`` was true (the flat form is small
+    enough), but it re-guards defensively and reports ``too_large`` if the
+    expansion would blow up.
+
+    Returns JSON: ``{ok, tf}`` with a normal (non-factored) flat tf.
+    """
+    try:
+        tf_data = json.loads(tf_json)
+        if not tf_data.get("factored"):
+            # Already flat: hand it straight back.
+            return _ok({"tf": tf_data})
+
+        # Estimate the flat size from the stored per-stage denominators (product
+        # of their term counts) before committing to the expansion.
+        est = 1
+        for st in tf_data.get("factors", []):
+            terms = 0
+            for c in st.get("den_coeffs", []):
+                terms += len(sp.Add.make_args(sp.expand(sp.sympify(c))))
+            est *= max(1, terms)
+        if est > _FLATTEN_TERM_CAP * 8:
+            return _err(["The flat transfer function is too large to expand; "
+                         "the factored form is the usable one here."],
+                        reason="too_large")
+
+        H = _cached_sympify(tf_data["H_expr"])
+        fields = _tf_fields_from_expr(H)
+        fields.pop("den_terms", None)
+        fields["kind"] = tf_data.get("kind", "voltage_gain")
+        return _ok({"tf": fields})
+    except Exception as exc:
+        return _err([f"flatten failed: {exc}"])
 
 
 # ===================================================================

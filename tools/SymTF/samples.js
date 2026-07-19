@@ -214,15 +214,15 @@ window.Samples = {
     }
 
     // The matched pair: the same three stages with and without the loop. Plain,
-    // the op-amp outputs let it tear into three independent biquads, so it solves
-    // fast (~0.2s) and returns a flat 6th-order H; wrapped in overall feedback,
-    // the loop cannot be torn and the three stages become one strongly-connected
-    // block solved monolithically (~1.4s). Same size, opposite decomposition --
-    // the point of the two samples. (A cascade only DISPLAYS factored when it is
-    // deep enough that the flat form would explode; three stages flatten
-    // cheaply, so both here show a flat H.)
+    // the op-amp outputs let it tear into three independent biquads, so it is
+    // shown FACTORED -- H1(s)·H2(s)·H3(s), each a readable second-order section
+    // (Expand to flat H(s) to see the combined 6th-order fraction). Wrapped in
+    // overall feedback, the loop cannot be torn: the three stages become one
+    // strongly-connected block and H(s) is a single monolithic 6th-order
+    // fraction. Same size, opposite decomposition -- the point of the two
+    // samples, now visible directly in how each result is displayed.
     window.Samples.active_lpf_x3 = {
-        title: 'Active LPF ×3 (no FB)',
+        title: 'Active LPF ×3 (factored)',
         model: buildCascade(3, false),
     };
     window.Samples.active_lpf_fb3 = {

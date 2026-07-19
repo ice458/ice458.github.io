@@ -76,6 +76,7 @@ const els = {
     denDegreeBadge: document.getElementById('den-degree-badge'),
     latexOutput: document.getElementById('latex-output'),
     toggleCoeffsBtn: document.getElementById('toggle-coeffs-btn'),
+    toggleFlatBtn: document.getElementById('toggle-flat-btn'),
     coeffsContainer: document.getElementById('coeffs-container'),
     numCoeffsList: document.getElementById('num-coeffs-list'),
     denCoeffsList: document.getElementById('den-coeffs-list'),
@@ -839,6 +840,9 @@ function renderResults(tf) {
     currentTf = tf;
     currentSubstitutedTf = tf;
     currentApproxTf = null;
+    // A fresh solve resets the factored/flat view to the default (factored).
+    flatViewExpanded = false;
+    flatCache = { key: null, tf: null };
     // A fresh solve invalidates any approximation chain built on the old H(s).
     approxChain = [];
     if (els.approxSteps) renderApproxChain();
@@ -970,48 +974,94 @@ async function maybeRunNumericSolve(effort = 'quick') {
 
 // Draws a transfer function into the banner. Display only -- no state, no table
 // rebuild -- so it is safe to call on every keystroke while editing values.
+const _KIND_MAP = {
+    'voltage_gain': 'Voltage Gain (V/V)',
+    'current_gain': 'Current Gain (I/I)',
+    'transimpedance': 'Transimpedance (V/I)',
+    'admittance_transfer': 'Admittance Transfer (I/V)'
+};
+
+// A decomposable cascade is shown FACTORED by default (a product of readable
+// per-stage biquads). The user can expand it to the single flat H(s) when the
+// engine says that is small enough (tf.flat_available); flatViewExpanded is that
+// choice and flatCache holds the expansion for the currently displayed tf, keyed
+// by its H_expr so a circuit edit invalidates it.
+let flatViewExpanded = false;
+let flatCache = { key: null, tf: null };
+
 function renderTf(tf) {
     els.resultPlaceholder.classList.add('hidden');
     els.resultContainer.classList.remove('hidden');
 
-    // Headers
-    const kindMap = {
-        'voltage_gain': 'Voltage Gain (V/V)',
-        'current_gain': 'Current Gain (I/I)',
-        'transimpedance': 'Transimpedance (V/I)',
-        'admittance_transfer': 'Admittance Transfer (I/V)'
-    };
-    els.tfKindLabel.textContent = (kindMap[tf.kind] || 'Transfer Function')
-        + (tf.factored ? ` — factored, ${tf.factors.length} stages` : '');
-    els.numDegreeBadge.textContent = `Num Deg: ${tf.num_degree}`;
-    els.denDegreeBadge.textContent = `Den Deg: ${tf.den_degree}`;
+    // If the user asked to see the flat form and we have expanded THIS tf, show
+    // the expansion; otherwise show tf as-is (factored or plain flat).
+    const canFlat = !!(tf.factored && tf.flat_available);
+    const showingFlat = canFlat && flatViewExpanded
+        && flatCache.key === tf.H_expr && flatCache.tf;
+    const disp = showingFlat ? flatCache.tf : tf;
+    const factoredView = !!disp.factored;
 
-    // Render main LaTeX. A factored H(s) is a cascade too large to expand flat,
-    // so render it as a stacked product of its stages (each a small readable
-    // biquad) rather than one wall-of-text fraction.
-    if (tf.factored) {
-        const stages = tf.factors.map((st, i) =>
+    // Expand/collapse control: only for a factored tf whose flat form is small
+    // enough to be worth forming.
+    if (els.toggleFlatBtn) {
+        els.toggleFlatBtn.classList.toggle('hidden', !canFlat);
+        els.toggleFlatBtn.textContent = showingFlat
+            ? 'Show factored sections' : 'Expand to flat H(s)';
+    }
+
+    els.tfKindLabel.textContent = (_KIND_MAP[disp.kind] || 'Transfer Function')
+        + (factoredView ? ` — factored, ${disp.factors.length} stages` : '');
+    els.numDegreeBadge.textContent = `Num Deg: ${disp.num_degree}`;
+    els.denDegreeBadge.textContent = `Den Deg: ${disp.den_degree}`;
+
+    // A factored H(s) renders as a stacked product of its stages (each a small
+    // readable biquad); a flat one as the single fraction.
+    if (factoredView) {
+        const stages = disp.factors.map((st, i) =>
             `H_{${i + 1}}(s) &= ${st.latex}`).join(' \\\\[4pt] ');
         katex.render(`\\begin{aligned} ${stages} \\end{aligned}`, els.latexOutput, {
             displayMode: true, throwOnError: false
         });
     } else {
-        const displayLatex = `H(s) = ${tf.latex}`;
-        katex.render(displayLatex, els.latexOutput, {
-            displayMode: true,
-            throwOnError: false
+        katex.render(`H(s) = ${disp.latex}`, els.latexOutput, {
+            displayMode: true, throwOnError: false
         });
     }
 
-    // Render Coefficients
-    renderCoeffsList(els.numCoeffsList, tf.num_coeffs, tf.num_degree);
-    renderCoeffsList(els.denCoeffsList, tf.den_coeffs, tf.den_degree);
+    renderCoeffsList(els.numCoeffsList, disp.num_coeffs, disp.num_degree);
+    renderCoeffsList(els.denCoeffsList, disp.den_coeffs, disp.den_degree);
 
-    // Poles & Zeros track the displayed H(s) -- but only while the panel is
-    // open, so a substitution keystroke does not pay for rooting when nobody is
-    // looking at the result.
-    if (pzVisible) renderPolesZeros(tf);
+    // Poles & Zeros track H(s) -- only while the panel is open, so a substitution
+    // keystroke does not pay for rooting when nobody is looking. Always root the
+    // factored form when there is one: each stage is degree <= 2 (closed-form
+    // roots), where the flat polynomial of a deep cascade has none.
+    if (pzVisible) renderPolesZeros(tf.factored ? tf : disp);
 }
+
+// Expand a factored cascade to its flat H(s) (and back). The expansion is a
+// worker round-trip the first time for a given tf, then cached.
+els.toggleFlatBtn?.addEventListener('click', async () => {
+    const tf = currentSubstitutedTf;
+    if (!tf || !tf.factored || !tf.flat_available) return;
+    flatViewExpanded = !flatViewExpanded;
+    if (flatViewExpanded && flatCache.key !== tf.H_expr) {
+        els.toggleFlatBtn.disabled = true;
+        els.toggleFlatBtn.textContent = 'Expanding…';
+        try {
+            const r = await Bridge.flatten(tf);
+            if (r.ok) {
+                flatCache = { key: tf.H_expr, tf: r.tf };
+            } else {
+                showGlobalError((r.errors || ['Could not expand to flat form.']).join(' '));
+                flatViewExpanded = false;
+            }
+        } finally {
+            els.toggleFlatBtn.disabled = false;
+        }
+    }
+    // Re-render whatever is current (a value edit may have moved it on).
+    if (currentSubstitutedTf) renderTf(currentSubstitutedTf);
+});
 
 // The set of DOM nodes one poles/zeros panel writes into. There are two: the
 // main result panel and the approximation result panel, so renderPolesZeros is
