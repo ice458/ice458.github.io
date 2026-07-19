@@ -211,3 +211,63 @@ def test_effort_long_has_no_symbol_count_refusal():
                      {"kind": "node_voltage", "node": "out"},
                      {"method": "auto", "effort": "bogus"})
     assert ok["ok"], ok.get("errors")
+
+
+# --- Phase 1: field-direct post-processing == Expr post-processing ----------
+
+def test_field_extraction_matches_expr_postproc():
+    """The fast tf fields (read straight off the solved FracElement) must be
+    byte-identical to what the old Expr post-processing produced.
+
+    :func:`engine._tf_fields_from_field` replaced a
+    cancel -> fraction -> expand -> Poly -> LC-normalise chain
+    (:func:`engine._tf_fields_from_expr`) with a direct read of the
+    numerator/denominator monomials. Feeding the SAME raw solve through both
+    must yield the same coefficient strings, degrees, and symbol list -- this
+    pins the two paths together so a future change to either is caught."""
+    import sympy as sp
+    import engine
+    from bench.circuits import get
+
+    # Cover a spread: single/multi-symbol, opamp (pi placeholder), differential,
+    # frequency-independent (no s generator).
+    cases = [
+        ("Vin in 0 Vin\nR1 in out R1\nC1 out 0 C1", "Vin", {"node": "out"}),
+        ("Vin in 0 Vin\nR1 in out R1\nR2 out 0 R2", "Vin", {"node": "out"}),
+        ("Vin in 0 Vin\nR1 in inv R1\nR2 inv out R2\nO1 0 inv out A0 GBW", "Vin",
+         {"node": "out"}),
+        ("Vin in 0 Vin\nR1 in a R1\nR2 a b R2\nR3 b 0 R3", "Vin",
+         {"from": "a", "to": "b"}),
+    ]
+    for name in ("mfb1", "mfb2", "sk2", "svf1"):
+        netlist, inp, out = get(name)
+        cases.append((netlist, inp, {"node": out}))
+
+    for netlist, inp, out_spec in cases:
+        pr = json.loads(parse_netlist(netlist))
+        circuit = json.loads(pr["circuit_json"])
+        elements = circuit["elements"]
+        A, z, node_list, var_names, errs = engine._build_mna(elements)
+        node_idx = {nd: i for i, nd in enumerate(node_list)}
+        group2 = [el["name"] for el in elements if el["type"] in ("V", "E", "O")]
+        branch_map = {nm: len(node_list) + i for i, nm in enumerate(group2)}
+        z_tf = engine.zeros(A.rows, 1)
+        z_tf[branch_map[inp]] = sp.Integer(1)
+        if "node" in out_spec:
+            oi, oi2 = node_idx[out_spec["node"]], None
+        else:
+            oi = node_idx[out_spec["from"]] if out_spec["from"] != "0" else None
+            oi2 = node_idx[out_spec["to"]] if out_spec["to"] != "0" else None
+
+        H_field, F_ring, has_pi = engine._frac_solve_field(A, z_tf, oi, oi2, max_terms=500)
+        fast = engine._tf_fields_from_field(H_field, F_ring, has_pi)
+        H_expr = H_field.as_expr()
+        if has_pi:
+            H_expr = H_expr.subs(engine._PI_SYM, sp.pi)
+        slow = engine._tf_fields_from_expr(H_expr)
+
+        assert fast["num_coeffs"] == slow["num_coeffs"], (name, fast, slow)
+        assert fast["den_coeffs"] == slow["den_coeffs"], (name, fast, slow)
+        assert fast["num_degree"] == slow["num_degree"]
+        assert fast["den_degree"] == slow["den_degree"]
+        assert fast["symbols"] == slow["symbols"]

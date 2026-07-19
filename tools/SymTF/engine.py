@@ -690,7 +690,7 @@ def _markowitz_choose(rows, live_rows, live_cols):
     return best
 
 
-def _frac_solve_H(
+def _frac_solve_field(
     A: sp.Matrix,
     z_tf: sp.Matrix,
     out_idx: Optional[int],
@@ -698,8 +698,16 @@ def _frac_solve_H(
     max_terms: int = 50000,
     max_product: Optional[int] = None,
     max_vars: Optional[int] = None,
-) -> sp.Expr:
-    """Solve A·x = z_tf over the fraction field and return the raw H(s).
+):
+    """Solve A·x = z_tf over the fraction field, returning ``(H_field, F, has_pi)``.
+
+    ``H_field`` is the raw transfer function as a ``FracElement`` of the field
+    ``F`` (fractions of ``ZZ[s, R1, ...]``); ``has_pi`` records whether ``sp.pi``
+    was mapped to the placeholder generator on the way in (so it can be mapped
+    back). Keeping the answer as a field element -- rather than an ``Expr`` --
+    lets the caller read the numerator/denominator monomials directly and build
+    the s-coefficient lists with no ``cancel``/``expand``/``Poly`` round-trip
+    (see :func:`_tf_fields_from_field`).
 
     H = x[out_idx]                          (single-ended output)
       = x[out_idx] - x[out_idx2]            (differential; a None index is ground)
@@ -849,10 +857,181 @@ def _frac_solve_H(
     if out_idx2 is not None:
         H_field = H_field - component(out_idx2)
 
+    return H_field, F, has_pi
+
+
+def _frac_solve_H(
+    A: sp.Matrix,
+    z_tf: sp.Matrix,
+    out_idx: Optional[int],
+    out_idx2: Optional[int],
+    max_terms: int = 50000,
+    max_product: Optional[int] = None,
+    max_vars: Optional[int] = None,
+) -> sp.Expr:
+    """Solve A·x = z_tf and return the raw H(s) as a SymPy ``Expr``.
+
+    Thin wrapper over :func:`_frac_solve_field` for callers (and the legacy
+    fallback / tests) that want an expression rather than a field element.
+    """
+    H_field, _F, has_pi = _frac_solve_field(
+        A, z_tf, out_idx, out_idx2,
+        max_terms=max_terms, max_product=max_product, max_vars=max_vars,
+    )
     H_expr = H_field.as_expr()
     if has_pi:
         H_expr = H_expr.subs(_PI_SYM, sp.pi)
     return H_expr
+
+
+def _field_poly_to_s_coeffs(pe, s_idx: Optional[int], gen_exprs) -> List[sp.Expr]:
+    """Coefficient list (highest s-power first) of a ``PolyElement`` in s.
+
+    ``pe`` is a numerator or denominator drawn from a :class:`FracElement`; it
+    is already a canonical, fully-expanded sparse polynomial over the ring
+    generators, so its coefficient of each power of s can be read straight from
+    the monomial dictionary -- no ``expand`` and no ``Poly`` construction. Each
+    s-coefficient is assembled as a SymPy ``Expr`` in the *other* generators
+    (``gen_exprs`` maps generator index -> its Expr, with the pi placeholder
+    already mapped back to ``sp.pi``).
+
+    ``s_idx`` is the index of the ``s`` generator, or ``None`` when the ring has
+    no ``s`` at all (a purely resistive circuit whose H is frequency-independent)
+    -- then every monomial sits at s-power 0 and the result is a single constant
+    coefficient, mirroring ``Poly(expr, s)`` of a degree-0 expression.
+    """
+    from collections import defaultdict
+    by_s: Dict[int, List[sp.Expr]] = defaultdict(list)
+    for mono, coeff in pe.terms():
+        term = sp.Integer(int(coeff))
+        for gi, e in enumerate(mono):
+            if gi == s_idx or e == 0:
+                continue
+            term *= gen_exprs[gi] ** int(e)
+        s_exp = mono[s_idx] if s_idx is not None else 0
+        by_s[s_exp].append(term)
+    if not by_s:
+        return [sp.Integer(0)]
+    deg = max(by_s)
+    return [sp.Add(*by_s[d]) if d in by_s else sp.Integer(0)
+            for d in range(deg, -1, -1)]
+
+
+def _tf_fields_from_field(H_field, F, has_pi: bool) -> Dict[str, Any]:
+    """Build every tf field directly from a solved ``FracElement``.
+
+    This is the fast post-processing path: it replaces the old
+    ``cancel`` -> ``fraction`` -> ``expand`` -> ``Poly`` -> LC-normalise ->
+    re-``expand`` chain (which re-canonicalised an answer the fraction field had
+    already reduced) with a direct read of the numerator/denominator monomials.
+
+    Returns a dict with ``num_coeffs``/``den_coeffs`` (strings, denominator made
+    monic, highest degree first), ``num_degree``/``den_degree``, ``symbols``,
+    ``latex``, ``H_expr`` (the un-normalised reduced fraction, matching the
+    legacy path), and ``den_terms`` (diagnostic monomial count).
+    """
+    gens = F.symbols   # tuple of SymPy Symbols; 's' may be absent (see below)
+    s_idx = next((i for i, g in enumerate(gens) if str(g) == "s"), None)
+    # Map each generator to the Expr it stands for -- the pi placeholder back to
+    # the real pi, everything else to itself.
+    gen_exprs = [sp.pi if (has_pi and g == _PI_SYM) else g for g in gens]
+
+    num_pe = H_field.numer
+    den_pe = H_field.denom
+    num_raw = _field_poly_to_s_coeffs(num_pe, s_idx, gen_exprs)
+    den_raw = _field_poly_to_s_coeffs(den_pe, s_idx, gen_exprs)
+
+    num_degree = len(num_raw) - 1
+    den_degree = len(den_raw) - 1
+
+    # Un-normalised reduced fraction: the field element is already coprime, so
+    # num/den needs no further cancel. This is what the legacy path exposed as
+    # H_expr and rendered to latex.
+    num_expr = sp.Add(*[c * s ** (num_degree - i) for i, c in enumerate(num_raw)])
+    den_expr = sp.Add(*[c * s ** (den_degree - i) for i, c in enumerate(den_raw)])
+    H_display = num_expr / den_expr
+
+    # Display coefficients: divide through by the denominator's leading
+    # coefficient so the denominator is monic (matches the legacy output). With
+    # a symbolic LC this turns polynomial coefficients into rational ones -- the
+    # same forms the old Poly/cancel path produced.
+    den_lc = den_raw[0]
+    if den_lc != 0 and den_lc != 1:
+        num_norm = [sp.cancel(c / den_lc) for c in num_raw]
+        den_norm = [sp.cancel(c / den_lc) for c in den_raw]
+    else:
+        num_norm = num_raw
+        den_norm = den_raw
+
+    all_syms = set()
+    for c in num_norm + den_norm:
+        all_syms.update(str(sym) for sym in c.free_symbols if sym != s)
+
+    den_terms = sum(len(sp.Add.make_args(c)) for c in den_raw)
+
+    return {
+        "num_coeffs": [str(c) for c in num_norm],
+        "den_coeffs": [str(c) for c in den_norm],
+        "num_degree": num_degree,
+        "den_degree": den_degree,
+        "symbols": sorted(all_syms),
+        "latex": _display_latex(H_display),
+        "H_expr": str(H_display),
+        "den_terms": den_terms,
+    }
+
+
+def _tf_fields_from_expr(H_raw: sp.Expr) -> Dict[str, Any]:
+    """Build the tf fields from a raw ``Expr`` transfer function.
+
+    The legacy post-processing path (cancel -> fraction -> expand -> Poly ->
+    LC-normalise), used by the berkowitz fallback and ``method='legacy'``. The
+    fast path uses :func:`_tf_fields_from_field` instead, which skips this
+    Expr-level re-canonicalisation entirely.
+    """
+    H_simplified = cancel(H_raw)
+    num_expr, den_expr = fraction(H_simplified)
+
+    try:
+        num_poly = Poly(sp.expand(num_expr), s)
+    except sp.PolynomialError:
+        num_poly = Poly(num_expr, s, domain="EX")
+    try:
+        den_poly = Poly(sp.expand(den_expr), s)
+    except sp.PolynomialError:
+        den_poly = Poly(den_expr, s, domain="EX")
+
+    den_lc = den_poly.LC()
+    if den_lc != 0 and den_lc != 1:
+        num_expr_norm = sp.cancel(num_expr / den_lc)
+        den_expr_norm = sp.cancel(den_expr / den_lc)
+        try:
+            num_poly = Poly(sp.expand(num_expr_norm), s)
+        except sp.PolynomialError:
+            num_poly = Poly(num_expr_norm, s, domain="EX")
+        try:
+            den_poly = Poly(sp.expand(den_expr_norm), s)
+        except sp.PolynomialError:
+            den_poly = Poly(den_expr_norm, s, domain="EX")
+        H_simplified = sp.cancel(num_expr_norm / den_expr_norm)
+
+    all_syms = set()
+    for c in num_poly.all_coeffs() + den_poly.all_coeffs():
+        all_syms.update(str(sym) for sym in sp.sympify(c).free_symbols if sym != s)
+
+    den_terms = sum(
+        len(sp.Add.make_args(sp.expand(c))) for c in den_poly.all_coeffs())
+
+    return {
+        "num_coeffs": _extract_coeffs(num_poly),
+        "den_coeffs": _extract_coeffs(den_poly),
+        "num_degree": num_poly.degree(),
+        "den_degree": den_poly.degree(),
+        "symbols": sorted(all_syms),
+        "latex": _display_latex(H_simplified),
+        "H_expr": str(H_simplified),
+        "den_terms": den_terms,
+    }
 
 
 def _value_subs_map(A: sp.Matrix, z_tf: sp.Matrix, values: Dict[str, Any]) -> Dict[sp.Symbol, sp.Expr]:
@@ -1069,16 +1248,19 @@ def solve(circuit_json: str) -> str:
         # the legacy Cramer/berkowitz path if the system cannot be embedded in a
         # polynomial ring (unexpected transcendental) or is structurally singular.
         stats: Dict[str, Any] = {"n": n_total}
-        H_raw = None
+        tf_fields = None
         used_method = method
         if method != "legacy":
             try:
-                H_raw = _frac_solve_H(
+                H_field, F_ring, has_pi = _frac_solve_field(
                     A, z_tf, output_idx, output_idx2,
                     max_terms=limits["max_terms"],
                     max_product=limits["max_product"],
                     max_vars=limits["max_vars"],
                 )
+                # Read the s-coefficients straight from the solved field element
+                # -- no cancel/expand/Poly round-trip (see _tf_fields_from_field).
+                tf_fields = _tf_fields_from_field(H_field, F_ring, has_pi)
                 used_method = "fast"
             except _SolverTooLarge as exc:
                 # Report machine-readably so the UI can offer the numeric-first
@@ -1094,71 +1276,23 @@ def solve(circuit_json: str) -> str:
                     symbols=remaining,
                 )
             except _SolverFallback:
-                H_raw = None   # drop to legacy below
+                tf_fields = None   # drop to legacy below
 
-        if H_raw is None:
+        if tf_fields is None:
             det_A = A.berkowitz_det()
             if det_A == 0:
                 return _err(["Singular MNA matrix — circuit may have errors"])
             H_raw = _legacy_cramer_H(A, z_tf, output_idx, output_idx2, det_A, n_total)
+            tf_fields = _tf_fields_from_expr(H_raw)
             used_method = "legacy"
 
         stats["method"] = used_method
-
-        # Simplify
-        H_simplified = cancel(H_raw)
-        num_expr, den_expr = fraction(H_simplified)
-
-        # Build polynomials in s
-        try:
-            num_poly = Poly(sp.expand(num_expr), s)
-        except sp.PolynomialError:
-            num_poly = Poly(num_expr, s, domain="EX")
-
-        try:
-            den_poly = Poly(sp.expand(den_expr), s)
-        except sp.PolynomialError:
-            den_poly = Poly(den_expr, s, domain="EX")
-
-        # Normalize: divide all by leading coefficient of denominator
-        den_lc = den_poly.LC()
-        if den_lc != 0 and den_lc != 1:
-            num_expr_norm = sp.cancel(num_expr / den_lc)
-            den_expr_norm = sp.cancel(den_expr / den_lc)
-            try:
-                num_poly = Poly(sp.expand(num_expr_norm), s)
-            except sp.PolynomialError:
-                num_poly = Poly(num_expr_norm, s, domain="EX")
-            try:
-                den_poly = Poly(sp.expand(den_expr_norm), s)
-            except sp.PolynomialError:
-                den_poly = Poly(den_expr_norm, s, domain="EX")
-            H_simplified = sp.cancel(num_expr_norm / den_expr_norm)
-
-        num_coeffs = _extract_coeffs(num_poly)
-        den_coeffs = _extract_coeffs(den_poly)
+        stats["den_terms"] = tf_fields.pop("den_terms")
 
         # Determine transfer-function kind
         kind = _determine_tf_kind(input_elem, output_type)
 
-        # Collect all symbols
-        all_syms = set()
-        for c in num_poly.all_coeffs() + den_poly.all_coeffs():
-            all_syms.update(str(sym) for sym in sp.sympify(c).free_symbols if sym != s)
-
-        stats["den_terms"] = sum(
-            len(sp.Add.make_args(sp.expand(c))) for c in den_poly.all_coeffs())
-
-        tf = {
-            "num_coeffs": num_coeffs,
-            "den_coeffs": den_coeffs,
-            "num_degree": num_poly.degree(),
-            "den_degree": den_poly.degree(),
-            "symbols": sorted(all_syms),
-            "latex": _display_latex(H_simplified),
-            "kind": kind,
-            "H_expr": str(H_simplified),
-        }
+        tf = {**tf_fields, "kind": kind}
 
         result: Dict[str, Any] = {"tf": tf, "errors": warnings, "stats": stats}
         return _ok(result)
