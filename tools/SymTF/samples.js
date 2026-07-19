@@ -213,16 +213,15 @@ window.Samples = {
         return { components, wires };
     }
 
-    // The matched pair: the same three stages with and without the loop. Plain,
-    // the op-amp outputs let it tear into three independent biquads, so it is
-    // shown FACTORED -- H1(s)·H2(s)·H3(s), each a readable second-order section
-    // (Expand to flat H(s) to see the combined 6th-order fraction). Wrapped in
-    // overall feedback, the loop cannot be torn: the three stages become one
-    // strongly-connected block and H(s) is a single monolithic 6th-order
-    // fraction. Same size, opposite decomposition -- the point of the two
-    // samples, now visible directly in how each result is displayed.
+    // The matched pair differs in one thing only: the overall feedback loop.
+    // Both are the same three Sallen-Key stages. The plain cascade tears at the
+    // op-amp outputs, so its H(s) comes out as a product of three second-order
+    // sections; add the loop and it cannot be torn, so H(s) is one 6th-order
+    // fraction. That difference in the result is a consequence of the topology,
+    // not a setting on the sample -- so the names say "cascade" vs "+ overall
+    // FB", never "factored" (which would read as a mode you picked).
     window.Samples.active_lpf_x3 = {
-        title: 'Active LPF ×3 (factored)',
+        title: 'Active LPF ×3 (cascade)',
         model: buildCascade(3, false),
     };
     window.Samples.active_lpf_fb3 = {
