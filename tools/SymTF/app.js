@@ -1613,10 +1613,13 @@ function renderPlotly(data, kind) {
 // --- M4: Approximation Logic ---
 
 function updateApproxTabState() {
-    // Approximation works on the flat H(s). A factored cascade has none (its flat
-    // form is what it deliberately avoids), so disable it there -- entering values
-    // to get a numeric H re-enables it.
-    if (currentTf && !currentTf.factored) {
+    // Approximation works on the flat H(s). A plain flat result always qualifies;
+    // a factored cascade qualifies when its flat form is small enough to form
+    // (flat_available) -- the engine flattens it internally. Only a deep cascade
+    // whose flat form would explode is disabled (enter values for a numeric H,
+    // or expand a shallower one).
+    const canApprox = currentTf && (!currentTf.factored || currentTf.flat_available);
+    if (canApprox) {
         els.approxWarning.classList.add('hidden');
         els.approxConfigContainer.classList.remove('hidden');
         els.approxResultsContainer.classList.add('hidden');

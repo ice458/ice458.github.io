@@ -469,6 +469,20 @@ def test_flatten_passes_through_already_flat_tf():
     assert r["ok"] and r["tf"]["den_degree"] == tf["den_degree"]
 
 
+def test_approximate_works_on_factored_tf():
+    """Approximation must run on a factored cascade (it flattens internally):
+    a DC limit and a truncation both succeed on mfb3's factored H."""
+    from engine import approximate
+    tf = _solve_full("mfb3", "o3")["tf"]
+    assert tf["factored"] and tf["flat_available"]
+    lim = json.loads(approximate(json.dumps(tf), json.dumps({"mode": "limit", "direction": "dc"})))
+    assert lim["ok"], lim.get("errors")
+    trunc = json.loads(approximate(
+        json.dumps(tf), json.dumps({"mode": "truncate", "max_num_order": 1, "max_den_order": 2})))
+    assert trunc["ok"], trunc.get("errors")
+    assert not trunc["tf_approx"].get("factored")   # result is flat
+
+
 # --- Phase 4b: factored form for deep cascades ------------------------------
 
 def test_deep_cascade_returns_factored():
