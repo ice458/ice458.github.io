@@ -727,6 +727,7 @@ class ProjectManager:
                     f'      "name": {json.dumps(project["title"], ensure_ascii=False)},\r\n'
                     f'      "description": {json.dumps(description, ensure_ascii=False)},\r\n'
                     f'      "thumbnailUrl": "https://img.youtube.com/vi/{video_id}/hqdefault.jpg",\r\n'
+                    f'      "uploadDate": "{datetime.now().strftime("%Y-%m-%dT00:00:00+09:00")}",\r\n'
                     f'      "contentUrl": "https://www.youtube.com/watch?v={video_id}",\r\n'
                     f'      "embedUrl": "https://www.youtube.com/embed/{video_id}"\r\n'
                     '    }\r\n'
