@@ -315,7 +315,7 @@ window.Netlist = {
             }
 
             // E5: 素子値が数値でも識別子でもない
-            if (comp.type !== 'O' && !isAcceptableValue(val)) {
+            if (comp.type !== 'O' && comp.type !== 'K' && !isAcceptableValue(val)) {
                 errors.push({msg: `'${comp.name}' value '${val}' must be a number or a symbol name`, componentId: comp.id, x: comp.x, y: comp.y});
             }
 
@@ -342,6 +342,21 @@ window.Netlist = {
                     }
                 }
                 lines.push(line);
+            } else if (comp.type === 'K') {
+                // Coupled inductor pair (mutual inductance / transformer):
+                // primary n1/n2, secondary n3/n4, value "L1 L2 k" -- k's SIGN
+                // is the winding polarity (the editor's "reverse secondary"
+                // checkbox just negates it), so no separate flip field is
+                // needed the way E/G need one.
+                const toks = (comp.value || '').trim().split(/\s+/).filter(Boolean);
+                if (toks.length !== 3 || !toks.every(isAcceptableValue)) {
+                    errors.push({
+                        msg: `'${comp.name}' needs three values "L1 L2 k" (primary inductance, secondary inductance, coupling -1 to 1)`,
+                        componentId: comp.id, x: comp.x, y: comp.y
+                    });
+                } else {
+                    lines.push(`${comp.name} ${nodes[0]} ${nodes[1]} ${nodes[2]} ${nodes[3]} ${toks[0]} ${toks[1]} ${toks[2]}`);
+                }
             }
         });
 

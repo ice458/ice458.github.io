@@ -272,6 +272,7 @@ _ELEM_SPEC = {
     "G": (2, True, True),   # VCCS — 4 nodes + value
     "E": (2, True, True),   # VCVS — 4 nodes + value
     "O": (3, False, False),  # Ideal Op-Amp — 3 nodes, no value
+    "K": (4, True, False),  # Coupled inductor pair — 4 nodes + "L1 L2 k"
 }
 
 
@@ -308,6 +309,9 @@ def _parse_netlist_text(text: str) -> Tuple[List[dict], List[str], List[str]]:
             # O: name n+ n- nout            (ideal)
             #    name n+ n- nout A0 GBW     (finite-gain)
             expected = 1 + 3
+        elif etype == "K":
+            # K: name n1 n2 n3 n4 L1 L2 k  (primary, secondary, then values)
+            expected = 1 + 4 + 3
         else:
             # R/L/C/V/I: name n1 n2 value
             expected = 1 + n_nodes + (1 if has_value else 0)
@@ -347,6 +351,20 @@ def _parse_netlist_text(text: str) -> Tuple[List[dict], List[str], List[str]]:
                 for v in (a0, gbw):
                     if isinstance(v, Symbol):
                         all_symbols.add(str(v))
+        elif etype == "K":
+            elem["n1"] = _node_key(tokens[1])
+            elem["n2"] = _node_key(tokens[2])
+            elem["n3"] = _node_key(tokens[3])
+            elem["n4"] = _node_key(tokens[4])
+            l1 = _parse_value(tokens[5])
+            l2 = _parse_value(tokens[6])
+            k = _parse_value(tokens[7])
+            elem["l1"] = str(l1)
+            elem["l2"] = str(l2)
+            elem["k"] = str(k)
+            for v in (l1, l2, k):
+                if isinstance(v, Symbol):
+                    all_symbols.add(str(v))
         else:
             elem["n1"] = _node_key(tokens[1])
             elem["n2"] = _node_key(tokens[2])
@@ -367,7 +385,7 @@ def _validate_circuit(elements: List[dict]) -> List[str]:
     nodes: set = set()
 
     for el in elements:
-        for key in ("n1", "n2", "np", "nn", "ncp", "ncn", "nout"):
+        for key in ("n1", "n2", "n3", "n4", "np", "nn", "ncp", "ncn", "nout"):
             if key in el:
                 nodes.add(el[key])
 
@@ -378,7 +396,7 @@ def _validate_circuit(elements: List[dict]) -> List[str]:
     node_counts: Dict[str, int] = {}
     for el in elements:
         el_nodes = set()
-        for key in ("n1", "n2", "np", "nn", "ncp", "ncn", "nout"):
+        for key in ("n1", "n2", "n3", "n4", "np", "nn", "ncp", "ncn", "nout"):
             if key in el and el[key] != "0":
                 el_nodes.add(el[key])
         for nd in el_nodes:
@@ -430,6 +448,28 @@ def parse_netlist(text_or_json: str) -> str:
 #  MNA Builder + Solver
 # ===================================================================
 
+def _branch_names(elements: List[dict]) -> List[str]:
+    """Ordered list of MNA "group 2" (branch-current) unknowns an element
+    list contributes: one for each V/E/O, two for each K (a coupled inductor
+    pair needs a loop current per winding, like a two-winding transformer).
+
+    Every place that needs to know the branch-current numbering (building
+    the MNA matrix itself, or re-deriving the same numbering later to find
+    one particular row -- the input source's row, or a requested branch
+    output) must call this SAME function. Building the list ad hoc in more
+    than one place is exactly how a K element's second branch would silently
+    misalign every branch index that comes after it in just one of them.
+    """
+    names: List[str] = []
+    for el in elements:
+        if el["type"] in ("V", "E", "O"):
+            names.append(el["name"])
+        elif el["type"] == "K":
+            names.append(f'{el["name"]}#1')
+            names.append(f'{el["name"]}#2')
+    return names
+
+
 def _build_mna(elements: List[dict]) -> Tuple[
     sp.Matrix, sp.Matrix, List[str], List[str], List[str]
 ]:
@@ -443,7 +483,7 @@ def _build_mna(elements: List[dict]) -> Tuple[
     # Collect non-ground nodes
     node_set: set = set()
     for el in elements:
-        for key in ("n1", "n2", "np", "nn", "ncp", "ncn", "nout"):
+        for key in ("n1", "n2", "n3", "n4", "np", "nn", "ncp", "ncn", "nout"):
             v = el.get(key)
             if v and v != "0":
                 node_set.add(v)
@@ -451,11 +491,9 @@ def _build_mna(elements: List[dict]) -> Tuple[
     node_idx = {nd: i for i, nd in enumerate(node_list)}
     n_nodes = len(node_list)
 
-    # Count group-2 (branch-current) variables: V, E, O
-    group2: List[str] = []
-    for el in elements:
-        if el["type"] in ("V", "E", "O"):
-            group2.append(el["name"])
+    # Group-2 (branch-current) variables: V, E, O each contribute one; K
+    # (coupled inductors) contributes two -- see _branch_names.
+    group2: List[str] = _branch_names(elements)
     n_branch = len(group2)
     n_total = n_nodes + n_branch
 
@@ -641,6 +679,58 @@ def _build_mna(elements: List[dict]) -> Tuple[
                     A[i_row, np_i] += 1
                 if nn_i is not None:
                     A[i_row, nn_i] -= 1
+
+        elif etype == "K":
+            # ---- Coupled Inductor Pair (mutual inductance / transformer) --
+            # Two branch currents (I1 through the primary, I2 through the
+            # secondary), each with a KCL stamp like a voltage source's, plus
+            # one constraint row per winding relating BOTH currents:
+            #   V(n1) - V(n2) - s*L1*I1 - s*M*I2 = 0     (primary loop)
+            #   V(n3) - V(n4) - s*M*I1  - s*L2*I2 = 0     (secondary loop)
+            # with M = k*sqrt(L1*L2) -- the general two-winding coupled-
+            # inductor model (an ideal transformer is the k -> 1 limit).
+            # k=0 decouples into two ordinary series inductors, the same
+            # relation the plain L stamp gives in admittance form. k's SIGN
+            # is the winding polarity (SPICE's own convention for a coupling
+            # coefficient), so a reversed secondary is just a negative k,
+            # not a separate stamp.
+            L1 = sp.sympify(el["l1"])
+            L2 = sp.sympify(el["l2"])
+            k_coup = sp.sympify(el["k"])
+            M = k_coup * sp.sqrt(L1 * L2)
+
+            n1_i = ni(el["n1"])
+            n2_i = ni(el["n2"])
+            n3_i = ni(el["n3"])
+            n4_i = ni(el["n4"])
+            i1_col = branch_idx[f'{el["name"]}#1']
+            i2_col = branch_idx[f'{el["name"]}#2']
+
+            # KCL: I1 leaves n1, enters n2; I2 leaves n3, enters n4.
+            if n1_i is not None:
+                A[n1_i, i1_col] += 1
+            if n2_i is not None:
+                A[n2_i, i1_col] -= 1
+            if n3_i is not None:
+                A[n3_i, i2_col] += 1
+            if n4_i is not None:
+                A[n4_i, i2_col] -= 1
+
+            # Constraint row 1: the primary loop.
+            if n1_i is not None:
+                A[i1_col, n1_i] += 1
+            if n2_i is not None:
+                A[i1_col, n2_i] -= 1
+            A[i1_col, i1_col] -= s * L1
+            A[i1_col, i2_col] -= s * M
+
+            # Constraint row 2: the secondary loop.
+            if n3_i is not None:
+                A[i2_col, n3_i] += 1
+            if n4_i is not None:
+                A[i2_col, n4_i] -= 1
+            A[i2_col, i1_col] -= s * M
+            A[i2_col, i2_col] -= s * L2
 
         else:
             errors.append(f"Unsupported element type '{etype}' for '{el['name']}'")
@@ -1275,7 +1365,7 @@ def _block_solve_tf(block_elements, active_src, zeroed_nodes, output_node, limit
     node_idx = {nd: i for i, nd in enumerate(node_list)}
     if output_node not in node_idx:
         raise _SolverFallback("block output not a node")
-    group2 = [el["name"] for el in els if el["type"] in ("V", "E", "O")]
+    group2 = _branch_names(els)
     branch_map = {nm: len(node_list) + i for i, nm in enumerate(group2)}
     z_tf = zeros(A.rows, 1)
     z_tf[branch_map[input_name]] = sp.Integer(1)
@@ -1711,11 +1801,12 @@ def solve(circuit_json: str) -> str:
         elif "branch" in output_spec:
             br_name = output_spec["branch"]
             # Find branch current index
-            group2 = [el["name"] for el in elements if el["type"] in ("V", "E", "O")]
+            group2 = _branch_names(elements)
             n_nodes = len(node_list)
             branch_map = {name: n_nodes + i for i, name in enumerate(group2)}
             if br_name not in branch_map:
-                return _err([f"Branch '{br_name}' not found (only V/E/O have branch currents)"])
+                return _err([f"Branch '{br_name}' not found (only V/E/O/K have branch currents; "
+                             f"K's are named '<name>#1'/'<name>#2' for primary/secondary)"])
             output_idx = branch_map[br_name]
             output_type = "current"
         else:
@@ -1726,7 +1817,7 @@ def solve(circuit_json: str) -> str:
 
         if input_elem["type"] == "V":
             # For voltage source: same stamp as original but Vs = 1
-            group2 = [el["name"] for el in elements if el["type"] in ("V", "E", "O")]
+            group2 = _branch_names(elements)
             n_nodes = len(node_list)
             branch_map = {name: n_nodes + i for i, name in enumerate(group2)}
             i_row = branch_map[input_name]

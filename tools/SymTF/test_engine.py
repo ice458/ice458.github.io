@@ -13,6 +13,7 @@ import json
 import math
 
 import pytest
+import sympy as sp
 from sympy import Symbol, symbols, sympify, simplify, cancel, Rational, oo
 
 from engine import parse_netlist, solve, substitute, approximate, freq_response, sensitivity
@@ -990,3 +991,67 @@ class TestSensitivityAtFreq:
             json.dumps(self.VALUES),
         ))
         assert not r["ok"]
+
+
+# ===================================================================
+#  Coupled Inductor Pair (Mutual Inductance / Transformer)
+# ===================================================================
+
+class TestCoupledInductor:
+    """Vin drives the primary (K1's n1) directly; the secondary (n3) loads
+    into R2. Hand-derived from the standard two-winding relations
+    V1 = s*L1*I1 + s*M*I2, V2 = s*M*I1 + s*L2*I2 (M = k*sqrt(L1*L2)):
+
+        H(s) = V(out)/Vin = (M*R2/L1) / (R2 + s*L2*(1 - k^2))
+
+    -- the load resistor and the secondary's LEAKAGE inductance L2*(1-k^2)
+    forming a simple 1st-order low-pass, a standard transformer result."""
+
+    NETLIST = "Vin in 0 Vin\nK1 in 0 out 0 L1 L2 k\nR2 out 0 R2"
+
+    def _tf(self, netlist=None):
+        return solve_circuit(
+            netlist or self.NETLIST,
+            {"kind": "V", "name": "Vin"},
+            {"kind": "node_voltage", "node": "out"},
+        )
+
+    def test_coupled_inductor_transfer_function(self):
+        tf = self._tf()
+        L1, L2, k, R2 = symbols("L1 L2 k R2", positive=True)
+        M = k * sp.sqrt(L1 * L2)
+        expected = (M * R2 / L1) / (R2 + s * L2 * (1 - k**2))
+        assert_tf_equal(tf, expected)
+
+    def test_zero_coupling_gives_no_secondary_response(self):
+        """k=0 -> M=0 -> primary and secondary are fully decoupled, so no
+        drive reaches the secondary at all: H(s) = 0."""
+        tf = self._tf("Vin in 0 Vin\nK1 in 0 out 0 L1 L2 0\nR2 out 0 R2")
+        assert_tf_equal(tf, sp.Integer(0))
+
+    def test_reversed_secondary_negates_gain(self):
+        """A negative k (the schematic editor's "reverse secondary
+        polarity") flips the sign of H(s): M enters the numerator to the
+        first power (sign-dependent), the denominator's leakage term only
+        through k^2 (sign-independent)."""
+        def h_for(k_val):
+            tf = self._tf(f"Vin in 0 Vin\nK1 in 0 out 0 L1 L2 {k_val}\nR2 out 0 R2")
+            return reconstruct_H(tf)
+        H_pos = h_for("0.9")
+        H_neg = h_for("-0.9")
+        assert simplify(H_pos + H_neg) == 0
+
+    def test_branch_output_names_primary_and_secondary_currents(self):
+        """K's two branch currents are addressable as an output ("<name>#1"
+        for the primary loop, "#2" for the secondary), the same mechanism
+        V/E/O branch currents already use -- exercises _branch_names being
+        shared between _build_mna and solve()'s own branch-output lookup."""
+        pr = json.loads(parse_netlist(self.NETLIST))
+        assert pr["ok"], pr.get("errors")
+        circuit = json.loads(pr["circuit_json"])
+        circuit["input"] = {"kind": "V", "name": "Vin"}
+        circuit["output"] = {"kind": "branch", "branch": "K1#1"}
+        sr = json.loads(solve(json.dumps(circuit)))
+        assert sr["ok"], sr.get("errors")
+        # V input + a current (branch) output -- see _determine_tf_kind.
+        assert sr["tf"]["kind"] == "transimpedance"

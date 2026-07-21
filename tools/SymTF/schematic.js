@@ -93,6 +93,19 @@ const SYMBOLS = {
         pins: [{ x: 20, y: -20 }, { x: 20, y: 20 }, { x: -20, y: -20 }, { x: -20, y: 20 }],
         draw: (comp) => controlledSourceShapes('G', comp && comp.flip)
     },
+    K: {
+        // Coupled inductor pair (mutual inductance / transformer): primary
+        // on the left, secondary on the right, a double vertical line for
+        // the core between them. Dot convention marks each winding's "+"
+        // terminal; the secondary's dot flips to the bottom when the
+        // coupling coefficient is stored negative (the editor's "reverse
+        // secondary polarity" checkbox) -- the sign of k IS the polarity, so
+        // (unlike E/G) this needs no separate flip field.
+        box: [-30, -24, 30, 24],
+        // pins: primary+, primary-, secondary+, secondary-
+        pins: [{ x: -30, y: -20 }, { x: -30, y: 20 }, { x: 30, y: -20 }, { x: 30, y: 20 }],
+        draw: (comp) => transformerShapes(comp)
+    },
     // A netname is not a conductor, so its anchor is deliberately a hollow
     // diamond -- never a solder dot, which means "wires are joined here".
     LABEL: {
@@ -105,7 +118,7 @@ const SYMBOLS = {
 };
 
 // Which types carry an editable value symbol (R1 -> "Rload", "1k", ...).
-const HAS_VALUE = new Set(['R', 'C', 'L', 'E', 'G', 'O']);
+const HAS_VALUE = new Set(['R', 'C', 'L', 'E', 'G', 'O', 'K']);
 
 // Terminal names, in the same order as each symbol's pins. Only used to say
 // which pin an extraction error is about.
@@ -117,6 +130,7 @@ const PIN_NAMES = {
     O: ['in+', 'in-', 'out'],
     E: ['out+', 'out-', 'ctrl+', 'ctrl-'],
     G: ['out+', 'out-', 'ctrl+', 'ctrl-'],
+    K: ['p1+', 'p1-', 'p2+', 'p2-'],
     LABEL: ['anchor']
 };
 
@@ -166,6 +180,34 @@ function controlledSourceShapes(kind, flip = false) {
         }));
     }
     return shapes;
+}
+
+// The L coil's own arc-bump path, reused rotated 90 degrees (Konva.Path's own
+// `rotation`, about its local origin) rather than a second, hand-derived
+// vertical arc geometry -- both windings then match the tool's other
+// inductor symbol exactly.
+const COIL_PATH = 'M -20 0 L -12 0 A 4 4 0 0 1 -4 0 A 4 4 0 0 1 4 0 A 4 4 0 0 1 12 0 L 20 0';
+
+function transformerShapes(comp) {
+    const toks = ((comp && comp.value) || '').trim().split(/\s+/).filter(Boolean);
+    const reversed = toks.length === 3 && parseFloat(toks[2]) < 0;
+
+    // paint:'fill' is buildComponent's hook for a solid marker instead of a
+    // stroked outline -- the standard transformer dot convention wants a
+    // filled dot, not a hollow one.
+    const dot = (x, y) => new Konva.Circle({ x, y, radius: 2, paint: 'fill' });
+
+    return [
+        new Konva.Path({ data: COIL_PATH, x: -30, y: 0, rotation: 90, strokeWidth: 2, lineJoin: 'round' }),
+        new Konva.Path({ data: COIL_PATH, x: 30, y: 0, rotation: 90, strokeWidth: 2, lineJoin: 'round' }),
+        // Core: two vertical bars between the windings.
+        new Konva.Line({ points: [-4, -20, -4, 20], strokeWidth: 2 }),
+        new Konva.Line({ points: [4, -20, 4, 20], strokeWidth: 2 }),
+        // Dot convention: primary's + is always the top pin; the secondary's
+        // follows unless the coupling is stored negative (reversed winding).
+        dot(-24, -16),
+        dot(24, reversed ? 16 : -16)
+    ];
 }
 
 // ---------------------------------------------------------------------------
@@ -350,7 +392,8 @@ const SHORT_PAIRS = {
     R: [[0, 1]], C: [[0, 1]], L: [[0, 1]],
     O: [[0, 1]],              // shorting the two op-amp inputs
     E: [[0, 1], [2, 3]],      // out+/out- and ctrl+/ctrl- -- never cross pairs
-    G: [[0, 1], [2, 3]]
+    G: [[0, 1], [2, 3]],
+    K: [[0, 1], [2, 3]]       // shorting either winding -- both a genuine short
 };
 
 function bodySpans(comp) {
@@ -1726,6 +1769,87 @@ function beginOpampEditor(comp) {
     nameEl.select();
 }
 
+// A small properties popover for the coupled inductor pair, matching the
+// op-amp's: three numeric fields (L1, L2, k) rather than one packed text
+// field that would be error-prone to hand-edit. There is no "ideal" default
+// (unlike the op-amp) -- all three values are always required, so a
+// never-configured K correctly fails extraction (E5, via netlist.js) rather
+// than silently analysing as something meaningless.
+//
+// "Reverse secondary polarity" writes k with a negative sign rather than
+// tracking a separate flip field: the SIGN of k already fully describes
+// which way the secondary is wound (SPICE's own convention for a coupling
+// coefficient), so there is nothing else that needs to move.
+function beginKEditor(comp) {
+    const container = stage.container();
+    container.querySelector('.schematic-opamp-editor')?.remove();
+    container.querySelector('.schematic-inline-edit')?.remove();
+
+    const toks = (comp.value || '').trim().split(/\s+/).filter(Boolean);
+    const hasVals = toks.length === 3;
+    const reversed = hasVals && parseFloat(toks[2]) < 0;
+    const kMag = hasVals && !isNaN(parseFloat(toks[2])) ? String(Math.abs(parseFloat(toks[2]))) : toks[2];
+
+    const screen = stage.getAbsoluteTransform().point({ x: comp.x, y: comp.y });
+    const box = document.createElement('div');
+    box.className = 'schematic-opamp-editor';
+    box.style.left = `${screen.x + 20}px`;
+    box.style.top = `${screen.y - 20}px`;
+    box.innerHTML = `
+        <label class="oae-row"><span>Name</span><input class="oae-name" spellcheck="false" value="${comp.name}"></label>
+        <label class="oae-row"><span>L1 (primary)</span><input class="oae-l1" spellcheck="false"></label>
+        <label class="oae-row"><span>L2 (secondary)</span><input class="oae-l2" spellcheck="false"></label>
+        <label class="oae-row"><span>k (0-1)</span><input class="oae-k" spellcheck="false"></label>
+        <label class="oae-check"><input type="checkbox" class="oae-reverse"> Reverse secondary polarity</label>
+        <div class="oae-actions"><button class="oae-ok">OK</button></div>
+    `;
+    container.appendChild(box);
+
+    const nameEl = box.querySelector('.oae-name');
+    const l1El = box.querySelector('.oae-l1');
+    const l2El = box.querySelector('.oae-l2');
+    const kEl = box.querySelector('.oae-k');
+    const revEl = box.querySelector('.oae-reverse');
+
+    l1El.value = hasVals ? toks[0] : 'L1';
+    l2El.value = hasVals ? toks[1] : 'L2';
+    kEl.value = hasVals ? kMag : '0.99';
+    revEl.checked = reversed;
+
+    let closed = false;
+    const finish = (save) => {
+        if (closed) return;
+        closed = true;
+        box.remove();
+        if (!save) return;
+        const name = nameEl.value.trim() || comp.name;
+        const l1 = l1El.value.trim() || 'L1';
+        const l2 = l2El.value.trim() || 'L2';
+        const kRaw = kEl.value.trim() || '0.99';
+        const kSigned = revEl.checked ? `-${kRaw}` : kRaw;
+        const value = `${l1} ${l2} ${kSigned}`;
+        const target = findComponent(comp.id);
+        if (!target) return;
+        if (target.name === name && (target.value || '') === value) return;
+        commit();
+        target.name = name;
+        target.value = value;
+        render();
+    };
+
+    box.addEventListener('keydown', (e) => {
+        e.stopPropagation();
+        if (e.key === 'Enter') finish(true);
+        else if (e.key === 'Escape') finish(false);
+    });
+    box.addEventListener('focusout', () => {
+        setTimeout(() => { if (!box.contains(document.activeElement)) finish(true); }, 0);
+    });
+    box.querySelector('.oae-ok').addEventListener('click', () => finish(true));
+    nameEl.focus();
+    nameEl.select();
+}
+
 function applyEdit(id, field, text) {
     const comp = findComponent(id);
     if (!comp) return;
@@ -1784,6 +1908,8 @@ function tryBeginEdit(screen, world) {
     // The op-amp has two parameters and an ideal/non-ideal choice, so it gets a
     // proper little form instead of a single text field.
     if (comp.type === 'O') { beginOpampEditor(comp); return true; }
+    // The coupled inductor pair has three (L1, L2, k), same reasoning.
+    if (comp.type === 'K') { beginKEditor(comp); return true; }
     const field = hit.field === 'value' && HAS_VALUE.has(comp.type) ? 'value' : 'name';
     beginEdit(comp, field);
     return true;
@@ -2073,6 +2199,7 @@ function setupKeyboard() {
         if (key === 'c') { startPlacing('C'); return; }
         if (key === 'l') { startPlacing('L'); return; }
         if (key === 'g') { placeOrFlip('G'); return; }
+        if (key === 'k') { startPlacing('K'); return; }
 
         if (e.key === 'Delete' || e.key === 'Backspace') { deleteSelection(); return; }
 

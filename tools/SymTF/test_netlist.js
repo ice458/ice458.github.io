@@ -225,6 +225,31 @@ const W = (id, x1, y1, x2, y2) => ({ id, x1, y1, x2, y2 });
 }
 
 {
+    // Coupled inductor pair (mutual inductance / transformer): K1 at
+    // (100,100), value "L1 L2 k". Pins: p1+ (70,80), p1- (70,120),
+    // p2+ (130,80), p2- (130,120).
+    const K = (value) => ({
+        components: [
+            { type: "K", name: "K1", value, x: 100, y: 100, rot: 0, mirror: false },
+            LABEL(70, 80, "p1p"), LABEL(70, 120, "p1m"),
+            LABEL(130, 80, "p2p"), LABEL(130, 120, "p2m")
+        ],
+        wires: []
+    });
+    const lineK = (m) => Netlist.extract(m).text.split('\n').find(l => l.startsWith('K1'));
+
+    eq("K emits 4 nodes + L1 L2 k", lineK(K('L1 L2 0.95')), 'K1 p1p p1m p2p p2m L1 L2 0.95');
+    eq("a negative (reversed) k is accepted",
+       lineK(K('L1 L2 -0.95')), 'K1 p1p p1m p2p p2m L1 L2 -0.95');
+
+    // Wrong token count is an error, same as any other malformed value.
+    eq("K needs exactly three values (two is an error)",
+       Netlist.extract(K('L1 L2')).errors.some(e => e.msg.includes('three values')), true);
+    eq("blank K is an error -- unlike the op-amp, there is no ideal default",
+       Netlist.extract(K('')).errors.some(e => e.msg.includes('three values')), true);
+}
+
+{
     // T33 決定性
     const model1 = {
         components: [ R(100, 100, "R1"), C(100, 150, "C1") ],
