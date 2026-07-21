@@ -753,11 +753,21 @@ body.schematic-full .left-pane {
 .workbench .action-row { margin-top: 1rem; display: flex; flex-wrap: wrap; gap: 0.5rem; }
 .workbench .action-row .primary-btn { flex: 1 1 140px; min-width: 140px; padding: 0.5rem; font-size: 0.9rem; }
 
-/* Narrow: stack the values above the plot rather than crushing both. */
+/* Narrow: stack the values above the plot rather than crushing both.
+   flex: none is flex-shrink:0 -- with many symbols the values table's
+   natural content height could exceed the whole window (a tall, narrow
+   window makes this the common case, not the edge case), and nothing
+   downstream of a shrink:0 box will make it shrink to fit. Its own
+   overflow-y:auto never got a chance to matter: there was nothing bounding
+   its height for that scrollbar to appear against. Capped to a fraction of
+   the viewport instead so the values pane always scrolls internally and the
+   plot below it always keeps some room. */
 @media (max-width: 1400px) {
     .workbench { flex-direction: column; }
     .workbench-values {
-        flex: none;
+        flex: 0 1 auto;
+        max-height: 40vh;
+        min-height: 0;
         border-right: none;
         border-bottom: 1px solid var(--border-color);
     }

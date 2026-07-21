@@ -1001,6 +1001,29 @@ function renderOverlay() {
         for (const t of buildComponentTexts(input.ghost, { ghost: true })) overlayLayer.add(t);
     }
 
+    // A full-canvas crosshair through the (snapped) pointer while wiring --
+    // tracked from the moment wiring mode starts, not just after the first
+    // click, so it also helps placing that first point. The point of it is
+    // seeing at a glance which OTHER pins/wires line up with the cursor,
+    // which a small fixed-size native cursor icon cannot show.
+    if (input.mode === 'wiring' && input.wireCursor) {
+        const r = visibleWorldRect();
+        const inv = 1 / stage.scaleX();
+        const { x: cx, y: cy } = input.wireCursor;
+        overlayLayer.add(new Konva.Line({
+            points: [r.x1, cy, r.x2, cy],
+            stroke: COLORS.active, opacity: 0.5,
+            strokeWidth: inv, dash: [4 * inv, 4 * inv],
+            listening: false
+        }));
+        overlayLayer.add(new Konva.Line({
+            points: [cx, r.y1, cx, r.y2],
+            stroke: COLORS.active, opacity: 0.5,
+            strokeWidth: inv, dash: [4 * inv, 4 * inv],
+            listening: false
+        }));
+    }
+
     if (input.mode === 'wiring' && input.wireStart && input.wireEnd) {
         const pts = wirePath(input.wireStart, input.wireEnd);
         overlayLayer.add(new Konva.Line({
@@ -1071,6 +1094,9 @@ const input = {
     ghostMulti: null,
     wireStart: null,
     wireEnd: null,
+    wireCursor: null,     // wiring: current pointer position, tracked even
+                          // before the first click (drives the full-canvas
+                          // crosshair -- see renderOverlay)
     rubberStart: null,
     rubberEnd: null,
     drag: null,
@@ -1111,6 +1137,7 @@ function cancelToIdle() {
     input.ghostMulti = null;
     input.wireStart = null;
     input.wireEnd = null;
+    input.wireCursor = null;
     input.drag = null;
     input.pressed = null;
     setMode('idle');
@@ -1314,6 +1341,10 @@ function commitPlacing() {
 
 function startWiring() {
     cancelToIdle();
+    // If the pointer is already over the canvas (the common case: pressing
+    // 'w' rather than clicking the palette button), show the crosshair right
+    // away instead of waiting for the first mousemove.
+    input.wireCursor = pointerSnapped();
     setMode('wiring');
 }
 
@@ -2052,11 +2083,19 @@ function setupPointer() {
             return;
         }
 
-        if (input.mode === 'wiring' && input.wireStart) {
+        if (input.mode === 'wiring') {
             const p = pointerSnapped();
-            if (p && (p.x !== input.wireEnd.x || p.y !== input.wireEnd.y)) {
-                input.wireEnd = p;
-                renderOverlay();
+            if (p) {
+                let changed = false;
+                if (!input.wireCursor || p.x !== input.wireCursor.x || p.y !== input.wireCursor.y) {
+                    input.wireCursor = p;
+                    changed = true;
+                }
+                if (input.wireStart && (p.x !== input.wireEnd.x || p.y !== input.wireEnd.y)) {
+                    input.wireEnd = p;
+                    changed = true;
+                }
+                if (changed) renderOverlay();
             }
             return;
         }
