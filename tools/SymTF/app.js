@@ -350,6 +350,11 @@ function toggleSchematicFullscreen(force) {
     els.fullscreenBtn.textContent = on ? '⛶ Exit full screen' : '⛶ Full screen';
     // Let layout settle before measuring for the fit.
     requestAnimationFrame(() => window.Schematic.fitToView());
+    // Full screen hides the entire right pane (CSS), Bode/Nyquist plots
+    // included. Any auto-plot that fired while it was hidden drew into a
+    // 0x0 container, so exiting needs a fresh plot now that it is visible
+    // again -- otherwise the graph comes back blank or stuck on stale data.
+    if (!on) schedulePlot();
 }
 
 els.fullscreenBtn?.addEventListener('click', () => {
@@ -589,11 +594,20 @@ els.tabs.forEach(btn => {
         // Remove active class from all
         els.tabs.forEach(t => t.classList.remove('active'));
         els.tabContents.forEach(c => c.classList.add('hidden'));
-        
+
         // Add active to clicked
         btn.classList.add('active');
         const tabId = btn.dataset.tab;
         document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+
+        // The Bode/Nyquist plots live in this tab and keep re-drawing (via
+        // schedulePlot on every value edit) even while this tab is hidden --
+        // Plotly measures a display:none container as 0x0, so a plot built
+        // while the Approximation tab was showing comes back blank or stale
+        // once the user switches back, with nothing left to trigger a
+        // redraw. Re-plotting now, with the container visible again, is the
+        // same fix already used for the Bode/Nyquist toggle above.
+        if (tabId === 'workbench') schedulePlot();
     });
 });
 
@@ -806,6 +820,13 @@ async function runAnalysis(forceInput = null, forceOutput = null, silent = false
             hasAnalyzed = true;
             enterNumericMode(result.symbols || [], result.errors || []);
             return null;
+        }
+        // A user-requested Cancel already has its own, non-alarming status in
+        // the engine chip ("Cancelled — restarting engine…"); surfacing the
+        // same event here too, worded as "Analysis: Cancelled", reads like a
+        // failure for something the user explicitly asked for.
+        if (result.errors.length === 1 && result.errors[0] === 'Cancelled') {
+            throw new Error("Cancelled");
         }
         // With no Analyze button there is no manual retry, so solve
         // failures always land in the persistent parse-error box
@@ -1279,22 +1300,32 @@ function renderCoeffsList(container, coeffsStrArray, degree) {
 function parseSIValue(str) {
     if (!str) return null;
     str = str.trim();
-    // Match number part and optional SI suffix
-    const match = str.match(/^([-+]?[0-9]*\.?[0-9]+(?:[eE][-+]?[0-9]+)?)([a-zA-Z]*)$/);
+    // Match number part and an optional suffix -- but ONLY one of the
+    // recognized SI prefixes. This used to accept ANY trailing letters
+    // ([a-zA-Z]*), so a unit written the way a datasheet or schematic would
+    // ("4.7uF", "10kOhm", "1MEG") matched with an unrecognized suffix, and
+    // that suffix was then silently ignored (no multiplier applies to
+    // "uF"), returning the UNSCALED number with no warning -- "4.7uF" quietly
+    // became 4.7, six orders of magnitude off, for anyone who included the
+    // unit the way it is normally written. Restricting the suffix
+    // alternation to known prefixes means anything else falls through to the
+    // "pass raw to sympy" branch below, which surfaces as a visible parse
+    // error instead of a wrong, silent value.
+    const match = str.match(/^([-+]?[0-9]*\.?[0-9]+(?:[eE][-+]?[0-9]+)?)(T|G|Meg|M|k|m|u|μ|n|p|f)?$/);
     if (!match) return str; // Pass raw to sympy if parsing fails
-    
+
     let val = parseFloat(match[1]);
     const suffix = match[2];
-    
+
     const multipliers = {
         'T': 1e12, 'G': 1e9, 'M': 1e6, 'Meg': 1e6, 'k': 1e3,
         'm': 1e-3, 'u': 1e-6, 'μ': 1e-6, 'n': 1e-9, 'p': 1e-12, 'f': 1e-15
     };
-    
-    if (suffix && multipliers[suffix]) {
+
+    if (suffix) {
         val *= multipliers[suffix];
     }
-    
+
     return val.toString();
 }
 
@@ -1690,18 +1721,35 @@ function updateApproxTabState() {
 // from it, which is also what makes Undo/Reset trivial.
 let approxChain = [];
 
+// The display label for a step, derived purely from its spec -- no DOM
+// reads. Shared by buildApproxSpec (a step just entered on the form) and by
+// replaying a chain restored from an imported session, so the two paths
+// cannot describe the same spec two different ways.
+function specLabel(spec) {
+    if (spec.mode === 'limit') {
+        return spec.direction === 'dc' ? 'Limit s → 0' : 'Limit s → ∞';
+    }
+    if (spec.mode === 'truncate') {
+        return `Truncate: num ≤ s^${spec.max_num_order}, den ≤ s^${spec.max_den_order}`;
+    }
+    if (spec.mode === 'assumption') {
+        return 'Assume ' + spec.assumptions.join(', ');
+    }
+    if (spec.mode === 'numerical') {
+        return `Numerical (threshold ${spec.threshold})`;
+    }
+    return spec.mode;
+}
+
 function buildApproxSpec() {
     const mode = els.approxMode.value;
     const spec = { mode };
-    let label = '';
 
     if (mode === 'limit') {
         spec.direction = document.querySelector('input[name="limit_dir"]:checked').value;
-        label = spec.direction === 'dc' ? 'Limit s → 0' : 'Limit s → ∞';
     } else if (mode === 'truncate') {
         spec.max_num_order = parseInt(els.truncNum.value);
         spec.max_den_order = parseInt(els.truncDen.value);
-        label = `Truncate: num ≤ s^${spec.max_num_order}, den ≤ s^${spec.max_den_order}`;
     } else if (mode === 'assumption') {
         const val = els.assumeInput.value.trim();
         spec.assumptions = val ? val.split(',').map(t => t.trim()) : [];
@@ -1709,7 +1757,6 @@ function buildApproxSpec() {
             showGlobalError('Enter at least one assumption, e.g. "gm*ro >> 1".');
             return null;
         }
-        label = 'Assume ' + spec.assumptions.join(', ');
     } else if (mode === 'numerical') {
         spec.threshold = parseFloat(els.numThresh.value);
         const typicalValues = {};
@@ -1724,9 +1771,27 @@ function buildApproxSpec() {
             return null;
         }
         spec.typical_values = typicalValues;
-        label = `Numerical (threshold ${spec.threshold})`;
     }
-    return { spec, label };
+    return { spec, label: specLabel(spec) };
+}
+
+// Runs one approximation step against wherever the chain currently stands
+// and, on success, pushes it. The spec is kept on the pushed entry (not just
+// the resulting tf) so the chain can be serialized as "what the user asked
+// for" and replayed -- see replayApproxChain -- rather than trusting a
+// resulting H(s) baked into a session file.
+async function runApproxStep(spec, label) {
+    const base = approxChain.length ? approxChain[approxChain.length - 1].tf : currentTf;
+    const result = await Bridge.approximate(base, spec);
+    if (result.ok) {
+        approxChain.push({
+            label,
+            spec,
+            tf: result.tf_approx,
+            dropped: result.dropped_terms || []
+        });
+    }
+    return result;
 }
 
 async function handleApproximation() {
@@ -1738,17 +1803,10 @@ async function handleApproximation() {
     els.runApproxBtn.querySelector('.btn-spinner').classList.remove('hidden');
 
     try {
-        // The step applies to where the chain currently stands.
-        const base = approxChain.length ? approxChain[approxChain.length - 1].tf : currentTf;
-        const result = await Bridge.approximate(base, built.spec);
+        const result = await runApproxStep(built.spec, built.label);
         if (!result.ok) {
             showGlobalError("Approximation Error:\n" + result.errors.join("\n"));
         } else {
-            approxChain.push({
-                label: built.label,
-                tf: result.tf_approx,
-                dropped: result.dropped_terms || []
-            });
             renderApproxChain();
         }
     } catch (e) {
@@ -1757,6 +1815,23 @@ async function handleApproximation() {
         els.runApproxBtn.disabled = false;
         els.runApproxBtn.querySelector('.btn-spinner').classList.add('hidden');
     }
+}
+
+// Rebuilds the chain from a saved list of specs (an imported session), one
+// engine round trip per step, exactly as if the user had clicked "Apply"
+// that many times. Only the specs are trusted from the file; every tf and
+// dropped-term list is regenerated here, never read from the file itself.
+async function replayApproxChain(specs) {
+    approxChain = [];
+    for (const spec of specs) {
+        const result = await runApproxStep(spec, specLabel(spec));
+        if (!result.ok) {
+            showGlobalError("Could not replay a saved approximation step: " +
+                (result.errors || []).join('; '));
+            break;
+        }
+    }
+    renderApproxChain();
 }
 
 // Redraws everything the chain implies: the steps list, the resulting H(s),
@@ -1919,7 +1994,7 @@ function handleExport() {
         }
     });
     
-    // 2. Approximation Config
+    // 2. Approximation Config (the form fields for the NEXT step to build)
     const approxConfig = {
         mode: els.approxMode.value,
         limit_dir: document.querySelector('input[name="limit_dir"]:checked').value,
@@ -1930,7 +2005,7 @@ function handleExport() {
     };
 
     const sessionData = {
-        version: "1.1",
+        version: "1.2",
         // v1.0 saved only the netlist text, so anyone who drew a circuit and
         // round-tripped through Export/Import lost the drawing -- the schematic
         // is the tool's primary input, which made this worse than no feature.
@@ -1939,7 +2014,28 @@ function handleExport() {
         input: currentCircuitJson?.input || null,
         output: currentCircuitJson?.output || null,
         substitution: subsMap,
-        approximation: approxConfig
+        approximation: approxConfig,
+        // v1.2: the steps actually APPLIED (not just the form fields for the
+        // next one). Only the specs -- what the user asked for -- are saved;
+        // each step's resulting H(s) and dropped-term list are recomputed on
+        // import (see replayApproxChain), never trusted from the file.
+        approxChain: approxChain.map(step => step.spec),
+        // v1.2: plot range/type and the view toggles are all things the user
+        // set by hand, not calculation results, so they round-trip too. The
+        // flat/standard-form expansions and poles & zeros themselves are not
+        // saved -- only whether to re-show them -- since those regenerate
+        // from the restored H(s) on demand.
+        plot: {
+            f_min: els.plotFmin.value,
+            f_max: els.plotFmax.value,
+            points: els.plotPoints.value,
+            type: els.plotType.value
+        },
+        view: {
+            standardForm: standardFormView,
+            flatExpanded: flatViewExpanded,
+            polesZerosVisible: pzVisible
+        }
     };
 
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(sessionData, null, 2));
@@ -1999,17 +2095,51 @@ function handleImport(e) {
                 await applySubstitution();
             }
 
-            // 4. Restore Approximation
+            // 4. Restore Approximation form fields (the next step to build)
             if (data.approximation) {
                 els.approxMode.value = data.approximation.mode;
                 // Dispatch change event to toggle UI containers
                 els.approxMode.dispatchEvent(new Event('change'));
-                
+
                 document.querySelector(`input[name="limit_dir"][value="${data.approximation.limit_dir}"]`).checked = true;
                 els.truncNum.value = data.approximation.trunc_num;
                 els.truncDen.value = data.approximation.trunc_den;
                 els.assumeInput.value = data.approximation.assumptions;
                 els.numThresh.value = data.approximation.num_thresh;
+            }
+
+            // 5. Replay the approximation steps that were actually applied.
+            if (data.approxChain && data.approxChain.length && currentTf) {
+                await replayApproxChain(data.approxChain);
+            }
+
+            // 6. Plot range/type -- dispatching 'change' both applies the
+            // bode/nyquist visibility and re-plots with the restored range.
+            if (data.plot) {
+                if (data.plot.f_min != null) els.plotFmin.value = data.plot.f_min;
+                if (data.plot.f_max != null) els.plotFmax.value = data.plot.f_max;
+                if (data.plot.points != null) els.plotPoints.value = data.plot.points;
+                if (data.plot.type) els.plotType.value = data.plot.type;
+                els.plotType.dispatchEvent(new Event('change'));
+            }
+
+            // 7. View toggles: which form the factored/flat H(s) and the
+            // poles & zeros panel are shown in. The underlying expansions
+            // are recomputed here (renderTf / renderPolesZeros), not read
+            // from the file.
+            if (data.view) {
+                standardFormView = !!data.view.standardForm;
+                if (currentSubstitutedTf) renderTf(currentSubstitutedTf);
+
+                if (data.view.flatExpanded && currentSubstitutedTf?.factored &&
+                    currentSubstitutedTf.flat_available && !flatViewExpanded) {
+                    els.toggleFlatBtn?.click();
+                }
+
+                pzVisible = !!data.view.polesZerosVisible;
+                els.pzContainer.classList.toggle('hidden', !pzVisible);
+                els.togglePzBtn.textContent = pzVisible ? "Hide Poles & Zeros" : "View Poles & Zeros";
+                if (pzVisible) renderPolesZeros(currentSubstitutedTf);
             }
 
         } catch (err) {

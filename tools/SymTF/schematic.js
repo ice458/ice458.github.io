@@ -331,6 +331,7 @@ function normalizeWires() {
     }
     model.wires = wires;
     cutWiresThroughBodies();
+    splitWiresAtJunctions();
 
     // Merging replaces wire objects, so any wire selection no longer refers to
     // anything real. Component selections survive -- their ids are untouched.
@@ -450,6 +451,47 @@ function computeJunctions() {
         if (degree >= 3) junctions.push(p);
     }
     return junctions;
+}
+
+// Cuts every wire at whichever junctions (T or X crossings, or a component
+// pin landing mid-span) fall strictly inside it, so each side of the
+// crossing becomes its own wire object instead of one run threading through
+// it. Without this, a long bus with a tap partway along was a single wire:
+// selecting or dragging "just the part past the junction" was impossible,
+// since that was the same object as the part before it.
+//
+// The cut points are exactly where computeJunctions() would draw a solder
+// dot, read from the current (still-merged) wires -- splitting a wire into
+// two pieces that both end exactly at that point does not change any
+// point's degree (an interior pass-through contributes 2; two new endpoints
+// meeting there also contribute 2), so this cannot itself create or erase a
+// junction and one pass is enough.
+function splitWiresAtJunctions() {
+    const junctions = computeJunctions();
+    if (!junctions.length) return;
+
+    const out = [];
+    for (const w of model.wires) {
+        const vertical = w.x1 === w.x2;
+        const cuts = junctions
+            .filter(p => isStrictlyInside(p.x, p.y, w))
+            .map(p => vertical ? p.y : p.x)
+            .sort((a, b) => a - b);
+
+        if (!cuts.length) { out.push(w); continue; }
+
+        const a = vertical ? Math.min(w.y1, w.y2) : Math.min(w.x1, w.x2);
+        const b = vertical ? Math.max(w.y1, w.y2) : Math.max(w.x1, w.x2);
+        const bounds = [a, ...cuts, b];
+        for (let i = 0; i < bounds.length - 1; i++) {
+            const lo = bounds[i], hi = bounds[i + 1];
+            if (lo === hi) continue;
+            out.push(vertical
+                ? { id: newId(), x1: w.x1, y1: lo, x2: w.x1, y2: hi }
+                : { id: newId(), x1: lo, y1: w.y1, x2: hi, y2: w.y1 });
+        }
+    }
+    model.wires = out;
 }
 
 // ---------------------------------------------------------------------------
