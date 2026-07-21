@@ -1620,17 +1620,17 @@ function hideCursor(gd) {
     }
 }
 
-// Gain and phase share one frequency axis, so zooming or panning either must
-// move the other. Plotly reports the change as a relayout event; mirror the new
-// x-range (or an autorange reset) onto the partner. The flag stops the mirrored
-// call from bouncing straight back.
-function linkFrequencyZoom(idA, idB) {
-    const a = document.getElementById(idA);
-    const b = document.getElementById(idB);
-    if (!a || !b) return;
+// Every linked plot shares one frequency axis, so zooming or panning any one
+// of them must move the rest (2 for the compare plots, 3 for mag/phase/group
+// delay). Plotly reports the change as a relayout event; mirror the new
+// x-range (or an autorange reset) onto every other plot in the group. The
+// flag stops the mirrored call from bouncing straight back.
+function linkFrequencyZoom(...ids) {
+    const nodes = ids.map(id => document.getElementById(id)).filter(Boolean);
+    if (nodes.length < 2) return;
     let syncing = false;
 
-    const mirror = (dst) => (ev) => {
+    const mirror = (others) => (ev) => {
         if (syncing) return;
         let upd = null;
         if (ev['xaxis.range[0]'] !== undefined) {
@@ -1640,40 +1640,66 @@ function linkFrequencyZoom(idA, idB) {
         }
         if (!upd) return;
         syncing = true;
-        Plotly.relayout(dst, upd).then(() => { syncing = false; });
+        Promise.all(others.map(n => Plotly.relayout(n, upd))).then(() => { syncing = false; });
     };
 
-    a.on('plotly_relayout', mirror(idB));
-    b.on('plotly_relayout', mirror(idA));
+    nodes.forEach((node, i) => {
+        const others = nodes.filter((_, j) => j !== i);
+        node.on('plotly_relayout', mirror(others));
+    });
 }
 
-// Hovering either plot puts the cursor (line + value chip) on BOTH at the same
-// sample and fills the shared readout. Both plots share the frequency array,
-// so one point index addresses the same frequency everywhere.
-// `readout(i)` -> HTML for the readout bar; `chipA(i)` / `chipB(i)` -> the chip
-// text for each plot (its own quantity: dB on the gain pane, deg on phase).
-function linkHoverReadout(idA, idB, readoutEl, readout, freqs, chipA, chipB) {
-    const a = document.getElementById(idA);
-    const b = document.getElementById(idB);
-    if (!a || !b) return;
+// Hovering any linked plot puts the cursor (line + value chip) on ALL of them
+// at the same sample and fills the shared readout. They all share the
+// frequency array, so one point index addresses the same frequency
+// everywhere. `readout(i)` -> HTML for the readout bar; `chips[k](i)` -> the
+// chip text for the k-th plot (its own quantity: dB, degrees, seconds, ...).
+function linkHoverReadout(ids, readoutEl, readout, freqs, chips) {
+    const nodes = ids.map(id => document.getElementById(id)).filter(Boolean);
+    if (nodes.length < 2) return;
 
     const show = (d) => {
         const i = d.points[0].pointIndex;
         if (readoutEl) readoutEl.innerHTML = readout(i);
-        moveCursor(a, freqs[i], chipA(i));
-        moveCursor(b, freqs[i], chipB(i));
+        nodes.forEach((node, k) => moveCursor(node, freqs[i], chips[k](i)));
     };
-    const hide = () => { hideCursor(a); hideCursor(b); };
+    const hide = () => nodes.forEach(hideCursor);
 
-    a.on('plotly_hover', show);
-    b.on('plotly_hover', show);
-    a.on('plotly_unhover', hide);
-    b.on('plotly_unhover', hide);
+    nodes.forEach(node => {
+        node.on('plotly_hover', show);
+        node.on('plotly_unhover', hide);
+    });
 }
 
 const fmtHz = (f) => f >= 1e6 ? (f / 1e6).toPrecision(4) + ' MHz'
     : f >= 1e3 ? (f / 1e3).toPrecision(4) + ' kHz'
     : f.toPrecision(4) + ' Hz';
+
+const fmtSeconds = (t) => {
+    const a = Math.abs(t);
+    if (a === 0) return '0 s';
+    if (a >= 1) return t.toPrecision(4) + ' s';
+    if (a >= 1e-3) return (t * 1e3).toPrecision(4) + ' ms';
+    if (a >= 1e-6) return (t * 1e6).toPrecision(4) + ' µs';
+    return (t * 1e9).toPrecision(4) + ' ns';
+};
+
+// Group delay: tau_g = -dphi/domega. phase_deg is already unwrapped by the
+// engine (no phase-jump artifacts to guard against), and degrees are
+// dimensionless, so deg/Hz is already seconds; dividing by 360 converts
+// degrees to cycles, and cycles per Hz is exactly seconds. A central
+// difference over the (non-uniform, log-spaced) frequency array; the two
+// endpoints fall back to a one-sided difference.
+function groupDelay(f, phaseDeg) {
+    const n = f.length;
+    const tau = new Array(n);
+    for (let i = 0; i < n; i++) {
+        const lo = i > 0 ? i - 1 : i;
+        const hi = i < n - 1 ? i + 1 : i;
+        tau[i] = lo === hi ? 0 : -(phaseDeg[hi] - phaseDeg[lo]) / (360 * (f[hi] - f[lo]));
+    }
+    return tau;
+}
 
 // The unit of H itself, so the Nyquist axes (which plot Re/Im of H) can be
 // labelled. A voltage or current gain is a ratio -- dimensionless, no unit.
@@ -1702,14 +1728,25 @@ function renderPlotly(data, kind) {
         yaxis: valueAxis('Phase (°)', phaseDtick(data.phase_deg))
     }, PLOT_CONFIG);
 
-    linkFrequencyZoom('bode-mag-plot', 'bode-phase-plot');
-    linkHoverReadout('bode-mag-plot', 'bode-phase-plot', els.bodeReadout, (i) =>
+    const tau = groupDelay(data.f, data.phase_deg);
+    Plotly.newPlot('bode-delay-plot', [{
+        x: data.f, y: tau, type: 'scatter', mode: 'lines',
+        line: { color: '#f59e0b', width: 2 }, name: 'Group delay', hoverinfo: 'none'
+    }], {
+        ...PLOT_BASE_LAYOUT, title: 'Group Delay', hovermode: 'x',
+        xaxis: freqAxis('Frequency (Hz)'), yaxis: valueAxis('Delay (s)')
+    }, PLOT_CONFIG);
+
+    linkFrequencyZoom('bode-mag-plot', 'bode-phase-plot', 'bode-delay-plot');
+    linkHoverReadout(['bode-mag-plot', 'bode-phase-plot', 'bode-delay-plot'], els.bodeReadout, (i) =>
         `<b>f</b> ${fmtHz(data.f[i])}` +
         ` &nbsp; <b>Gain</b> ${data.mag_db[i].toFixed(2)} dB` +
-        ` &nbsp; <b>Phase</b> ${data.phase_deg[i].toFixed(2)}°`,
+        ` &nbsp; <b>Phase</b> ${data.phase_deg[i].toFixed(2)}°` +
+        ` &nbsp; <b>Delay</b> ${fmtSeconds(tau[i])}`,
     data.f,
-    (i) => `${fmtHz(data.f[i])}  ${data.mag_db[i].toFixed(2)} dB`,
-    (i) => `${fmtHz(data.f[i])}  ${data.phase_deg[i].toFixed(2)}°`);
+    [(i) => `${fmtHz(data.f[i])}  ${data.mag_db[i].toFixed(2)} dB`,
+     (i) => `${fmtHz(data.f[i])}  ${data.phase_deg[i].toFixed(2)}°`,
+     (i) => `${fmtHz(data.f[i])}  ${fmtSeconds(tau[i])}`]);
 
     const unit = TF_UNIT[kind] ?? '';
     Plotly.newPlot('nyquist-plot', [{
@@ -1983,13 +2020,13 @@ function handleComparePlots() {
                  yaxis: valueAxis('Phase (°)', phaseDtick(orig.phase_deg.concat(approx.phase_deg))) }, PLOT_CONFIG);
 
             linkFrequencyZoom('compare-mag-plot', 'compare-phase-plot');
-            linkHoverReadout('compare-mag-plot', 'compare-phase-plot', els.compareReadout, (i) =>
+            linkHoverReadout(['compare-mag-plot', 'compare-phase-plot'], els.compareReadout, (i) =>
                 `<b>f</b> ${fmtHz(orig.f[i])}` +
                 ` &nbsp; <b>Gain</b> ${orig.mag_db[i].toFixed(2)}/${approx.mag_db[i].toFixed(2)} dB` +
                 ` &nbsp; <b>Phase</b> ${orig.phase_deg[i].toFixed(2)}/${approx.phase_deg[i].toFixed(2)}°`,
             orig.f,
-            (i) => `${fmtHz(orig.f[i])}  ${orig.mag_db[i].toFixed(2)} / ${approx.mag_db[i].toFixed(2)} dB`,
-            (i) => `${fmtHz(orig.f[i])}  ${orig.phase_deg[i].toFixed(2)} / ${approx.phase_deg[i].toFixed(2)}°`);
+            [(i) => `${fmtHz(orig.f[i])}  ${orig.mag_db[i].toFixed(2)} / ${approx.mag_db[i].toFixed(2)} dB`,
+             (i) => `${fmtHz(orig.f[i])}  ${orig.phase_deg[i].toFixed(2)} / ${approx.phase_deg[i].toFixed(2)}°`]);
 
         } catch (e) {
             showGlobalError("UI Plot Error: " + e.message);
