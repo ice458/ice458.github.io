@@ -56,6 +56,8 @@ header {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    flex-wrap: wrap;
+    row-gap: 0.4rem;
     gap: 1rem;
 }
 
@@ -84,7 +86,18 @@ header {
 .header-actions {
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
     gap: 0.4rem;
+}
+
+/* Buttons keep their natural width and wrap onto a new line as a whole
+   rather than being squeezed narrower than their own text -- a shrunk
+   button doesn't clip, it wraps its label onto two lines inside itself,
+   which read as broken layout on anything narrower than a full desktop
+   window (a common case: an FHD screen at 125-150% OS display scaling
+   renders at an effective 1280-1536 CSS px, not the full 1920). */
+.header-actions > * {
+    flex-shrink: 0;
 }
 
 .header-actions .small-btn {
@@ -181,6 +194,8 @@ header {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    flex-wrap: wrap;
+    row-gap: 0.5rem;
     background: rgba(0, 0, 0, 0.2);
 }
 
@@ -258,6 +273,7 @@ textarea {
 
 .config-row {
     display: flex;
+    flex-wrap: wrap;
     gap: 1.5rem;
     margin-bottom: 1.5rem;
 }
@@ -266,7 +282,8 @@ textarea {
     flex-direction: column;
     align-items: flex-start;
     gap: 0.4rem;
-    flex: 1;
+    flex: 1 1 140px;
+    min-width: 140px;
 }
 
 .config-row select {
@@ -353,12 +370,12 @@ textarea {
 /* --- Schematic Editor (M6) --- */
 .palette {
     display: flex;
+    flex-wrap: wrap;
     gap: 0.5rem;
     margin-bottom: 1rem;
     padding: 0.5rem;
     background: rgba(0, 0, 0, 0.2);
     border-radius: 6px;
-    overflow-x: auto;
     align-items: center;
 }
 
@@ -482,6 +499,7 @@ textarea {
 /* Tabs */
 .tabs {
     display: flex;
+    flex-wrap: wrap;
     gap: 0.5rem;
 }
 
@@ -571,9 +589,12 @@ textarea {
 .canvas-overlay {
     position: absolute;
     top: 8px;
+    left: 8px;
     right: 8px;
     z-index: 20;
     display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
     gap: 6px;
     pointer-events: none;
 }
@@ -729,8 +750,8 @@ body.schematic-full .left-pane {
 }
 
 .workbench .subs-table { width: 100%; }
-.workbench .action-row { margin-top: 1rem; display: flex; gap: 0.5rem; }
-.workbench .action-row .primary-btn { flex: 1; padding: 0.5rem; font-size: 0.9rem; }
+.workbench .action-row { margin-top: 1rem; display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.workbench .action-row .primary-btn { flex: 1 1 140px; min-width: 140px; padding: 0.5rem; font-size: 0.9rem; }
 
 /* Narrow: stack the values above the plot rather than crushing both. */
 @media (max-width: 1400px) {
@@ -801,6 +822,8 @@ body.schematic-full .left-pane {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    flex-wrap: wrap;
+    row-gap: 0.5rem;
     margin-bottom: 2rem;
 }
 
@@ -811,6 +834,8 @@ body.schematic-full .left-pane {
 
 .badges {
     display: flex;
+    flex-wrap: wrap;
+    row-gap: 0.4rem;
     gap: 0.5rem;
 }
 
@@ -1044,23 +1069,27 @@ body.schematic-full .left-pane {
 
 .action-row {
     display: flex;
+    flex-wrap: wrap;
     gap: 1rem;
 }
 
 .action-row button {
-    flex: 1;
+    flex: 1 1 120px;
+    min-width: 120px;
 }
 
 /* --- M3: Plot Tab --- */
 .plot-config-row {
     display: flex;
+    flex-wrap: wrap;
     gap: 1rem;
     margin-bottom: 1.5rem;
     align-items: flex-end;
 }
 
 .plot-config-row .control-group {
-    flex: 1;
+    flex: 1 1 110px;
+    min-width: 110px;
     flex-direction: column;
     align-items: flex-start;
     gap: 0.4rem;
@@ -1106,6 +1135,11 @@ body.schematic-full .left-pane {
     position: absolute;
     top: 44px;
     right: 8px;
+    /* Every description column used to force nowrap, so this panel could
+       only ever be as wide as its widest row (~350-400px) -- wider than a
+       narrow schematic pane can hold. Capped relative to the canvas and
+       scrollable, with the description column now allowed to wrap. */
+    max-width: calc(100% - 16px);
     z-index: 25;
     background: rgba(15, 23, 42, 0.95);
     border: 1px solid var(--border-color);
@@ -1115,6 +1149,17 @@ body.schematic-full .left-pane {
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
     max-height: calc(100% - 56px);
     overflow-y: auto;
+    overflow-x: auto;
+}
+
+.shortcuts-panel table {
+    table-layout: auto;
+}
+
+/* The key-combo column stays compact and unwrapped; the description is the
+   one that needs room, so it is the one allowed to wrap. */
+.shortcuts-panel td:last-child {
+    white-space: normal;
 }
 
 .shortcuts-panel td {
