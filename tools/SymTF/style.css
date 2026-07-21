@@ -750,7 +750,23 @@ body.schematic-full .left-pane {
 }
 
 .workbench .subs-table { width: 100%; }
-.workbench .action-row { margin-top: 1rem; display: flex; flex-wrap: wrap; gap: 0.5rem; }
+
+/* Clear / Solve harder sit below the symbols table, so with enough symbols
+   to need numeric mode in the first place (that's exactly when Solve harder
+   appears) they were exactly what a long scroll buried -- the button existed
+   but reaching it meant scrolling past every row first. Sticky keeps it at
+   the bottom of the visible list at all times instead. */
+.workbench .action-row {
+    position: sticky;
+    bottom: 0;
+    margin-top: 1rem;
+    padding: 0.6rem 0 0.1rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    background: rgba(15, 17, 26, 0.95);
+    border-top: 1px solid var(--border-color);
+}
 .workbench .action-row .primary-btn { flex: 1 1 140px; min-width: 140px; padding: 0.5rem; font-size: 0.9rem; }
 
 /* Narrow: stack the values above the plot rather than crushing both.
