@@ -226,13 +226,13 @@ const W = (id, x1, y1, x2, y2) => ({ id, x1, y1, x2, y2 });
 
 {
     // Coupled inductor pair (mutual inductance / transformer): K1 at
-    // (100,100), value "L1 L2 k". Pins: p1+ (70,80), p1- (70,120),
-    // p2+ (130,80), p2- (130,120).
+    // (100,100), value "L1 L2 k". Pins: p1+ (80,80), p1- (80,120),
+    // p2+ (120,80), p2- (120,120).
     const K = (value) => ({
         components: [
             { type: "K", name: "K1", value, x: 100, y: 100, rot: 0, mirror: false },
-            LABEL(70, 80, "p1p"), LABEL(70, 120, "p1m"),
-            LABEL(130, 80, "p2p"), LABEL(130, 120, "p2m")
+            LABEL(80, 80, "p1p"), LABEL(80, 120, "p1m"),
+            LABEL(120, 80, "p2p"), LABEL(120, 120, "p2m")
         ],
         wires: []
     });

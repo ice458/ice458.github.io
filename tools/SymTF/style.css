@@ -444,10 +444,11 @@ textarea {
 .oae-row > span { width: 34px; color: var(--text-secondary); }
 .oae-row > small { color: var(--text-secondary); }
 
-.schematic-opamp-editor input[type="text"],
-.schematic-opamp-editor .oae-name,
-.schematic-opamp-editor .oae-a0,
-.schematic-opamp-editor .oae-gbw {
+/* Every text field in a row, by structure rather than by an enumerated list
+   of field classes -- the K editor's .oae-l1/.oae-l2/.oae-k fields were
+   invisible to this rule (unstyled, unflexed browser-default inputs) until
+   this stopped being a name-by-name list. */
+.schematic-opamp-editor .oae-row input {
     flex: 1;
     min-width: 0;
     background: var(--bg-input);

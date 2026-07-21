@@ -248,19 +248,19 @@ eq("wire shorting op-amp inputs is split", wireList(), [[-30, -50, -30, -10], [-
 // A coupled inductor pair (transformer): either winding is a pin pair too.
 eq("K pins (unrotated): primary+, primary-, secondary+, secondary-",
    t.absPins({ type: "K", x: 0, y: 0, rot: 0, mirror: false }),
-   [{ x: -30, y: -20 }, { x: -30, y: 20 }, { x: 30, y: -20 }, { x: 30, y: 20 }]);
+   [{ x: -20, y: -20 }, { x: -20, y: 20 }, { x: 20, y: -20 }, { x: 20, y: 20 }]);
 
 t.reset();
 t.model.components = [{ id: 1, type: "K", x: 0, y: 0, rot: 0, mirror: false }];
-t.model.wires = [{ id: 2, x1: -30, y1: -50, x2: -30, y2: 50 }];
+t.model.wires = [{ id: 2, x1: -20, y1: -50, x2: -20, y2: 50 }];
 t.normalizeWires();
-eq("wire shorting K's primary winding is split", wireList(), [[-30, -50, -30, -20], [-30, 20, -30, 50]].sort());
+eq("wire shorting K's primary winding is split", wireList(), [[-20, -50, -20, -20], [-20, 20, -20, 50]].sort());
 
 t.reset();
 t.model.components = [{ id: 1, type: "K", x: 0, y: 0, rot: 0, mirror: false }];
-t.model.wires = [{ id: 2, x1: 30, y1: -50, x2: 30, y2: 50 }];
+t.model.wires = [{ id: 2, x1: 20, y1: -50, x2: 20, y2: 50 }];
 t.normalizeWires();
-eq("wire shorting K's secondary winding is split", wireList(), [[30, -50, 30, -20], [30, 20, 30, 50]].sort());
+eq("wire shorting K's secondary winding is split", wireList(), [[20, -50, 20, -20], [20, 20, 20, 50]].sort());
 
 // --- attached wires re-route instead of going diagonal ---
 // Dragging perpendicular to a wire is the case that turns a moved endpoint into

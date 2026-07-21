@@ -402,6 +402,29 @@ def test_symbolic_cascades_default_to_factored():
     assert _solve_full("svf1", "p1")["tf"].get("factored") is None
 
 
+def test_current_source_input_also_factors():
+    """A current-source-driven cascade must ALSO return the factored form.
+    _block_solve_tf previously assumed the input always has an MNA branch-
+    current row (true for V/E/O/K); an independent current source has none
+    (see _build_mna's "I" stamp), so looking it up raised inside
+    _block_compose -- silently caught by the caller as "not decomposable"
+    and falling back to the flat solver for every I-type input, factored
+    cascade or not."""
+    from bench.circuits import mfb_chain
+    netlist, _, out = mfb_chain(2)
+    netlist_i = netlist.replace("V1 in 0 Vs", "I1 in 0 Is")
+    pr = json.loads(parse_netlist(netlist_i))
+    assert pr["ok"], pr.get("errors")
+    circuit = json.loads(pr["circuit_json"])
+    circuit["input"] = {"name": "I1"}
+    circuit["output"] = {"node": out}
+    r = json.loads(solve(json.dumps(circuit)))
+    assert r["ok"], r.get("errors")
+    assert r["stats"]["method"] == "block-factored"
+    assert r["tf"]["factored"] is True
+    assert r["tf"]["kind"] == "transimpedance"
+
+
 def test_block_path_matches_flat_solve_numerically():
     """The block-composed H must equal the flat solve. For mfb3 the flat solve
     is feasible (compare as rational functions); validate exactly there, and for

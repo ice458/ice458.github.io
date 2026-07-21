@@ -643,6 +643,11 @@ els.tabs.forEach(btn => {
 // There is no Apply button; the fields are the interface.
 let subsLiveTimer = null;
 let fixedLiveTimer = null;
+
+// Persists typed substitution values by symbol name across table rebuilds,
+// even through a rebuild where a symbol has no row at all (see
+// populateSubstitutionTable). Only "Clear" resets it.
+let subsValueCache = {};
 els.subsTbody.addEventListener('input', (e) => {
     if (e.target.classList.contains('subs-val-input')) {
         clearTimeout(subsLiveTimer);
@@ -671,6 +676,7 @@ els.subsTbody.addEventListener('input', (e) => {
 
 els.clearSubsBtn.addEventListener('click', () => {
     document.querySelectorAll('.subs-val-input').forEach(input => input.value = '');
+    subsValueCache = {};
     clearSubsError();
     if (numericMode) {
         // No symbolic form to fall back to; just drop the stale numeric result
@@ -1393,9 +1399,20 @@ function populateSubstitutionTable(symbols) {
     // Keep whatever the user already typed: a re-analysis (including the silent
     // auto-refresh after an edit) rebuilds this table, and wiping the values
     // every time would make the numbers impossible to keep.
-    const prev = {};
+    //
+    // Scraping only the currently-rendered rows into a LOCAL object was not
+    // enough: a symbol that temporarily has no row (e.g. it drops out of the
+    // transfer function entirely for a current-source input -- a component in
+    // series with an ideal current source cannot affect a downstream reading,
+    // by definition of a current source, so it correctly has nothing to
+    // substitute) never gets its typed value carried anywhere, and switching
+    // back loses it for good. subsValueCache is the persistent version: it
+    // only ever gains entries here (merged from whatever is on screen right
+    // before the rebuild), so a symbol's value survives however many rebuilds
+    // happen while it happens not to be shown, and reappears the moment it is
+    // relevant again. Only the "Clear" button resets it.
     els.subsTbody.querySelectorAll('.subs-val-input').forEach(inp => {
-        if (inp.value.trim() !== '') prev[inp.dataset.sym] = inp.value;
+        if (inp.value.trim() !== '') subsValueCache[inp.dataset.sym] = inp.value;
     });
 
     // The rebuild may happen while the user is typing in this very table (the
@@ -1411,7 +1428,7 @@ function populateSubstitutionTable(symbols) {
 
     [...symbols].sort(natCompare).forEach(sym => {
         const tr = document.createElement('tr');
-        const val = prev[sym] ? ` value="${escHtml(prev[sym])}"` : '';
+        const val = subsValueCache[sym] ? ` value="${escHtml(subsValueCache[sym])}"` : '';
         tr.innerHTML = `
             <td>${escHtml(sym)}</td>
             <td><input type="text" class="text-input subs-val-input" data-sym="${escHtml(sym)}"${val} placeholder="e.g. 1k, 4.7u"></td>
@@ -1531,7 +1548,11 @@ async function handlePlotting() {
     const points = parseInt(els.plotPoints.value);
     if (isNaN(f_min) || isNaN(f_max) || isNaN(points) || f_min <= 0 || f_max <= f_min) return;
 
-    const range = { f_min, f_max, points: Math.min(Math.max(points, 10), 1000) };
+    // Keys must match engine.py's freq_response range_json exactly
+    // (f_start/f_end/n_points) -- sending f_min/f_max/points meant every one
+    // of these fields silently fell through to the engine's own defaults
+    // (1 Hz .. 1 GHz, 200 points) regardless of what was typed here.
+    const range = { f_start: f_min, f_end: f_max, n_points: Math.min(Math.max(points, 10), 1000) };
     try {
         const tf = currentSubstitutedTf;
         const seq = ++plotSeq;
@@ -2003,11 +2024,13 @@ function handleComparePlots() {
             }
 
             // Same frequency range as the main plot, so "compare" compares the
-            // band the user is actually looking at.
+            // band the user is actually looking at. Keys must match
+            // engine.py's freq_response (f_start/f_end/n_points), same fix
+            // as handlePlotting's range object.
             const range = {
-                f_min: parseFloat(parseSIValue(els.plotFmin.value)) || 1,
-                f_max: parseFloat(parseSIValue(els.plotFmax.value)) || 1e6,
-                points: parseInt(els.plotPoints.value) || 200
+                f_start: parseFloat(parseSIValue(els.plotFmin.value)) || 1,
+                f_end: parseFloat(parseSIValue(els.plotFmax.value)) || 1e6,
+                n_points: parseInt(els.plotPoints.value) || 200
             };
 
             const [origPlotRes, approxPlotRes] = await Promise.all([

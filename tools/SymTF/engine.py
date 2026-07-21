@@ -1348,13 +1348,28 @@ def _block_solve_tf(block_elements, active_src, zeroed_nodes, output_node, limit
     """V(output_node) with a unit source at active_src and other input ports
     shorted to ground -- one term of a block's superposition.
 
-    active_src is a node name (a torn input cut) or ``('elem', name)`` naming a
-    real source element already inside the block."""
+    active_src is a node name (a torn input cut -- always injected as a unit
+    VOLTAGE source: an interior cut is always an op-amp/VCVS output, which is
+    a voltage source in the Thevenin sense regardless of the circuit's own
+    primary input type) or ``('elem', name)`` naming a real source element
+    already inside the block. That real element is a unit VOLTAGE excitation
+    via its MNA branch-current row if it is type V/E/O/K, or a unit CURRENT
+    injected directly at its own two nodes if it is type I -- an independent
+    current source has NO branch-current row at all (see _build_mna's "I"
+    stamp), so looking it up in the branch map raised a KeyError that the
+    caller silently swallowed as "not a decomposable chain", which is what
+    made every current-source-driven cascade fall back to the flat solver
+    (losing the factored form) instead of actually being one."""
     els = list(block_elements)
     for i, nd in enumerate(zeroed_nodes):
         els.append({"name": f"_Z{i}", "type": "V", "n1": nd, "n2": "0", "value": "0"})
+
+    current_src_nodes = None
     if isinstance(active_src, tuple):
         input_name = active_src[1]
+        src_el = next(el for el in block_elements if el["name"] == input_name)
+        if src_el["type"] == "I":
+            current_src_nodes = (src_el.get("n1"), src_el.get("n2"))
     else:
         els.append({"name": "_SRC", "type": "V", "n1": active_src, "n2": "0", "value": "1"})
         input_name = "_SRC"
@@ -1365,10 +1380,19 @@ def _block_solve_tf(block_elements, active_src, zeroed_nodes, output_node, limit
     node_idx = {nd: i for i, nd in enumerate(node_list)}
     if output_node not in node_idx:
         raise _SolverFallback("block output not a node")
-    group2 = _branch_names(els)
-    branch_map = {nm: len(node_list) + i for i, nm in enumerate(group2)}
+
     z_tf = zeros(A.rows, 1)
-    z_tf[branch_map[input_name]] = sp.Integer(1)
+    if current_src_nodes is not None:
+        n1, n2 = current_src_nodes
+        if n1 and n1 != "0":
+            z_tf[node_idx[n1]] += 1
+        if n2 and n2 != "0":
+            z_tf[node_idx[n2]] -= 1
+    else:
+        group2 = _branch_names(els)
+        branch_map = {nm: len(node_list) + i for i, nm in enumerate(group2)}
+        z_tf[branch_map[input_name]] = sp.Integer(1)
+
     H_field, F, has_pi = _frac_solve_field(
         A, z_tf, node_idx[output_node], None,
         max_terms=limits["max_terms"], max_product=limits["max_product"],

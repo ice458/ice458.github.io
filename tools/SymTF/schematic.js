@@ -101,9 +101,9 @@ const SYMBOLS = {
         // coupling coefficient is stored negative (the editor's "reverse
         // secondary polarity" checkbox) -- the sign of k IS the polarity, so
         // (unlike E/G) this needs no separate flip field.
-        box: [-30, -24, 30, 24],
+        box: [-20, -22, 20, 22],
         // pins: primary+, primary-, secondary+, secondary-
-        pins: [{ x: -30, y: -20 }, { x: -30, y: 20 }, { x: 30, y: -20 }, { x: 30, y: 20 }],
+        pins: [{ x: -20, y: -20 }, { x: -20, y: 20 }, { x: 20, y: -20 }, { x: 20, y: 20 }],
         draw: (comp) => transformerShapes(comp)
     },
     // A netname is not a conductor, so its anchor is deliberately a hollow
@@ -198,15 +198,19 @@ function transformerShapes(comp) {
     const dot = (x, y) => new Konva.Circle({ x, y, radius: 2, paint: 'fill' });
 
     return [
-        new Konva.Path({ data: COIL_PATH, x: -30, y: 0, rotation: 90, strokeWidth: 2, lineJoin: 'round' }),
-        new Konva.Path({ data: COIL_PATH, x: 30, y: 0, rotation: 90, strokeWidth: 2, lineJoin: 'round' }),
+        // Both coils bulge TOWARD the core, not the same absolute direction:
+        // rotation:90 on the left one and rotation:-90 (its mirror image) on
+        // the right one, or the pair reads as two identical copies rather
+        // than a symmetric, facing transformer winding.
+        new Konva.Path({ data: COIL_PATH, x: -20, y: 0, rotation: 90, strokeWidth: 2, lineJoin: 'round' }),
+        new Konva.Path({ data: COIL_PATH, x: 20, y: 0, rotation: -90, strokeWidth: 2, lineJoin: 'round' }),
         // Core: two vertical bars between the windings.
-        new Konva.Line({ points: [-4, -20, -4, 20], strokeWidth: 2 }),
-        new Konva.Line({ points: [4, -20, 4, 20], strokeWidth: 2 }),
+        new Konva.Line({ points: [-3, -20, -3, 20], strokeWidth: 2 }),
+        new Konva.Line({ points: [3, -20, 3, 20], strokeWidth: 2 }),
         // Dot convention: primary's + is always the top pin; the secondary's
         // follows unless the coupling is stored negative (reversed winding).
-        dot(-24, -16),
-        dot(24, reversed ? 16 : -16)
+        dot(-14, -16),
+        dot(14, reversed ? 16 : -16)
     ];
 }
 
@@ -1797,9 +1801,9 @@ function beginKEditor(comp) {
     box.style.top = `${screen.y - 20}px`;
     box.innerHTML = `
         <label class="oae-row"><span>Name</span><input class="oae-name" spellcheck="false" value="${comp.name}"></label>
-        <label class="oae-row"><span>L1 (primary)</span><input class="oae-l1" spellcheck="false"></label>
-        <label class="oae-row"><span>L2 (secondary)</span><input class="oae-l2" spellcheck="false"></label>
-        <label class="oae-row"><span>k (0-1)</span><input class="oae-k" spellcheck="false"></label>
+        <label class="oae-row" title="Primary inductance"><span>L1</span><input class="oae-l1" spellcheck="false"></label>
+        <label class="oae-row" title="Secondary inductance"><span>L2</span><input class="oae-l2" spellcheck="false"></label>
+        <label class="oae-row" title="Coupling coefficient, 0 to 1"><span>k</span><input class="oae-k" spellcheck="false"></label>
         <label class="oae-check"><input type="checkbox" class="oae-reverse"> Reverse secondary polarity</label>
         <div class="oae-actions"><button class="oae-ok">OK</button></div>
     `;
