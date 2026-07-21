@@ -1055,3 +1055,45 @@ class TestCoupledInductor:
         assert sr["ok"], sr.get("errors")
         # V input + a current (branch) output -- see _determine_tf_kind.
         assert sr["tf"]["kind"] == "transimpedance"
+
+
+# ===================================================================
+#  Driving-Point Impedance ("kill the real source, probe elsewhere")
+# ===================================================================
+# This is exactly the one-off circuit app.js's computeImpedance() builds:
+# NOT the "same node, current input" trick (that discards the real driven
+# analysis entirely), but a separate circuit with the real source killed and
+# a unit test current injected at whatever node is being probed.
+
+class TestDrivingPointImpedance:
+    """RC low-pass, Vin->R1->out->C1->gnd. Killing Vin (a voltage source, so
+    a SHORT to ground, not a removed branch) and probing "out" with a unit
+    test current must give exactly R1 || C1 -- the textbook Zout of an RC
+    low-pass with an ideal voltage source at the input."""
+
+    def test_zout_of_rc_lowpass_is_r_parallel_c(self):
+        netlist = "Vin in 0 Vin\nR1 in out R1\nC1 out 0 C1"
+        pr = json.loads(parse_netlist(netlist))
+        assert pr["ok"], pr.get("errors")
+        elements = json.loads(pr["circuit_json"])["elements"]
+
+        idx = next(i for i, el in enumerate(elements) if el["name"] == "Vin")
+        assert elements[idx]["type"] == "V"
+        killed = [dict(el) for el in elements]
+        killed[idx]["value"] = "0"   # kill: short, not remove
+        killed.append({"name": "_Ztest", "type": "I", "n1": "out", "n2": "0", "value": "1"})
+
+        circuit = {
+            "elements": killed,
+            "input": {"kind": "I", "name": "_Ztest"},
+            "output": {"kind": "node_voltage", "node": "out"},
+        }
+        sr = json.loads(solve(json.dumps(circuit)))
+        assert sr["ok"], sr.get("errors")
+        assert sr["tf"]["kind"] == "transimpedance"
+
+        R1, C1 = symbols("R1 C1")   # plain, matching _cached_sympify's own convention
+        Z = sympify(sr["tf"]["H_expr"])
+        expected = R1 / (1 + s * R1 * C1)
+        diff = simplify(cancel(Z - expected))
+        assert diff == 0 or diff.equals(0)

@@ -152,7 +152,14 @@ const els = {
     sensError: document.getElementById('sens-error'),
     sensResultsContainer: document.getElementById('sens-results-container'),
     sensResultsList: document.getElementById('sens-results-list'),
-    sensNotes: document.getElementById('sens-notes')
+    sensNotes: document.getElementById('sens-notes'),
+
+    // Driving-point impedance (a separate, one-off measurement from H(s))
+    impedanceNode: document.getElementById('impedance-node'),
+    computeImpedanceBtn: document.getElementById('compute-impedance-btn'),
+    impedanceResult: document.getElementById('impedance-result'),
+    impedanceLatex: document.getElementById('impedance-latex'),
+    impedanceError: document.getElementById('impedance-error')
 };
 
 // --- Left Tabs (Schematic / Text) ---
@@ -521,9 +528,11 @@ function syncSchematicIoOptions() {
     
     const prevInput = els.inputSource.value;
     const prevOutput = els.outputNode.value;
-    
+    const prevImpedance = els.impedanceNode ? els.impedanceNode.value : null;
+
     els.inputSource.innerHTML = '';
     els.outputNode.innerHTML = '';
+    if (els.impedanceNode) els.impedanceNode.innerHTML = '';
 
     // Options are node names only -- the label beside each dropdown already says
     // what the choice means (input voltage source / output voltage). Choosing an
@@ -541,6 +550,13 @@ function syncSchematicIoOptions() {
         outOpt.value = lbl;
         outOpt.textContent = lbl;
         els.outputNode.appendChild(outOpt);
+
+        if (els.impedanceNode) {
+            const zOpt = document.createElement('option');
+            zOpt.value = lbl;
+            zOpt.textContent = lbl;
+            els.impedanceNode.appendChild(zOpt);
+        }
     });
 
     const labels = res.labels || [];
@@ -575,7 +591,87 @@ function syncSchematicIoOptions() {
             ? labels.find(l => l !== els.inputSource.value)
             : guess;
     }
+    // Zout (the output node) is the more common ask than Zin, so default there.
+    if (els.impedanceNode) {
+        els.impedanceNode.value = has(els.impedanceNode, prevImpedance)
+            ? prevImpedance
+            : (prefer([/^v?out$/i]) ?? labels[labels.length - 1]);
+    }
 }
+
+// Driving-point impedance at any node -- a separate, one-off measurement,
+// deliberately NOT wired through the main Input Source/Output selection or
+// currentTf/currentSubstitutedTf. Zin/Zout has a real definition: kill the
+// circuit's own independent source (short it if it's a voltage source, open
+// it if current -- the two are not interchangeable) and read V/I from a
+// unit test current injected at the node in question. Reusing the "same
+// node, current input" trick from the main analysis would force throwing
+// away the real driven H(s) just to peek at an impedance; this keeps both on
+// screen at once by building its own one-off circuit and calling solve()
+// directly, leaving currentCircuitJson/currentTf untouched.
+function setImpedanceError(msg) {
+    els.impedanceError.textContent = msg;
+    els.impedanceError.classList.remove('hidden');
+    els.impedanceResult.classList.add('hidden');
+}
+function clearImpedanceError() {
+    els.impedanceError.classList.add('hidden');
+}
+
+async function computeImpedance() {
+    if (!currentCircuitJson || !currentCircuitJson.elements) {
+        setImpedanceError('Analyze a circuit first.');
+        return;
+    }
+    const probeNode = els.impedanceNode.value;
+    const realInput = currentCircuitJson.input;
+    if (!probeNode || !realInput || !realInput.name) {
+        setImpedanceError('No input source to kill for this measurement.');
+        return;
+    }
+
+    const elements = currentCircuitJson.elements.map(el => ({ ...el }));
+    const idx = elements.findIndex(el => el.name === realInput.name);
+    if (idx === -1) {
+        setImpedanceError('Could not find the input source element.');
+        return;
+    }
+
+    // Kill the real source: a voltage source becomes a short (0 V, branch
+    // kept -- the correct way to zero a voltage source, since removing the
+    // branch entirely would be an open, not a short); an independent current
+    // source becomes an open (removed entirely -- it has no "0 A" stamp to
+    // fall back to, per _build_mna's own "I" handling).
+    const killed = elements[idx].type === 'V'
+        ? elements.map((el, i) => i === idx ? { ...el, value: '0' } : el)
+        : elements.filter((_, i) => i !== idx);
+    killed.push({ name: '_Ztest', type: 'I', n1: probeNode, n2: '0', value: '1' });
+
+    const circuit = {
+        elements: killed,
+        input: { kind: 'I', name: '_Ztest' },
+        output: { kind: 'node_voltage', node: probeNode }
+    };
+
+    els.computeImpedanceBtn.disabled = true;
+    try {
+        const result = await Bridge.solveCircuit(circuit);
+        if (!result.ok) {
+            setImpedanceError('Impedance solve failed: ' + (result.errors || []).join('; '));
+            return;
+        }
+        clearImpedanceError();
+        els.impedanceResult.classList.remove('hidden');
+        katex.render(`Z(s) = ${result.tf.latex}`, els.impedanceLatex,
+            { displayMode: true, throwOnError: false });
+    } catch (e) {
+        setImpedanceError('UI Error: ' + e.message);
+    } finally {
+        els.computeImpedanceBtn.disabled = false;
+    }
+}
+els.computeImpedanceBtn?.addEventListener('click', computeImpedance);
+
 let autosaveTimer = null;
 document.addEventListener('schematicChange', () => {
     window.Schematic.setErrorHighlights([]);

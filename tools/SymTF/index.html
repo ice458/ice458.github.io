@@ -242,6 +242,22 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                          load, on every edit, and on port changes. Problems
                          surface here instead. -->
                     <div id="parse-error-box" class="error-box hidden" style="margin-top: 0.75rem;"></div>
+
+                    <!-- Driving-point impedance at any node: a separate,
+                         one-off measurement from the H(s) above. Zin/Zout
+                         means killing the REAL input source and probing
+                         elsewhere with a test current -- a different circuit
+                         than "the real source drives it", not just a toggle,
+                         so this never disturbs the main input/output above. -->
+                    <div class="control-group" style="margin-top: 0.75rem; border-top: 1px solid var(--border-color); padding-top: 0.75rem;">
+                        <label for="impedance-node" title="Kills the real input source (short if it's a voltage source, remove if current) and reads V/I from a unit test current injected at this node.">Impedance looking into node</label>
+                        <select id="impedance-node"></select>
+                        <button id="compute-impedance-btn" class="secondary-btn small-btn">Compute Z(s)</button>
+                    </div>
+                    <div id="impedance-result" class="hidden" style="margin-top: 0.5rem;">
+                        <div id="impedance-latex" class="math-display"></div>
+                    </div>
+                    <div id="impedance-error" class="error-box hidden" style="margin-top: 0.5rem;"></div>
                 </div>
             </section>
 
@@ -571,7 +587,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <script src="samples.js?v=6"></script>
     <script src="netlist.js?v=7"></script>
     <script src="schematic.js?v=9"></script>
-    <script src="app.js?v=21"></script>
+    <script src="app.js?v=22"></script>
     <script src="/consent.js" defer></script>
 </body>
 </html>
