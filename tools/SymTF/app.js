@@ -396,6 +396,18 @@ function selectedVirtualInput() {
     return opt && opt.dataset.isVirtual ? opt.value : null;
 }
 
+// Whether the injected virtual source drives the chosen node with a voltage
+// ('V', the default -- gain analysis) or a current ('I' -- transimpedance;
+// and, when the output node is the SAME node, the driving-point impedance
+// Z(s) there, since this tool never has a second independent source to kill).
+let inputKind = 'V';
+document.querySelectorAll('input[name="input-kind"]').forEach(r =>
+    r.addEventListener('change', () => {
+        inputKind = document.querySelector('input[name="input-kind"]:checked').value;
+        analyzeSchematic(true);
+    })
+);
+
 // Extraction is the single authority on whether the circuit can be analysed,
 // and this runs on every schematic edit -- so fixing whatever was wrong clears
 // the error and re-enables Analyze immediately, with no re-analyse needed. That
@@ -404,7 +416,8 @@ function selectedVirtualInput() {
 function updateNetlistPreview() {
     if (!window.Netlist || !window.Schematic) return;
     const res = window.Netlist.extract(window.Schematic.getModel(), {
-        virtualInput: selectedVirtualInput()
+        virtualInput: selectedVirtualInput(),
+        virtualInputKind: inputKind
     });
     // '*' starts a comment in this format, so the reasons it will not analyse
     // can sit in the preview without making the text invalid.
@@ -478,7 +491,7 @@ async function analyzeSchematic(silent = false) {
     await handleNetlistChange();         // engine parse -> currentCircuitJson
     if (analyzeBlocked) return;          // engine rejected the netlist
 
-    runAnalysis({ kind: 'V', name: inputName }, { node: outNode }, silent).catch(() => {});
+    runAnalysis({ kind: inputKind, name: inputName }, { node: outNode }, silent).catch(() => {});
 }
 
 
@@ -506,7 +519,7 @@ function syncSchematicIoOptions() {
         const inOpt = document.createElement('option');
         inOpt.value = lbl;
         inOpt.textContent = lbl;
-        inOpt.dataset.kind = 'V';
+        inOpt.dataset.kind = inputKind;
         inOpt.dataset.isVirtual = 'true';
         els.inputSource.appendChild(inOpt);
 
@@ -1004,6 +1017,19 @@ const _KIND_MAP = {
     'admittance_transfer': 'Admittance Transfer (I/V)'
 };
 
+// A transimpedance result (current-source input, voltage output) where the
+// input and output happen to be the SAME node is exactly the driving-point
+// impedance Z(s) at that node -- same analysis, clearer label for the case
+// the user actually asked for (pick one node, drive it with current, read
+// its own voltage).
+function kindLabel(kind) {
+    if (kind === 'transimpedance' && inputKind === 'I' &&
+        els.inputSource.value && els.inputSource.value === els.outputNode.value) {
+        return 'Impedance Z(s) (Ω)';
+    }
+    return _KIND_MAP[kind] || 'Transfer Function';
+}
+
 // A decomposable cascade is shown FACTORED by default (a product of readable
 // per-stage biquads). The user can expand it to the single flat H(s) when the
 // engine says that is small enough (tf.flat_available); flatViewExpanded is that
@@ -1075,7 +1101,7 @@ function renderTf(tf) {
             ? 'Component form' : 'Standard form (f₀, Q)';
     }
 
-    els.tfKindLabel.textContent = (_KIND_MAP[disp.kind] || 'Transfer Function')
+    els.tfKindLabel.textContent = kindLabel(disp.kind)
         + (factoredView ? ` — factored, ${disp.factors.length} stages` : '');
     els.numDegreeBadge.textContent = `Num Deg: ${disp.num_degree}`;
     els.denDegreeBadge.textContent = `Den Deg: ${disp.den_degree}`;

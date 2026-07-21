@@ -99,7 +99,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     <script src="https://unpkg.com/konva@9.3.6/konva.min.js"></script>
 
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="style.css?v=8">
+    <link rel="stylesheet" href="style.css?v=9">
 </head>
 <body>
 <!-- Google Tag Manager (noscript) -->
@@ -225,7 +225,11 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                     <h3>Port Configuration</h3>
                     <div class="io-controls">
                         <div class="control-group">
-                            <label for="input-source">Input voltage source at node</label>
+                            <label for="input-source">Input source at node</label>
+                            <div class="input-kind-toggle">
+                                <label><input type="radio" name="input-kind" value="V" checked> Voltage</label>
+                                <label><input type="radio" name="input-kind" value="I"> Current</label>
+                            </div>
                             <select id="input-source"></select>
                         </div>
                         <div class="control-group">
@@ -492,9 +496,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
          registered its DOMContentLoaded handler first. -->
     <script src="pyodide_bridge.js?v=6"></script>
     <script src="samples.js?v=6"></script>
-    <script src="netlist.js?v=5"></script>
+    <script src="netlist.js?v=6"></script>
     <script src="schematic.js?v=6"></script>
-    <script src="app.js?v=17"></script>
+    <script src="app.js?v=18"></script>
     <script src="/consent.js" defer></script>
 </body>
 </html>

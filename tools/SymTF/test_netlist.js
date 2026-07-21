@@ -318,6 +318,15 @@ const W = (id, x1, y1, x2, y2) => ({ id, x1, y1, x2, y2 });
     clash.components.push({ type: "R", name: "V_in", value: "1k", x: 400, y: 400, rot: 0, mirror: false });
     eq("T35 V_in が既存名と衝突したら退避する",
        Netlist.extract(clash, { virtualInput: "in" }).virtualSource, "V_in1");
+
+    // virtualInputKind: 'I' -- current-source input (transimpedance / Zin/Zout).
+    // Element name must start with 'I', not 'V', or the engine's own name/type
+    // check would reject the generated line.
+    const cur = Netlist.extract(model, { virtualInput: "in", virtualInputKind: "I" });
+    eq("T35 電流源入力: 抽出が通る", [cur.ok, cur.errors], [true, []]);
+    eq("T35 電流源入力: 素子名は I_ で始まる", cur.virtualSource, "I_in");
+    eq("T35 電流源入力: 生成ネットリスト", cur.text.split('\n'),
+       ["C1 out 0 C1", "R1 in out R1", "I_in in 0 I_in"]);
 }
 
 {

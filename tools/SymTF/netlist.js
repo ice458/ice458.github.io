@@ -222,6 +222,14 @@ window.Netlist = {
         let virtualSource = null;
         let virtualLine = null;
         if (opts.virtualInput) {
+            // 'V' (default) drives the node with a voltage source -- the normal
+            // gain analysis. 'I' drives it with a current source instead: the
+            // engine already computes "transimpedance" (V-out/I-in) for that
+            // combination, and choosing the SAME node for input and output
+            // turns it into the driving-point impedance Z(s) at that node
+            // (no separate "kill the source" step needed -- this tool never
+            // has more than one independent source in a circuit).
+            const kind = opts.virtualInputKind === 'I' ? 'I' : 'V';
             const lbl = model.components.find(
                 c => c.type === 'LABEL' && c.name === opts.virtualInput);
             if (!lbl) {
@@ -230,19 +238,23 @@ window.Netlist = {
                 const p = absPins(lbl)[0];
                 const node = byPoint[`${p.x},${p.y}`];
                 if (node === "0") {
-                    // V_in が短絡される。名前ではなく解決後のノードで判定する
-                    // こと -- ラベル 'in' が接地ネットに乗っている場合がある。
+                    // V_in/I_in が短絡される。名前ではなく解決後のノードで判定
+                    // すること -- ラベル 'in' が接地ネットに乗っている場合がある。
                     errors.push({
                         msg: `Input '${opts.virtualInput}' is on the ground net and cannot be the input`,
                         componentId: lbl.id, x: lbl.x, y: lbl.y
                     });
                 } else {
                     const taken = new Set(model.components.map(c => c.name));
-                    virtualSource = 'V_in';
-                    for (let i = 1; taken.has(virtualSource); i++) virtualSource = `V_in${i}`;
+                    // Element name must start with its type letter (checked
+                    // below, same rule as any user-placed part) -- so the
+                    // current-source variant cannot reuse the "V_in" name.
+                    const base = kind === 'I' ? 'I_in' : 'V_in';
+                    virtualSource = base;
+                    for (let i = 1; taken.has(virtualSource); i++) virtualSource = `${base}${i}`;
                     virtualLine = `${virtualSource} ${node} 0 ${virtualSource}`;
                     elemNodes.push({
-                        comp: { id: null, name: virtualSource, type: 'V' },
+                        comp: { id: null, name: virtualSource, type: kind },
                         nodes: [node, "0"]
                     });
                 }

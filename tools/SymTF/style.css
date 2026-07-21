@@ -193,7 +193,22 @@ header {
 .control-group {
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
     gap: 0.75rem;
+}
+
+.input-kind-toggle {
+    display: flex;
+    gap: 0.5rem;
+    font-size: 0.8rem;
+}
+
+.input-kind-toggle label {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    color: var(--text-secondary);
+    cursor: pointer;
 }
 
 label {

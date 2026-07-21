@@ -495,6 +495,47 @@ class TestTFKindVoltageGain:
         assert tf["kind"] == "voltage_gain"
 
 
+class TestTFKindTransimpedanceAndImpedance:
+    """Current-source input -- transimpedance in general, and the driving-point
+    impedance Z(s) at a node when input and output are the SAME node (the
+    schematic UI's route to Zin/Zout: drive with current, read that node's own
+    voltage -- no separate "kill the source" step, since a circuit built by
+    this tool never has more than one independent source to begin with)."""
+
+    def test_kind_is_transimpedance(self):
+        netlist = "Iin in 0 Iin\nR1 in out R1\nC1 out 0 C1"
+        tf = solve_circuit(
+            netlist,
+            {"kind": "I", "name": "Iin"},
+            {"kind": "node_voltage", "node": "out"},
+        )
+        assert tf["kind"] == "transimpedance"
+
+    def test_impedance_of_bare_resistor(self):
+        """Iin -> R1 -> gnd, read V at the driven node ⇒ Z(s) = R1."""
+        netlist = "Iin in 0 Iin\nR1 in 0 R1"
+        tf = solve_circuit(
+            netlist,
+            {"kind": "I", "name": "Iin"},
+            {"kind": "node_voltage", "node": "in"},
+        )
+        assert tf["kind"] == "transimpedance"
+        R1 = Symbol("R1", positive=True)
+        assert_tf_equal(tf, R1)
+
+    def test_impedance_of_parallel_rc(self):
+        """Iin -> node -> {R1, C1} -> gnd, read V at that same node
+        ⇒ Z(s) = R1 / (1 + s*R1*C1) (the classic parallel-RC impedance)."""
+        netlist = "Iin in 0 Iin\nR1 in 0 R1\nC1 in 0 C1"
+        tf = solve_circuit(
+            netlist,
+            {"kind": "I", "name": "Iin"},
+            {"kind": "node_voltage", "node": "in"},
+        )
+        R1, C1 = symbols("R1 C1", positive=True)
+        assert_tf_equal(tf, R1 / (1 + s * R1 * C1))
+
+
 # ===================================================================
 #  Frequency Response Tests
 # ===================================================================
