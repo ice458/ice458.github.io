@@ -162,6 +162,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             <div class="help-panel-body">
                 <section>
                     <h4>Getting started</h4>
+                    <p>This is a <b>small-signal (AC) symbolic</b> tool, not a SPICE-like simulator --
+                       there is no DC operating point or transient analysis, and every part is already
+                       linear: a transistor's small-signal model is drawn directly as an R/G/E
+                       combination, not as a transistor.</p>
                     <p>Draw a circuit (or load an Example) and drop a <b>Netname</b> label on the
                        input and output nodes. Pick them in Port Configuration and H(s) appears
                        automatically -- there is no Analyze button, every edit re-solves.</p>
@@ -176,7 +180,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 </section>
                 <section>
                     <h4>Port configuration &amp; impedance</h4>
-                    <p>The Voltage/Current toggle picks what drives the circuit. Choosing the
+                    <p>There is no source part to place -- picking a node here injects a voltage or
+                       current source there internally (per the Voltage/Current toggle); it is never a
+                       component on the schematic, and its own name never appears in H(s). Choosing the
                        <em>same</em> node for input and output with Current gives the driving-point
                        impedance directly -- or use the separate "Impedance at node" tool to get
                        Zin/Zout without touching the main H(s) at all (it kills the real source and
@@ -200,6 +206,15 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                     <p>See which component matters most for a factored section's f0/Q, or for the
                        magnitude/phase at a chosen frequency -- results are sorted by impact, the
                        biggest lever first.</p>
+                </section>
+                <section>
+                    <h4>Save &amp; share</h4>
+                    <p><b>Export</b> writes a JSON file with everything: the schematic, the substituted
+                       values, the approximation steps actually applied, and the plot/view settings.
+                       <b>Import</b> restores all of it. <b>Share Link</b> is lighter and different: it
+                       encodes just the circuit diagram into the page URL, nothing else and nothing
+                       uploaded anywhere -- opening that link redraws the schematic with no file to
+                       send.</p>
                 </section>
             </div>
         </div>
