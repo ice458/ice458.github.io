@@ -51,6 +51,7 @@ import engine
         approximate: pyodide.runPython("engine.approximate"),
         freq_response: pyodide.runPython("engine.freq_response"),
         poles_zeros: pyodide.runPython("engine.poles_zeros"),
+        sensitivity: pyodide.runPython("engine.sensitivity"),
     };
 }
 

@@ -30,7 +30,7 @@ const Bridge = {
     },
 
     _spawn() {
-        this.worker = new Worker('engine_worker.js?v=7');
+        this.worker = new Worker('engine_worker.js?v=8');
 
         this.worker.onmessage = (e) => {
             const msg = e.data;
@@ -137,6 +137,11 @@ const Bridge = {
 
     polesZeros(tfJsonObj) {
         return this._call('poles_zeros', JSON.stringify(tfJsonObj));
+    },
+
+    sensitivity(tfJsonObj, targetObj, valuesObj) {
+        return this._call('sensitivity',
+            JSON.stringify(tfJsonObj), JSON.stringify(targetObj), JSON.stringify(valuesObj));
     }
 };
 

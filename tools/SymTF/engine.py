@@ -11,10 +11,13 @@ Public API (all accept / return JSON strings):
     substitute(tf_json, subs)    — numeric / partial substitution
     approximate(tf_json, spec)   — DC/HF limit, truncation, assumptions
     freq_response(tf_json, rng)  — magnitude / phase over frequency
+    sensitivity(tf_json, target, values) — component sensitivity of f0/Q or
+                                            of |H|/phase at a frequency
 """
 
 from __future__ import annotations
 
+import cmath
 import json
 import math
 import re
@@ -2153,6 +2156,178 @@ def poles_zeros(tf_json: str) -> str:
         })
     except Exception as exc:
         return _err([f"poles_zeros failed: {exc}"])
+
+
+# ===================================================================
+#  Sensitivity Analysis
+# ===================================================================
+# Two independent ways to ask "how much does this component matter", chosen
+# to cover both a NAMED filter parameter and an arbitrary point of interest --
+# see the sensitivity() docstring below for exactly what each computes and why.
+
+def _standard_param_sensitivities(
+    Y: sp.Expr, free_syms: List[Symbol], values: Dict[str, Any],
+    notes: List[str], param: str
+) -> List[Dict[str, Any]]:
+    """Classic normalized sensitivity S = (x/Y)*(dY/dx) of one standard-form
+    parameter (f0 or Q), evaluated at the given nominal values. A true
+    symbolic derivative -- Y here is just sqrt/ratio of coefficient
+    expressions, which SymPy differentiates cheaply and exactly."""
+    results = []
+    for sym in free_syms:
+        name = str(sym)
+        if name not in values:
+            notes.append(f"'{name}' has no value; skipped.")
+            continue
+        try:
+            sub = {other: sp.Float(values[str(other)]) for other in free_syms if str(other) in values}
+            if len(sub) != len(free_syms):
+                notes.append(f"Cannot evaluate sensitivity for '{name}': another symbol has no value.")
+                continue
+            Y0 = float(Y.subs(sub))
+            if Y0 == 0:
+                notes.append(f"{param} is 0 at these values; sensitivity for '{name}' is undefined (skipped).")
+                continue
+            dY0 = float(sp.diff(Y, sym).subs(sub))
+            x0 = float(sub[sym])
+            results.append({
+                "symbol": name,
+                "sensitivity": (x0 / Y0) * dY0,
+                "unit": "dY/Y per dx/x (dimensionless)",
+            })
+        except Exception as exc:
+            notes.append(f"'{name}': {exc}")
+    return results
+
+
+def _at_freq_sensitivities(
+    H_expr: sp.Expr, free_syms: List[Symbol], f_hz: float, quantity: str,
+    values: Dict[str, Any], notes: List[str]
+) -> List[Dict[str, Any]]:
+    """Finite-difference d(quantity)/d(ln x), rescaled to "per 1% change in
+    x" -- NOT a symbolic derivative of Abs()/arg(): differentiating those
+    through a complex rational function is fragile and slow in SymPy for
+    anything past the simplest circuits. Holding every other symbol at its
+    nominal value collapses H(jf_hz) to a plain complex number either side of
+    a tiny (0.01%) perturbation in x, so this is just two evaluations."""
+    omega = 2 * math.pi * f_hz
+    s_val = sp.I * omega
+    eps = 1e-4
+    results = []
+
+    def eval_quantity(sub: Dict[Symbol, sp.Expr]) -> float:
+        Hc = complex(H_expr.xreplace({**sub, s: s_val}))
+        if quantity == "phase_deg":
+            return math.degrees(cmath.phase(Hc))
+        mag = abs(Hc)
+        return 20.0 * math.log10(mag) if mag > 0 else -300.0
+
+    for sym in free_syms:
+        name = str(sym)
+        if name not in values:
+            notes.append(f"'{name}' has no value; skipped.")
+            continue
+        try:
+            base = {other: sp.Float(values[str(other)]) for other in free_syms if str(other) in values}
+            if len(base) != len(free_syms):
+                notes.append(f"Cannot evaluate at-frequency sensitivity for '{name}': another symbol has no value.")
+                continue
+            x0 = float(values[name])
+            if x0 == 0:
+                notes.append(f"'{name}' is 0; sensitivity undefined (skipped).")
+                continue
+            y0 = eval_quantity(base)
+            perturbed = dict(base)
+            perturbed[sym] = sp.Float(x0 * (1 + eps))
+            y1 = eval_quantity(perturbed)
+            d_per_1pct = (y1 - y0) / math.log(1 + eps) * 0.01
+            unit = ("dB per 1% change in x" if quantity == "mag_db"
+                    else "degrees per 1% change in x")
+            results.append({"symbol": name, "sensitivity": d_per_1pct, "unit": unit})
+        except Exception as exc:
+            notes.append(f"'{name}': {exc}")
+    return results
+
+
+def sensitivity(tf_json: str, target_json: str, values_json: str) -> str:
+    """Component sensitivity of a scalar quantity derived from a transfer
+    function, with respect to every free symbol still present.
+
+    ``target``::
+        {"kind": "standard_param", "param": "f0" | "Q"}
+            ``tf_json`` is ONE FACTORED SECTION's tf (num_coeffs/den_coeffs,
+            e.g. one entry of solve()'s "factors"). Reports the classic
+            dimensionless normalized sensitivity S = (x/Y)*(dY/dx) -- the
+            filter-synthesis figure of merit (S=0.5 means a 1% change in x
+            moves Y by 0.5%).
+        {"kind": "at_freq", "f_hz": <number>, "quantity": "mag_db" | "phase_deg"}
+            ``tf_json`` is the (flat or factored) tf carrying H_expr. Reports
+            dB, or degrees, of change per 1% change in x at that frequency
+            (f_hz = 0 is DC gain).
+
+    ``values``: nominal numeric values for every free symbol -- the same
+    "fill in every symbol" requirement as the 'numerical' approximation mode.
+    A symbol missing a value is skipped and noted, not a hard failure, so a
+    partially-filled Values tab still returns whatever sensitivities *can* be
+    computed.
+
+    Returns JSON: ``{ok, results: [{symbol, sensitivity, unit}], notes}``,
+    results sorted by |sensitivity| descending (most-impactful component
+    first -- the actual point of a sensitivity table).
+    """
+    try:
+        tf_data = json.loads(tf_json)
+        target = json.loads(target_json)
+        values = json.loads(values_json)
+        kind = target.get("kind")
+        notes: List[str] = []
+
+        if kind == "standard_param":
+            param = target.get("param")
+            if param not in ("f0", "Q"):
+                return _err([f"Unknown standard_param '{param}' -- use 'f0' or 'Q'."])
+
+            den = [_cached_sympify(c) for c in tf_data["den_coeffs"]]
+            dd = len(den) - 1
+            dpow = {dd - i: c for i, c in enumerate(den)}
+            g = lambda pw: dpow.get(pw, sp.Integer(0))
+
+            if dd == 2:
+                a2, a1, a0 = g(2), g(1), g(0)
+                if param == "Q":
+                    if a1 == 0:
+                        return _err(["Q is infinite for this section (a1 = 0); sensitivity undefined."])
+                    Y = sp.sqrt(a0 * a2) / a1
+                else:
+                    Y = sp.sqrt(a0 / a2) / (2 * sp.pi)
+            elif dd == 1:
+                if param == "Q":
+                    return _err(["A 1st-order section has no Q -- use f0."])
+                a1, a0 = g(1), g(0)
+                Y = (a0 / a1) / (2 * sp.pi)
+            else:
+                return _err(["Sensitivity needs a 1st- or 2nd-order section (this one is order > 2)."])
+
+            free_syms = sorted(Y.free_symbols, key=str)
+            results = _standard_param_sensitivities(Y, free_syms, values, notes, param)
+
+        elif kind == "at_freq":
+            H_expr = _cached_sympify(tf_data["H_expr"])
+            f_hz = float(target.get("f_hz", 0.0))
+            quantity = target.get("quantity", "mag_db")
+            if quantity not in ("mag_db", "phase_deg"):
+                return _err([f"Unknown quantity '{quantity}' -- use 'mag_db' or 'phase_deg'."])
+            free_syms = sorted(H_expr.free_symbols - {s}, key=str)
+            results = _at_freq_sensitivities(H_expr, free_syms, f_hz, quantity, values, notes)
+
+        else:
+            return _err([f"Unknown sensitivity target kind '{kind}'."])
+
+        results.sort(key=lambda r: -abs(r["sensitivity"]))
+        return _ok({"results": results, "notes": notes})
+
+    except Exception as exc:
+        return _err([f"sensitivity failed: {exc}"])
 
 
 # ===================================================================

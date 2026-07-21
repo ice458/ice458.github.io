@@ -15,7 +15,7 @@ import math
 import pytest
 from sympy import Symbol, symbols, sympify, simplify, cancel, Rational, oo
 
-from engine import parse_netlist, solve, substitute, approximate, freq_response
+from engine import parse_netlist, solve, substitute, approximate, freq_response, sensitivity
 
 # ---------------------------------------------------------------------------
 # Shared helpers
@@ -881,3 +881,112 @@ class TestPolesZeros:
         r = _pz(tf)
         assert r["zeros"] == []
         assert r["poles"] == []
+
+
+# ===================================================================
+#  Sensitivity Analysis
+# ===================================================================
+
+class TestSensitivityStandardParam:
+    """Verified against the textbook-exact sensitivities of a parallel RLC
+    tank: den = L*C*s^2 + (L/R)*s + 1 ⇒ Q = R*sqrt(C/L), f0 = 1/(2*pi*sqrt(L*C)).
+    S_Q^R = 1, S_Q^C = 1/2, S_Q^L = -1/2, S_f0^R = 0, S_f0^L = S_f0^C = -1/2
+    -- exact rational constants, independent of the actual R/L/C values."""
+
+    SECTION = {"num_coeffs": ["1"], "den_coeffs": ["L*C", "L/R", "1"]}
+    VALUES = {"R": 1000.0, "L": 1e-3, "C": 1e-9}
+
+    def _run(self, param, values=None):
+        r = json.loads(sensitivity(
+            json.dumps(self.SECTION),
+            json.dumps({"kind": "standard_param", "param": param}),
+            json.dumps(values if values is not None else self.VALUES),
+        ))
+        assert r["ok"], r
+        return {x["symbol"]: x["sensitivity"] for x in r["results"]}
+
+    def test_Q_sensitivities(self):
+        by_sym = self._run("Q")
+        assert by_sym["R"] == pytest.approx(1.0, abs=1e-6)
+        assert by_sym["C"] == pytest.approx(0.5, abs=1e-6)
+        assert by_sym["L"] == pytest.approx(-0.5, abs=1e-6)
+
+    def test_f0_sensitivities(self):
+        # R cancels out of f0 = 1/(2*pi*sqrt(L*C)) entirely, so it is not a
+        # free symbol of that expression at all -- it correctly has no entry
+        # here, rather than an entry equal to 0.
+        by_sym = self._run("f0")
+        assert "R" not in by_sym
+        assert by_sym["L"] == pytest.approx(-0.5, abs=1e-6)
+        assert by_sym["C"] == pytest.approx(-0.5, abs=1e-6)
+
+    def test_results_sorted_by_impact(self):
+        r = json.loads(sensitivity(
+            json.dumps(self.SECTION),
+            json.dumps({"kind": "standard_param", "param": "Q"}),
+            json.dumps(self.VALUES),
+        ))
+        mags = [abs(x["sensitivity"]) for x in r["results"]]
+        assert mags == sorted(mags, reverse=True)
+
+    def test_missing_value_is_skipped_not_fatal(self):
+        r = json.loads(sensitivity(
+            json.dumps(self.SECTION),
+            json.dumps({"kind": "standard_param", "param": "Q"}),
+            json.dumps({"R": 1000.0, "L": 1e-3}),  # C missing
+        ))
+        assert r["ok"]
+        assert not any(x["symbol"] == "C" for x in r["results"])
+        assert any("C" in n for n in r["notes"])
+
+    def test_first_order_section_has_no_q(self):
+        r = json.loads(sensitivity(
+            json.dumps({"num_coeffs": ["1"], "den_coeffs": ["R*C", "1"]}),
+            json.dumps({"kind": "standard_param", "param": "Q"}),
+            json.dumps({"R": 1000.0, "C": 1e-9}),
+        ))
+        assert not r["ok"]
+
+
+class TestSensitivityAtFreq:
+    """At-frequency sensitivity of an RC low-pass: DC gain (f=0) is exactly
+    1 regardless of R/C (H(0)=1 for a series-R/shunt-C divider), so its
+    sensitivity to either part must be ~0; well past the corner frequency
+    the gain is clearly sensitive to both."""
+
+    NETLIST = "Vin in 0 Vin\nR1 in out R1\nC1 out 0 C1"
+    VALUES = {"R1": 1000.0, "C1": 1e-9}   # f0 = 1/(2*pi*R1*C1) ~ 159.15 kHz
+
+    def _tf(self):
+        return solve_circuit(
+            self.NETLIST, {"kind": "V", "name": "Vin"},
+            {"kind": "node_voltage", "node": "out"},
+        )
+
+    def test_dc_gain_is_insensitive(self):
+        r = json.loads(sensitivity(
+            json.dumps(self._tf()),
+            json.dumps({"kind": "at_freq", "f_hz": 0, "quantity": "mag_db"}),
+            json.dumps(self.VALUES),
+        ))
+        assert r["ok"], r
+        for x in r["results"]:
+            assert x["sensitivity"] == pytest.approx(0.0, abs=1e-6)
+
+    def test_gain_sensitive_well_above_corner(self):
+        r = json.loads(sensitivity(
+            json.dumps(self._tf()),
+            json.dumps({"kind": "at_freq", "f_hz": 1e7, "quantity": "mag_db"}),
+            json.dumps(self.VALUES),
+        ))
+        assert r["ok"], r
+        for x in r["results"]:
+            assert abs(x["sensitivity"]) > 0.01
+
+    def test_unknown_kind_is_an_error(self):
+        r = json.loads(sensitivity(
+            json.dumps(self._tf()),
+            json.dumps({"kind": "nonsense"}),
+            json.dumps(self.VALUES),
+        ))
+        assert not r["ok"]

@@ -138,7 +138,21 @@ const els = {
     droppedTermsContainer: document.getElementById('dropped-terms-container'),
     droppedTermsList: document.getElementById('dropped-terms-list'),
     comparePlotBtn: document.getElementById('compare-plot-btn'),
-    comparePlotWrapper: document.getElementById('compare-plot-wrapper')
+    comparePlotWrapper: document.getElementById('compare-plot-wrapper'),
+
+    // Sensitivity
+    sensWarning: document.getElementById('sens-warning'),
+    sensConfigContainer: document.getElementById('sens-config-container'),
+    sensTarget: document.getElementById('sens-target'),
+    sensCfgStandard: document.getElementById('sens-cfg-standard'),
+    sensCfgAtFreq: document.getElementById('sens-cfg-at-freq'),
+    sensSection: document.getElementById('sens-section'),
+    sensFreq: document.getElementById('sens-freq'),
+    runSensBtn: document.getElementById('run-sens-btn'),
+    sensError: document.getElementById('sens-error'),
+    sensResultsContainer: document.getElementById('sens-results-container'),
+    sensResultsList: document.getElementById('sens-results-list'),
+    sensNotes: document.getElementById('sens-notes')
 };
 
 // --- Left Tabs (Schematic / Text) ---
@@ -694,6 +708,13 @@ els.undoApproxBtn.addEventListener('click', () => { approxChain.pop(); renderApp
 els.resetApproxBtn.addEventListener('click', () => { approxChain = []; renderApproxChain(); });
 els.comparePlotBtn.addEventListener('click', handleComparePlots);
 
+// Sensitivity
+els.sensTarget?.addEventListener('change', (e) => {
+    els.sensCfgStandard.classList.toggle('hidden', e.target.value !== 'standard_param');
+    els.sensCfgAtFreq.classList.toggle('hidden', e.target.value !== 'at_freq');
+});
+els.runSensBtn?.addEventListener('click', handleSensitivity);
+
 // Global Errors
 els.closeErrorBtn.addEventListener('click', hideGlobalError);
 
@@ -887,6 +908,7 @@ function renderResults(tf) {
     renderTf(tf);
     updatePlotTabState();
     updateApproxTabState();
+    updateSensitivityTabState();
 
     // If values carried over from a previous analysis (auto-refresh after an
     // edit), re-apply them so a substituted view stays substituted rather than
@@ -930,6 +952,7 @@ function enterNumericMode(symbols, errors) {
     els.solveLongBtn?.classList.remove('hidden');
     updatePlotTabState();
     updateApproxTabState();
+    updateSensitivityTabState();
 
     // Values may already be filled (an edit re-analysed an already-numeric
     // circuit) -- solve straight away if so.
@@ -1006,6 +1029,7 @@ async function maybeRunNumericSolve(effort = 'quick') {
     renderTf(result.tf);
     updatePlotTabState();
     updateApproxTabState();
+    updateSensitivityTabState();
 }
 
 // Draws a transfer function into the banner. Display only -- no state, no table
@@ -2035,6 +2059,141 @@ function handleComparePlots() {
             els.comparePlotBtn.textContent = "Compare Bode Plots";
         }
     })();
+}
+
+// --- Sensitivity Logic ---
+
+function updateSensitivityTabState() {
+    if (currentTf) {
+        els.sensWarning?.classList.add('hidden');
+        els.sensConfigContainer?.classList.remove('hidden');
+        populateSensSections();
+    } else {
+        els.sensWarning?.classList.remove('hidden');
+        els.sensConfigContainer?.classList.add('hidden');
+    }
+}
+
+// Always reads currentTf (never currentSubstitutedTf): substitute() -- even
+// a single symbol's worth -- always returns a flat tf with no "factors" at
+// all, AND bakes whatever was substituted straight into H_expr as literal
+// numbers, which would silently drop that symbol from sensitivity's own
+// results (it can only report on the symbols it can still see). currentTf is
+// the untouched, always-fully-symbolic ground truth every substitution
+// applies to -- exactly what a numeric evaluation-at-nominal-values needs to
+// stay eligible for every one of its own free symbols.
+//
+// The section picker offers the factored cascade's stages, or -- when the
+// current H(s) is not a cascade -- the whole thing as a single section: most
+// circuits are one stage, and a plain 1st/2nd-order filter is just as
+// eligible for f0/Q sensitivity as one stage of a larger cascade (a section
+// past 2nd order surfaces the engine's own error on Compute, same as any
+// other invalid input here).
+function populateSensSections() {
+    if (!els.sensSection) return;
+    const tf = currentTf;
+    els.sensSection.innerHTML = '';
+    if (!tf) return;
+    const sections = tf.factored ? tf.factors : [tf];
+    sections.forEach((st, i) => {
+        const opt = document.createElement('option');
+        opt.value = String(i);
+        opt.textContent = tf.factored
+            ? `Section ${i + 1}${st.standard && st.standard.type ? ' — ' + st.standard.type : ''}`
+            : 'Whole H(s)';
+        els.sensSection.appendChild(opt);
+    });
+}
+
+function setSensError(msg) {
+    els.sensError.textContent = msg;
+    els.sensError.classList.remove('hidden');
+}
+function clearSensError() {
+    els.sensError.classList.add('hidden');
+}
+
+async function handleSensitivity() {
+    const tf = currentTf;   // always the fully-symbolic ground truth; see populateSensSections
+    if (!tf) return;
+
+    // Every symbol needs a nominal value -- the same "fill in the Values
+    // tab" requirement the numerical approximation mode already uses.
+    const values = {};
+    let missing = false;
+    document.querySelectorAll('.subs-val-input').forEach(input => {
+        const v = parseSIValue(input.value);
+        if (!v) missing = true;
+        else values[input.dataset.sym] = parseFloat(v);
+    });
+    if (missing || Object.keys(values).length === 0) {
+        setSensError("Sensitivity needs a value for every symbol in the Values tab.");
+        return;
+    }
+
+    let sensTf, target;
+    if (els.sensTarget.value === 'standard_param') {
+        const sections = tf.factored ? tf.factors : [tf];
+        const section = sections[parseInt(els.sensSection.value)];
+        if (!section) { setSensError("No section selected."); return; }
+        sensTf = { num_coeffs: section.num_coeffs, den_coeffs: section.den_coeffs };
+        target = { kind: 'standard_param',
+            param: document.querySelector('input[name="sens-param"]:checked').value };
+    } else {
+        const f_hz = parseFloat(parseSIValue(els.sensFreq.value));
+        if (isNaN(f_hz) || f_hz < 0) { setSensError("Enter a valid frequency (Hz, 0 = DC)."); return; }
+        sensTf = tf;   // needs H_expr, present on both factored and flat tf
+        target = { kind: 'at_freq', f_hz,
+            quantity: document.querySelector('input[name="sens-quantity"]:checked').value };
+    }
+
+    els.runSensBtn.disabled = true;
+    els.runSensBtn.querySelector('.btn-spinner').classList.remove('hidden');
+    try {
+        const result = await Bridge.sensitivity(sensTf, target, values);
+        if (!result.ok) {
+            setSensError((result.errors || ['Sensitivity failed.']).join('; '));
+            return;
+        }
+        clearSensError();
+        renderSensResults(result.results, result.notes || []);
+    } catch (e) {
+        setSensError('UI Error: ' + e.message);
+    } finally {
+        els.runSensBtn.disabled = false;
+        els.runSensBtn.querySelector('.btn-spinner').classList.add('hidden');
+    }
+}
+
+// Reuses the coeff-list item styling (symbol + value pair) already used for
+// the H(s) coefficient lists -- a sensitivity table is the same shape of
+// data: a component name against a number.
+function renderSensResults(results, notes) {
+    els.sensResultsContainer.classList.remove('hidden');
+    els.sensResultsList.innerHTML = '';
+    if (!results.length) {
+        const note = document.createElement('div');
+        note.className = 'coeff-item';
+        note.style.color = 'var(--text-secondary)';
+        note.textContent = 'No sensitivities to show (see notes below).';
+        els.sensResultsList.appendChild(note);
+    } else {
+        results.forEach(r => {
+            const item = document.createElement('div');
+            item.className = 'coeff-item';
+            const sym = document.createElement('div');
+            sym.className = 'coeff-power';
+            sym.textContent = r.symbol;
+            const val = document.createElement('div');
+            val.className = 'coeff-expr';
+            val.textContent = `${r.sensitivity.toPrecision(4)}  (${r.unit})`;
+            item.appendChild(sym);
+            item.appendChild(val);
+            els.sensResultsList.appendChild(item);
+        });
+    }
+    els.sensNotes.classList.toggle('hidden', notes.length === 0);
+    els.sensNotes.textContent = notes.join(' ');
 }
 
 // --- M5: Export / Import Logic ---

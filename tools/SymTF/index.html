@@ -99,7 +99,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     <script src="https://unpkg.com/konva@9.3.6/konva.min.js"></script>
 
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="style.css?v=9">
+    <link rel="stylesheet" href="style.css?v=10">
 </head>
 <body>
 <!-- Google Tag Manager (noscript) -->
@@ -287,6 +287,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                     <div class="tabs">
                         <button class="tab-btn active" data-tab="workbench">Values &amp; Plot</button>
                         <button class="tab-btn" data-tab="approximation">Approximation</button>
+                        <button class="tab-btn" data-tab="sensitivity">Sensitivity</button>
                     </div>
                 </div>
 
@@ -476,6 +477,76 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                     </div>
                 </div>
 
+                <!-- Sensitivity Tab -->
+                <div class="tab-content hidden" id="tab-sensitivity">
+                    <div class="approx-header">
+                        <h3>Component Sensitivity</h3>
+                        <p class="subtitle-text">See which components matter most for a section's f0/Q, or for the response at a chosen frequency.</p>
+                    </div>
+
+                    <div id="sens-warning" class="error-box">
+                        Sensitivity needs a value for every symbol in the Values tab.
+                    </div>
+
+                    <div id="sens-config-container" class="hidden">
+                        <div class="config-row">
+                            <div class="control-group" style="flex: 1;">
+                                <label for="sens-target">Quantity</label>
+                                <select id="sens-target">
+                                    <option value="standard_param">Section f0 / Q</option>
+                                    <option value="at_freq">Value at a frequency</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Standard-form param config. Section list is either the
+                             factored cascade's stages, or the whole H(s) treated as
+                             a single (1st/2nd-order) section when it isn't a cascade.
+                             A section beyond 2nd order surfaces as an error on
+                             "Compute", same as any other invalid input here. -->
+                        <div id="sens-cfg-standard" class="sens-cfg">
+                            <div class="config-row">
+                                <div class="control-group">
+                                    <label for="sens-section">Section</label>
+                                    <select id="sens-section"></select>
+                                </div>
+                                <div class="control-group">
+                                    <label><input type="radio" name="sens-param" value="f0" checked> f0</label>
+                                    <label><input type="radio" name="sens-param" value="Q"> Q</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- At-frequency config -->
+                        <div id="sens-cfg-at-freq" class="sens-cfg hidden">
+                            <div class="config-row">
+                                <div class="control-group">
+                                    <label for="sens-freq">Frequency (Hz, 0 = DC)</label>
+                                    <input type="text" id="sens-freq" class="text-input" value="1k">
+                                </div>
+                                <div class="control-group">
+                                    <label><input type="radio" name="sens-quantity" value="mag_db" checked> Magnitude (dB)</label>
+                                    <label><input type="radio" name="sens-quantity" value="phase_deg"> Phase (°)</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="action-row" style="margin-top: 1rem;">
+                            <button id="run-sens-btn" class="primary-btn">
+                                <span>Compute Sensitivities</span>
+                                <div class="btn-spinner hidden"></div>
+                            </button>
+                        </div>
+                        <div id="sens-error" class="error-box hidden"></div>
+
+                        <div id="sens-results-container" class="hidden" style="margin-top: 1.25rem;">
+                            <h4>Sensitivity (sorted by impact)</h4>
+                            <div id="sens-results-list" class="coeff-list"></div>
+                            <div id="sens-notes" class="pz-notes hidden"></div>
+                        </div>
+                    </div>
+                </div>
+
             </section>
         </main>
 
@@ -495,11 +566,11 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <!-- App Logic -->
     <!-- Order matters: app.js drives the editor, so schematic.js must have
          registered its DOMContentLoaded handler first. -->
-    <script src="pyodide_bridge.js?v=6"></script>
+    <script src="pyodide_bridge.js?v=7"></script>
     <script src="samples.js?v=6"></script>
     <script src="netlist.js?v=6"></script>
     <script src="schematic.js?v=6"></script>
-    <script src="app.js?v=19"></script>
+    <script src="app.js?v=20"></script>
     <script src="/consent.js" defer></script>
 </body>
 </html>
