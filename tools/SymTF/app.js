@@ -58,6 +58,9 @@ const els = {
     fullscreenBtn: document.getElementById('fullscreen-btn'),
     shortcutsBtn: document.getElementById('shortcuts-btn'),
     shortcutsPanel: document.getElementById('shortcuts-panel'),
+    helpBtn: document.getElementById('help-btn'),
+    helpPanel: document.getElementById('help-panel'),
+    helpCloseBtn: document.getElementById('help-close-btn'),
     globalErrorBanner: document.getElementById('global-error-banner'),
     globalErrorText: document.getElementById('global-error-text'),
     closeErrorBtn: document.getElementById('close-error-btn'),
@@ -391,11 +394,22 @@ function toggleShortcuts(force) {
     els.shortcutsPanel.classList.toggle('hidden', force !== undefined ? !force : undefined);
 }
 els.shortcutsBtn?.addEventListener('click', () => { toggleShortcuts(); els.shortcutsBtn.blur(); });
+
+// Whole-app help: same toggle pattern as the canvas shortcuts panel, but
+// reachable from the header regardless of which tab is open. No keyboard
+// shortcut of its own -- '?' is already the canvas panel's, and giving the
+// same key two meanings would just be confusing.
+function toggleHelp(force) {
+    els.helpPanel?.classList.toggle('hidden', force !== undefined ? !force : undefined);
+}
+els.helpBtn?.addEventListener('click', () => { toggleHelp(); els.helpBtn.blur(); });
+els.helpCloseBtn?.addEventListener('click', () => toggleHelp(false));
+
 document.addEventListener('keydown', (e) => {
     const tag = e.target.tagName;
     if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
     if (e.key === '?') toggleShortcuts();
-    else if (e.key === 'Escape') toggleShortcuts(false);
+    else if (e.key === 'Escape') { toggleShortcuts(false); toggleHelp(false); }
 });
 
 document.addEventListener('keydown', (e) => {

@@ -99,7 +99,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     <script src="https://unpkg.com/konva@9.3.6/konva.min.js"></script>
 
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="style.css?v=14">
+    <link rel="stylesheet" href="style.css?v=15">
 </head>
 <body>
 <!-- Google Tag Manager (noscript) -->
@@ -139,9 +139,70 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                     <button id="import-btn" class="secondary-btn small-btn">Import</button>
                     <button id="export-btn" class="secondary-btn small-btn">Export</button>
                     <input type="file" id="import-file" accept=".json" class="hidden">
+                    <button id="help-btn" class="secondary-btn small-btn" title="How this tool works">?</button>
                 </div>
             </div>
         </header>
+
+        <!-- Whole-app help, same floating-panel look as the schematic's own "?"
+             (which stays scoped to canvas shortcuts) -- this one covers every
+             pane and is reachable regardless of which tab is open.
+             Deliberately NOT nested inside <header>: header's backdrop-filter
+             establishes a containing block for position:fixed descendants in
+             some engines, which silently traps this panel's stacking context
+             inside header's own -- painted behind <main> regardless of
+             z-index, and any click on it hit-tests whatever is in <main> at
+             that position instead. Living at the #app-container level avoids
+             the trap entirely. -->
+        <div id="help-panel" class="help-panel hidden">
+            <div class="help-panel-header">
+                <h3>How SymTF works</h3>
+                <button id="help-close-btn" class="close-error-btn" title="Close">&times;</button>
+            </div>
+            <div class="help-panel-body">
+                <section>
+                    <h4>Getting started</h4>
+                    <p>Draw a circuit (or load an Example) and drop a <b>Netname</b> label on the
+                       input and output nodes. Pick them in Port Configuration and H(s) appears
+                       automatically -- there is no Analyze button, every edit re-solves.</p>
+                </section>
+                <section>
+                    <h4>Schematic editor</h4>
+                    <p>Click a palette button (or press its key) to pick up a part, click again on
+                       the canvas to drop it, Esc to cancel. Drag to move, <code>Ctrl+R</code> /
+                       <code>Ctrl+E</code> to rotate/mirror, double-click (or right-click) a part to
+                       edit its name or value. The <code>?</code> button on the canvas itself has
+                       the full key list.</p>
+                </section>
+                <section>
+                    <h4>Port configuration &amp; impedance</h4>
+                    <p>The Voltage/Current toggle picks what drives the circuit. Choosing the
+                       <em>same</em> node for input and output with Current gives the driving-point
+                       impedance directly -- or use the separate "Impedance at node" tool to get
+                       Zin/Zout without touching the main H(s) at all (it kills the real source and
+                       probes elsewhere on its own, one-off circuit).</p>
+                </section>
+                <section>
+                    <h4>Values &amp; Plot</h4>
+                    <p>Type a number for any symbol to substitute it live into H(s). Once every
+                       symbol has a value, the Bode (magnitude/phase/group delay) and Nyquist plots
+                       follow automatically.</p>
+                </section>
+                <section>
+                    <h4>Approximation</h4>
+                    <p>Chain simplifications onto H(s) one step at a time -- a DC/HF limit,
+                       polynomial truncation, a symbolic assumption ("gm*ro &gt;&gt; 1"), or a
+                       numerical guide from the values you have entered. Compare the result against
+                       the original with the Bode overlay.</p>
+                </section>
+                <section>
+                    <h4>Sensitivity</h4>
+                    <p>See which component matters most for a factored section's f0/Q, or for the
+                       magnitude/phase at a chosen frequency -- results are sorted by impact, the
+                       biggest lever first.</p>
+                </section>
+            </div>
+        </div>
 
         <main class="split-layout">
             <!-- Left Pane: Input -->
@@ -587,7 +648,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <script src="samples.js?v=6"></script>
     <script src="netlist.js?v=7"></script>
     <script src="schematic.js?v=10"></script>
-    <script src="app.js?v=22"></script>
+    <script src="app.js?v=23"></script>
     <script src="/consent.js" defer></script>
 </body>
 </html>
