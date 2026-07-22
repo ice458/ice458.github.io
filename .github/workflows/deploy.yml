@@ -23,14 +23,17 @@ jobs:
         with:
           submodules: recursive
           
-      - name: Inject GTM and SEO into SymTF
+      - name: Inject GTM and SEO into SymTF and pio_sim
         run: |
-          # Inject before </head>
+          # Inject SymTF
           awk '/<\/head>/{system("cat .github/inject/symtf_head.html")}1' tools/SymTF/index.html > tmp.html && mv tmp.html tools/SymTF/index.html
-          # Inject after <body>
           awk '1;/<body>/{system("cat .github/inject/symtf_body.html")}' tools/SymTF/index.html > tmp.html && mv tmp.html tools/SymTF/index.html
-          # Replace footer
           awk '/<footer class="site-footer">/{system("cat .github/inject/symtf_footer.html"); skip=1} /<\/footer>/{skip=0; next} !skip{print}' tools/SymTF/index.html > tmp.html && mv tmp.html tools/SymTF/index.html
+          
+          # Inject pio_sim
+          awk '/<\/head>/{system("cat .github/inject/pio_sim_head.html")}1' tools/pio_sim/index.html > tmp.html && mv tmp.html tools/pio_sim/index.html
+          awk '1;/<body.*>/{system("cat .github/inject/pio_sim_body.html")}' tools/pio_sim/index.html > tmp.html && mv tmp.html tools/pio_sim/index.html
+          awk '/<footer/{system("cat .github/inject/pio_sim_footer.html"); skip=1} /<\/footer>/{skip=0; next} !skip{print}' tools/pio_sim/index.html > tmp.html && mv tmp.html tools/pio_sim/index.html
           
       - name: Setup Pages
         uses: actions/configure-pages@v5

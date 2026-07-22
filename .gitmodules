@@ -1,3 +1,6 @@
 [submodule "tools/SymTF"]
 	path = tools/SymTF
 	url = https://github.com/ice458/SymTF.git
+[submodule "tools/pio_sim"]
+	path = tools/pio_sim
+	url = https://github.com/ice458/pio_sim.git
