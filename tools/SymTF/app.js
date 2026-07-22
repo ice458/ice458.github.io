@@ -416,6 +416,9 @@ document.addEventListener('keydown', (e) => {
     // Esc leaves full screen. The schematic's own Esc (cancel placement) still
     // runs in its handler; this only reacts when already full screen.
     if (e.key === 'Escape' && document.body.classList.contains('schematic-full')) {
+        // If the schematic is currently placing/wiring, let its own Escape handler cancel that action
+        // rather than closing full screen entirely.
+        if (window.Schematic && !window.Schematic.isIdle()) return;
         toggleSchematicFullscreen(false);
     }
 });
@@ -2422,10 +2425,18 @@ function handleImport(e) {
             }
 
             // 1. The schematic. Everything else here is derived from it.
+            const savedHasAnalyzed = hasAnalyzed;
+            hasAnalyzed = false; // Suppress auto-reanalyze from setModel's schematicChange event
             window.Schematic.setModel(data.schematic);
             syncSchematicIoOptions();
+            
+            // Pre-select I/O options so that any subsequent analysis uses the correct ports
+            if (data.input) els.inputSource.value = data.input.name;
+            if (data.output) els.outputNode.value = data.output.node;
+            
             updateNetlistPreview();
             await handleNetlistChange();
+            hasAnalyzed = savedHasAnalyzed;
             
             // 2. Run Analysis to populate symbols (Wait for it)
             if (data.input && data.output && currentCircuitJson) {

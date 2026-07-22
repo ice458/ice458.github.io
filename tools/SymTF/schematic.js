@@ -2366,6 +2366,7 @@ function setModel(next, { undoable = true } = {}) {
 }
 
 window.Schematic = {
+    isIdle: () => input.mode === 'idle',
     getModel: () => JSON.parse(JSON.stringify(model)),
     setModel,
     fitToView,
