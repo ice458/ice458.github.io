@@ -1,0 +1,3 @@
+[submodule "tools/SymTF"]
+	path = tools/SymTF
+	url = https://github.com/ice458/SymTF.git
