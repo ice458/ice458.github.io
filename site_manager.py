@@ -61,7 +61,7 @@ KINDS = {
 KEY_ORDER = ["layout", "type", "nav", "permalink", "title", "description",
              "og_description", "og_title_plain", "keywords", "image", "og_type",
              "title_full", "site_jsonld", "script", "categories", "date",
-             "date_label", "updated", "summary", "search", "order",
+             "updated", "summary", "search", "order",
              "video", "video_upload_date", "mathjax", "sitemap"]
 
 
@@ -229,7 +229,7 @@ class PageDialog(tk.Toplevel):
         ttk.Entry(f, textvariable=self.title_var).grid(row=0, column=0, sticky=(tk.W, tk.E))
         r += 1
 
-        f = self._row(m, r, "日付", "一覧の並びや表示に使われます")
+        f = self._row(m, r, "日付", "ページに「公開日: …」と表示されます")
         self.date_var = tk.StringVar()
         ttk.Entry(f, textvariable=self.date_var).grid(row=0, column=0, sticky=(tk.W, tk.E))
         bf = ttk.Frame(f)
@@ -237,12 +237,6 @@ class PageDialog(tk.Toplevel):
         ttk.Button(bf, text="今日", width=6,
                    command=lambda: self.date_var.set(
                        datetime.now().strftime("%Y年%m月%d日"))).pack()
-        r += 1
-
-        f = self._row(m, r, "日付の見出し", "ページ本文に「○○: 日付」と出ます")
-        self.datelabel_var = tk.StringVar(value="作成日")
-        ttk.Combobox(f, textvariable=self.datelabel_var, values=["作成日", "公開", "公開日"],
-                     state="normal").grid(row=0, column=0, sticky=(tk.W, tk.E))
         r += 1
 
         f = self._row(m, r, "最終更新")
@@ -315,7 +309,6 @@ class PageDialog(tk.Toplevel):
     def _fill(self, p):
         self.title_var.set(p.get("title", ""))
         self.date_var.set(p.get("date", ""))
-        self.datelabel_var.set(p.get("date_label", "作成日"))
         self.updated_var.set(p.get("updated", ""))
         self.search_var.set(p.get("search", ""))
         self.kw_var.set(p.get("keywords", ""))
@@ -350,7 +343,6 @@ class PageDialog(tk.Toplevel):
         self.result = {
             "title": title,
             "date": self.date_var.get().strip(),
-            "date_label": self.datelabel_var.get().strip() or "作成日",
             "updated": self.updated_var.get().strip(),
             "categories": cats,
             "summary": summary,
@@ -489,7 +481,7 @@ class SiteManager:
                      f"URL: {p.get('permalink', '')}", "",
                      f"ファイル: {p.path.relative_to(ROOT)}", "",
                      f"カテゴリ: {', '.join(p.get('categories', []))}", "",
-                     f"日付: {p.get('date_label', '作成日')}: {p.get('date', '')}", "",
+                     f"公開日: {p.get('date', '')}", "",
                      f"最終更新: {p.get('updated', '')}", "",
                      f"検索語: {p.get('search', '')}", "",
                      f"動画: {p.get('video', '') or 'なし'}", "",
@@ -565,7 +557,6 @@ class SiteManager:
         setter("keywords", data["keywords"])
         setter("categories", data["categories"])
         setter("date", data["date"])
-        setter("date_label", data["date_label"] if data["date_label"] != "作成日" else None)
         setter("updated", data["updated"])
         setter("search", data["search"])
         setter("mathjax", True if data["mathjax"] else None)
