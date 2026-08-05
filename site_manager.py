@@ -18,6 +18,7 @@ import unicodedata
 import urllib.error
 import urllib.request
 import webbrowser
+from urllib.parse import unquote
 from datetime import datetime
 from pathlib import Path
 from tkinter import messagebox, ttk
@@ -678,7 +679,12 @@ class SiteManager:
                 for src in re.findall(r'<img[^>]+src="([^"]+)"', p.body):
                     if src.startswith(("http://", "https://", "data:", "/")):
                         continue
-                    if not (p.path.parent / src).exists():
+                    # ?w=800 のようなクエリや #fragment はファイル名ではないので外す。
+                    # %20 などのパーセント符号化も実ファイル名に戻してから照合する。
+                    rel = unquote(re.split(r"[?#]", src, maxsplit=1)[0])
+                    if not rel:
+                        continue
+                    if not (p.path.parent / rel).exists():
                         problems.append(f"{p.title}: 画像が見つかりません -> {src}")
                 # div の対応
                 if p.body.count("<div") != p.body.count("</div>"):
