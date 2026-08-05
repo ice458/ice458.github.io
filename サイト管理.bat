@@ -1,33 +1,29 @@
 @echo off
-chcp 65001 >nul
 cd /d "%~dp0"
-title site manager
+title ice458 site manager
 
 python --version >nul 2>&1
-if errorlevel 1 (
-    echo.
-    echo  Python が見つかりません。
-    echo  https://www.python.org/downloads/ からインストールしてください。
-    echo  インストール時に "Add Python to PATH" にチェックを入れてください。
-    echo.
-    pause
-    exit /b 1
-)
+if errorlevel 1 goto nopython
 
-python -c "import yaml" >nul 2>&1
-if errorlevel 1 (
-    echo  必要な部品 ^(PyYAML^) を入れています...
-    python -m pip install --quiet pyyaml
-    if errorlevel 1 (
-        echo  インストールに失敗しました。ネットワークを確認してください。
-        pause
-        exit /b 1
-    )
-)
+python site_manager.py
+if errorlevel 1 goto err
+exit /b 0
 
-python -X utf8 site_manager.py
-if errorlevel 1 (
-    echo.
-    echo  エラーで終了しました。上の内容を確認してください。
-    pause
-)
+:nopython
+echo.
+echo   Python was not found on this PC.
+echo.
+echo   Install it from:  https://www.python.org/downloads/
+echo   In the installer, check "Add Python to PATH".
+echo.
+echo   The manual in this folder has more details.
+echo.
+pause
+exit /b 1
+
+:err
+echo.
+echo   Finished with an error. Please read the message above.
+echo.
+pause
+exit /b 1

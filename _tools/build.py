@@ -20,7 +20,11 @@ import webbrowser
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
-import yaml                                    # noqa: E402
+try:
+    import yaml                                # noqa: E402
+except ImportError:
+    sys.exit("PyYAML が入っていません。次のコマンドで導入してください:\n"
+             "    python -m pip install pyyaml")
 from liquid_lite import Template, LiquidError  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent

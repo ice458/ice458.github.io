@@ -1,21 +1,29 @@
 @echo off
-chcp 65001 >nul
 cd /d "%~dp0"
-title site preview
+title ice458 site preview
 
 python --version >nul 2>&1
-if errorlevel 1 (
-    echo  Python が見つかりません。site_manager と同じ手順で入れてください。
-    pause
-    exit /b 1
-)
+if errorlevel 1 goto nopython
 
-python -c "import yaml" >nul 2>&1
-if errorlevel 1 python -m pip install --quiet pyyaml
+python _tools/build.py --serve
+if errorlevel 1 goto err
+exit /b 0
 
+:nopython
 echo.
-echo  サイトを組み立ててブラウザで開きます。
-echo  このウィンドウを閉じるとプレビューは終了します。
+echo   Python was not found on this PC.
 echo.
-python -X utf8 _tools/build.py --serve
-if errorlevel 1 pause
+echo   Install it from:  https://www.python.org/downloads/
+echo   In the installer, check "Add Python to PATH".
+echo.
+echo   The manual in this folder has more details.
+echo.
+pause
+exit /b 1
+
+:err
+echo.
+echo   Finished with an error. Please read the message above.
+echo.
+pause
+exit /b 1

@@ -22,7 +22,25 @@ from datetime import datetime
 from pathlib import Path
 from tkinter import messagebox, ttk
 
-import yaml
+try:
+    import yaml
+except ImportError:                       # 初回起動時など
+    _r = tk.Tk()
+    _r.withdraw()
+    if not messagebox.askyesno(
+            "部品が足りません",
+            "このツールに必要な PyYAML が入っていません。\n\n"
+            "今すぐインストールしますか？（ネットワークに接続している必要があります）"):
+        sys.exit(1)
+    if subprocess.run([sys.executable, "-m", "pip", "install", "--quiet",
+                       "pyyaml"]).returncode != 0:
+        messagebox.showerror(
+            "インストールに失敗しました",
+            "PyYAML を入れられませんでした。\n\n"
+            "ネットワーク接続を確認してから、もう一度起動してください。")
+        sys.exit(1)
+    _r.destroy()
+    import yaml
 
 ROOT = Path(__file__).resolve().parent
 PREVIEW_PORT = 4000
