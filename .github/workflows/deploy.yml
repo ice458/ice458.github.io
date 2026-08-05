@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           submodules: recursive
           
@@ -31,12 +31,11 @@ jobs:
           awk '/<footer class="site-footer">/{system("cat .github/inject/symtf_footer.html"); skip=1} /<\/footer>/{skip=0; next} !skip{print}' tools/SymTF/index.html > tmp.html && mv tmp.html tools/SymTF/index.html
           
           # Inject pio_sim
-          awk '/<\/head>/{system("cat .github/inject/pio_sim_head.html")}1' tools/pio_sim/index.html > tmp.html && mv tmp.html tools/pio_sim/index.html
           awk '1;/<body.*>/{system("cat .github/inject/pio_sim_body.html")}' tools/pio_sim/index.html > tmp.html && mv tmp.html tools/pio_sim/index.html
           awk '/<footer/{system("cat .github/inject/pio_sim_footer.html"); skip=1} /<\/footer>/{skip=0; next} !skip{print}' tools/pio_sim/index.html > tmp.html && mv tmp.html tools/pio_sim/index.html
           
       - name: Setup Pages
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@v6
         
       - name: Build with Jekyll
         uses: actions/jekyll-build-pages@v1
@@ -45,7 +44,7 @@ jobs:
           destination: ./_site
           
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v5
 
   deploy:
     environment:
@@ -56,4 +55,4 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5

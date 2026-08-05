@@ -5,7 +5,7 @@ nav: projects
 permalink: /project-46661/
 title: 電子オルゴール
 description: 8bit PICマイコンである、PIC18F27Q43 で電子オルゴールを作りました。波形テーブルを使って減衰正弦波を生成し、機械式オルゴールのような音を出すことができます。
-keywords: オーディオ,電子工作,電子工作,製作物,DIY,ice458
+keywords: オーディオ,電子工作,製作物,DIY,ice458
 image: /logo.png
 categories:
 - オーディオ
@@ -35,22 +35,22 @@ sitemap:
 
                     <div class="image-row">
                         <div class="image-item">
-                            <img src="img/w1.png" alt="テーブルデータの画像">
+                            <img src="img/w1.webp" alt="テーブルデータの画像">
                             <p class="image-caption">1. テーブルデータ</p>
                         </div>
                         <div class="image-item">
-                            <img src="img/w2.png" alt="間引きして抜き出すデータの画像">
+                            <img src="img/w2.webp" alt="間引きして抜き出すデータの画像">
                             <p class="image-caption">2. 間引きして抜き出すデータ</p>
                         </div>
                     </div>
 
                     <div class="image-row">
                         <div class="image-item">
-                            <img src="img/w3.png" alt="抜き出したデータから生成された再生波の画像">
+                            <img src="img/w3.webp" alt="抜き出したデータから生成された再生波の画像">
                             <p class="image-caption">3. 抜き出したデータから生成された再生波</p>
                         </div>
                         <div class="image-item">
-                            <img src="img/w4.png" alt="繰り返し抜き出して生成された再生波の画像">
+                            <img src="img/w4.webp" alt="繰り返し抜き出して生成された再生波の画像">
                             <p class="image-caption">4. 繰り返し抜き出して生成された再生波</p>
                         </div>
                     </div>
@@ -58,9 +58,9 @@ sitemap:
                     <p>減衰波形は、エンベロープの重みをテーブルに持ち、それをサイン波と掛け合わせることで実現します。PIC18Fシリーズには乗算器があるため8bit×8bitの整数の乗算を高速に行うことができます。乗算結果は上位8bitだけを使います。
                     </p>
 
-                    <img src="img/w5-1-edited.png" alt="減衰正弦波の生成の画像">
+                    <img src="img/w5-1-edited.webp" alt="減衰正弦波の生成の画像">
 
                     <p>これらの処理を行うオシレータを4チャンネル分用意し、それらの出力を足し合わせることで4和音を生成します。この音声データを200kHzでPWM変調をかけたものをアナログ出力としています。</p>
 
-                    <p>ソースコードは<a href="https://github.com/ice458/music-box" target="_blank">こちら</a>。</p>
+                    <p>ソースコードは<a href="https://github.com/ice458/music-box" target="_blank" rel="noopener">こちら</a>。</p>
                 </section>

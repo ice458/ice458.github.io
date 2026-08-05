@@ -5,7 +5,7 @@ nav: projects
 permalink: /project-28566/
 title: アナログ回路でLチカ
 description: アナログ回路で文字通りLチカをします。
-keywords: 電子工作,電子工作,製作物,DIY,ice458
+keywords: 電子工作,製作物,DIY,ice458
 image: /logo.png
 categories:
 - 電子工作
@@ -43,7 +43,7 @@ mathjax: true
                     <div class="process-step">
                         <h3>例1：Ch1にのみ正弦波を入れるとき</h3>
                         <div class="article-image">
-                            <img src="img/xy_example_1.png" alt="XYモードの例1">
+                            <img src="img/xy_example_1.webp" alt="XYモードの例1">
                             <p class="image-caption">XYモードの例1</p>
                         </div>
                         <p>Ch1の正弦波に対応してX軸が左右に動くので、横向きの直線が表示されます。</p>
@@ -52,7 +52,7 @@ mathjax: true
                     <div class="process-step">
                         <h3>例2：Ch1に高い周波数の正弦波、Ch2に低い周波数の三角波を入れるとき</h3>
                         <div class="article-image">
-                            <img src="img/xy_example_2.png" alt="XYモードの例2">
+                            <img src="img/xy_example_2.webp" alt="XYモードの例2">
                             <p class="image-caption">XYモードの例2</p>
                         </div>
                         <p>Ch1の高い周波数の正弦波に対応してX軸が高速で左右に動き、Ch2の低い周波数の三角波に対応してY軸がゆっくり上下に動くので、塗りつぶされた四角形が表示されます。</p>
@@ -62,7 +62,7 @@ mathjax: true
                         <h3>「L」を表示する</h3>
                         <p>例2の正弦波を、適切なタイミングと電圧でクリップすればL字の図形を作れます。</p>
                         <div class="article-image">
-                            <img src="img/xy_example_3.png" alt="XYモードでのL字表示例">
+                            <img src="img/xy_example_3.webp" alt="XYモードでのL字表示例">
                             <p class="image-caption">XYモードでのL字表示</p>
                         </div>
                         <p>この例では、三角波が-0.7V以上の時に正弦波を-0.5Vでクリップしています。これを電子回路で実現すれば、オシロスコープに「L」の文字を表示できます。</p>
@@ -74,7 +74,7 @@ mathjax: true
                     <h2>設計・回路図</h2>
                     <p>回路図は以下の通りです。</p>
                     <div class="article-image">
-                        <img src="img/sch.png" alt="回路図">
+                        <img src="img/sch.webp" alt="回路図">
                         <p class="image-caption">回路図</p>
                     </div>
                     <p>回路は、U2Aのウィーンブリッジ発振回路（正弦波）、U1AとU18の三角波発振回路、U3Aの弛緩発振回路（矩形波）、U3Bの閾値検出回路、Q2とD1のクリップ回路、Q1、Q3の禁止回路から構成されます。</p>
@@ -82,7 +82,10 @@ mathjax: true
                     <p>チカチカは、弛緩発振回路と禁止回路で行います。両chの出力電圧をQ1、Q3で-15Vに固定することで、オシロスコープ上の表示を点にします。これによりLの表示が消えるのと同時に、LEDへの電流を遮断します。</p>
 
                     <div class="article-image">
-                        <img src="img/L.gif" alt="動作の様子">
+                        <video autoplay loop muted playsinline aria-label="動作の様子">
+                        <source src="img/L.webm" type="video/webm">
+                        <source src="img/L.mp4" type="video/mp4">
+                    </video>
                         <p class="image-caption">動作の様子</p>
                     </div>
                     <p>完全に駄洒落ですが、アナログ回路の面白さが詰まっているのではないかと思います。</p>

@@ -5,13 +5,13 @@ nav: projects
 permalink: /project-58097/
 title: デュアルトラッキング電源装置
 description: 正負の出力電圧を、その比が等しい状態で可変できるデュアルトラッキング方式の安定化電源装置を作りました。オペアンプの実験などに便利です。
-keywords: 測定器,電子工作,電子工作,製作物,DIY,ice458
+keywords: 測定器,電子工作,製作物,DIY,ice458
 image: /logo.png
 categories:
 - 測定器
 - 電子工作
-date: 2021年9月6日
-updated: 2021年9月6日
+date: 2021年09月06日
+updated: 2021年09月06日
 summary: 絶対値の等しい正負電圧を出力可能な電源装置です。
 order: 12
 sitemap:
@@ -21,7 +21,7 @@ sitemap:
 
                 <p>正負の出力電圧を、その比が等しい状態で可変できるデュアルトラッキング方式の安定化電源装置を作りました。オペアンプの実験などに便利です。</p>
                 <div class="article-image">
-                    <img src="img/img_4479.png" alt="完成写真">
+                    <img src="img/img_4479.webp" alt="完成写真">
                     <p class="image-caption">完成写真</p>
                 </div>
                 <div class="article-section">
@@ -39,13 +39,13 @@ sitemap:
                     <h2>回路図</h2>
                     <h3>全体回路図</h3>
                     <div class="article-image">
-                        <img src="img/a.png" alt="全体回路図">
+                        <img src="img/a.webp" alt="全体回路図">
                         <p class="image-caption">全体回路図</p>
                     </div>
 
                     <h3>AC入力と整流部分の回路図</h3>
                     <div class="article-image">
-                        <img src="img/b.png" alt="AC入力と整流部分の回路">
+                        <img src="img/b.webp" alt="AC入力と整流部分の回路">
                         <p class="image-caption">AC入力と整流部分の回路</p>
                     </div>
                     <p>一次側にはノイズフィルタを入れてあります。よくある X コンデンサと Y コンデンサを使ったものではなく、X コンデンサのみのフィルタを採用しました。Y
@@ -53,7 +53,7 @@ sitemap:
 
                     <h3>電源回路</h3>
                     <div class="article-image">
-                        <img src="img/c.png" alt="電源回路">
+                        <img src="img/c.webp" alt="電源回路">
                         <p class="image-caption">電源回路</p>
                     </div>
                     <p>三端子レギュレータを使ってオペアンプやマイコンなどへの電源を用意します。三端子レギュレータで正負電源を作る際はラッチダウン防止用のダイオード (D18、D19)
@@ -62,7 +62,7 @@ sitemap:
 
                     <h3>定電圧回路</h3>
                     <div class="article-image">
-                        <img src="img/d.png" alt="定電圧回路">
+                        <img src="img/d.webp" alt="定電圧回路">
                         <p class="image-caption">定電圧回路</p>
                     </div>
                     <p>よくある NFB 型定電圧回路です。オペアンプで基準電圧と出力電圧を比較し、出力トランジスタを制御します。出力コンデンサに ESR が小さいものを選ぶと位相余裕がなくなり不安定になります。今回は
@@ -79,7 +79,7 @@ sitemap:
 
                     <h3>制御回路</h3>
                     <div class="article-image">
-                        <img src="img/e.png" alt="制御回路">
+                        <img src="img/e.webp" alt="制御回路">
                         <p class="image-caption">制御回路</p>
                     </div>
                     <p>DAC の設定、出力の電圧と電流の計測や画面表示などの制御を PIC マイコンの PIC18F26Q84 で行っています。演算機能付き12bitADC
@@ -88,7 +88,7 @@ sitemap:
                     <p>電源装置の保護機能もこの PIC が担っています。PIC18F26Q84 はごく小規模な PLD のような CLC
                         というモジュールが乗っており、次のような論理回路を構成することで過電流保護と過熱保護の機能を持たせました。</p>
                     <div class="article-image">
-                        <img src="img/img_4450.png" alt="CLC">
+                        <img src="img/img_4450.webp" alt="CLC">
                         <p class="image-caption">CLC</p>
                     </div>
                     <p>内蔵 DAC の出力と電流計測回路の出力電圧を内蔵コンパレータで比較し、設定した値以上の電流が流れると RS フリップフロップの出力がHiになります。CLC モジュールの出力端子は MOSFET
@@ -99,11 +99,11 @@ sitemap:
                 <div class="article-section">
                     <h2>組み立てなど</h2>
                     <div class="article-image">
-                        <img src="img/img_4452.png" alt="上からの写真">
+                        <img src="img/img_4452.webp" alt="上からの写真">
                         <p class="image-caption">上からの写真</p>
                     </div>
                     <div class="article-image">
-                        <img src="img/img_4454.png" alt="横からの写真">
+                        <img src="img/img_4454.webp" alt="横からの写真">
                         <p class="image-caption">横からの写真</p>
                     </div>
                     <p>ケースは 摂津金属工業 の UZ-3 です。あらゆる寸法が今回の作品にぴったりで、非常に安価なケースでした。</p>
@@ -117,11 +117,11 @@ sitemap:
                     <p>出力15V のとき、無負荷状態から15Ω の抵抗を接続し1A 流した時の過渡波形です。</p>
                     <div class="image-row">
                         <div class="image-item">
-                            <img src="img/ds1z_quickprint1.png" alt="測定結果">
+                            <img src="img/ds1z_quickprint1.webp" alt="測定結果">
                             <p class="image-caption">測定結果</p>
                         </div>
                         <div class="image-item">
-                            <img src="img/ds1z_quickprint2.png" alt="拡大した波形">
+                            <img src="img/ds1z_quickprint2.webp" alt="拡大した波形">
                             <p class="image-caption">拡大した波形</p>
                         </div>
                     </div>
@@ -131,11 +131,11 @@ sitemap:
                     <p>次は出力5V のとき、無負荷状態から7.5Ω の抵抗を接続し0.67A 流した時の過渡波形です。</p>
                     <div class="image-row">
                         <div class="image-item">
-                            <img src="img/ds1z_quickprint3.png" alt="測定結果">
+                            <img src="img/ds1z_quickprint3.webp" alt="測定結果">
                             <p class="image-caption">測定結果</p>
                         </div>
                         <div class="image-item">
-                            <img src="img/ds1z_quickprint4.png" alt="拡大した波形">
+                            <img src="img/ds1z_quickprint4.webp" alt="拡大した波形">
                             <p class="image-caption">拡大した波形</p>
                         </div>
                     </div>

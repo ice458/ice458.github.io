@@ -26,7 +26,7 @@ sitemap:
                     <p>自作オーディオは測定値を追い求める方向や音や回路の面白さを追い求める方向、ヴィンテージな方向などいろいろありますが、このようなデジタル信号処理モリモリもなかなか楽しいです。</p>
                     
                     <div class="article-image">
-                        <img src="img/IMG_9463.png" alt="HRTFヘッドホンアンプの外観">
+                        <img src="img/IMG_9463.webp" alt="HRTFヘッドホンアンプの外観">
                         <p class="image-caption">完成した HRTF ヘッドホンアンプ</p>
                     </div>
                 </div>
@@ -76,7 +76,7 @@ sitemap:
                     <p>ヘッドホン出力とライン入力、USB 入力を持ち、マイコンは Raspberry Pi Pico 2 と同じ RP2350A を使用しています。コーデックには入出力を一体で賄える SGTL5000 を使い、こちらを I2S マスターとして 48kHz / 24bit で動作させ、Pico 側は PIO で I2S スレーブとして受け取る構成にしました。MCLK は SGTL5000 が要求する 12MHz を、SYSCLK 252MHz から PWM による整数分周 (252 / 21) で生成しています。オーバークロックは分周が整数比になる点と、DSP 処理に十分なサイクル余裕を確保するために必要でした。</p>
 
                     <div class="article-image">
-                        <img src="img/sch.png" alt="HRTFヘッドホンアンプの回路図">
+                        <img src="img/sch.webp" alt="HRTFヘッドホンアンプの回路図">
                         <p class="image-caption">回路図</p>
                     </div>
 
@@ -94,7 +94,7 @@ sitemap:
                     </ul>
 
                     <div class="article-image">
-                        <img src="img/block.png" alt="信号処理のブロック図(概略)">
+                        <img src="img/block.webp" alt="信号処理のブロック図(概略)">
                         <p class="image-caption">信号処理のブロック図(概略)</p>
                     </div>
 
@@ -213,7 +213,7 @@ sitemap:
                     <p>パススルーモードから頭外定位モードへ切り替えると、音像が耳の近くから前方へ移動するのがはっきり分かります。ただし HRIR は本来、個人の耳介・頭部形状に合わせたものが最適なので、SADIE II の被験者すべてが自分の耳に合うわけではありません。何人かを切り替えて、最も自然に前方から聞こえるデータを選ぶ使い方が基本となります。音場拡張を ON にすると空間の広がりが強まり、臨場感が増します。ライブ音源などを聴くと非常に楽しいです。</p>
 
                     <div class="article-image">
-                        <img src="img/IMG_9465.png" alt="アクリルパネルで挟んだHRTFヘッドホンアンプの写真">
+                        <img src="img/IMG_9465.webp" alt="アクリルパネルで挟んだHRTFヘッドホンアンプの写真">
                         <p class="image-caption">アクリルパネルで挟んだ</p>
                     </div>
                 </div>

@@ -381,6 +381,8 @@ class SiteManager:
                   font=("", 14, "bold")).pack(side=tk.LEFT)
         ttk.Button(top, text="プレビュー", command=self.preview).pack(side=tk.RIGHT)
         ttk.Button(top, text="点検", command=self.check).pack(side=tk.RIGHT, padx=6)
+        ttk.Button(top, text="画像を最適化",
+                   command=self.optimize_media).pack(side=tk.RIGHT)
         ttk.Button(top, text="保存", command=self.save_all).pack(side=tk.RIGHT)
         ttk.Button(top, text="再読み込み", command=self.reload).pack(side=tk.RIGHT, padx=6)
 
@@ -667,7 +669,7 @@ class SiteManager:
                 if not p.get("categories"):
                     problems.append(f"{p.title}: カテゴリがありません")
                 # 本文中の画像が実在するか
-                for src in re.findall(r'<img[^>]+src="([^"]+)"', p.body):
+                for src in re.findall(r'<(?:img|source)[^>]+src="([^"]+)"', p.body):
                     if src.startswith(("http://", "https://", "data:", "/")):
                         continue
                     # ?w=800 のようなクエリや #fragment はファイル名ではないので外す。
@@ -688,6 +690,69 @@ class SiteManager:
         else:
             messagebox.showinfo("点検結果", "問題は見つかりませんでした。")
         self.status.set(f"点検: 問題 {len(problems)} 件")
+
+    def optimize_media(self):
+        """画像とアニメGIFを軽い形式に変換する（解像度・フレームレートは維持）"""
+        import tkinter.simpledialog  # noqa: F401  (未使用だが将来用)
+        script = ROOT / "_tools" / "optimize_media.py"
+        self.status.set("変換対象を調べています...")
+        self.root.update_idletasks()
+        dry = subprocess.run([sys.executable, "-X", "utf8", str(script)],
+                             cwd=ROOT, capture_output=True, text=True,
+                             encoding="utf-8", errors="replace")
+        if dry.returncode != 0:
+            messagebox.showerror("実行できません", dry.stdout + dry.stderr)
+            self.status.set("最適化を中止しました")
+            return
+        if "合計" not in dry.stdout:
+            messagebox.showinfo("画像の最適化", "変換できる画像はありませんでした。")
+            self.status.set("最適化: 対象なし")
+            return
+
+        win = tk.Toplevel(self.root)
+        win.title("画像の最適化")
+        win.geometry("900x560")
+        win.transient(self.root)
+        win.grab_set()
+        ttk.Label(win, text="次のように変換します（解像度とフレームレートは変わりません）",
+                  padding=10).pack(anchor=tk.W)
+        box = tk.Text(win, wrap=tk.NONE, font=("Consolas", 9))
+        box.pack(fill=tk.BOTH, expand=True, padx=10)
+        box.insert("1.0", dry.stdout)
+        box.configure(state=tk.DISABLED)
+        delvar = tk.BooleanVar(value=False)
+        ttk.Checkbutton(win, text="変換に成功した元ファイルを削除する",
+                        variable=delvar).pack(anchor=tk.W, padx=12, pady=6)
+        bar = ttk.Frame(win, padding=(10, 0, 10, 10)); bar.pack(fill=tk.X)
+        result = {"go": False}
+
+        def go():
+            result["go"] = True
+            win.destroy()
+        ttk.Button(bar, text="キャンセル", command=win.destroy).pack(side=tk.RIGHT)
+        ttk.Button(bar, text="実行", command=go).pack(side=tk.RIGHT, padx=6)
+        win.wait_window()
+        if not result["go"]:
+            self.status.set("最適化を取りやめました")
+            return
+
+        args = [sys.executable, "-X", "utf8", str(script), "--write"]
+        if delvar.get():
+            args.append("--delete-originals")
+        self.status.set("変換中です。しばらくかかります...")
+        self.root.update_idletasks()
+        r = subprocess.run(args, cwd=ROOT, capture_output=True, text=True,
+                           encoding="utf-8", errors="replace")
+        if r.returncode != 0:
+            messagebox.showerror("変換に失敗しました", r.stdout + r.stderr)
+            self.status.set("最適化に失敗しました")
+            return
+        last = [l for l in r.stdout.splitlines() if "合計" in l or "書き換え" in l]
+        messagebox.showinfo("変換しました",
+                            "\n".join(last) + "\n\n"
+                            "プレビューで表示を確認してください。")
+        self.reload()
+        self.status.set("画像の最適化が完了しました")
 
     def _ensure_server(self):
         """ビルドしてプレビュー用サーバを起動する（起動済みなら再ビルドのみ）"""
