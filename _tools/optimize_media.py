@@ -239,10 +239,9 @@ def cleanup_originals(write):
 
     victims, kept = [], []
     for p in pages:
-        d = p.parent / "img"
-        if not d.exists():
-            continue
-        for f in sorted(d.iterdir()):
+        for f in sorted(p.parent.rglob("*")):
+            if not f.is_file():
+                continue
             ext = f.suffix.lower()
             if ext not in STILL_EXT and ext != ".gif":
                 continue
@@ -300,10 +299,11 @@ def main():
 
     pages = sorted(list(ROOT.glob("project-*/index.html")) +
                    list(ROOT.glob("blog/*/index.html")))
+    # img/ の中だけでなく、記事フォルダ配下のどこにあっても対象にする
     imgs = []
     for d in [p.parent for p in pages]:
-        for f in sorted((d / "img").glob("*")) if (d / "img").exists() else []:
-            if f.suffix.lower() in STILL_EXT or f.suffix.lower() == ".gif":
+        for f in sorted(d.rglob("*")):
+            if f.is_file() and (f.suffix.lower() in STILL_EXT or f.suffix.lower() == ".gif"):
                 imgs.append(f)
 
     still_map, gif_map = {}, {}
@@ -341,8 +341,11 @@ def main():
         print(f"{'合計':52} {fmt(tot_before):>9} {fmt(tot_after):>9} "
               f"{100*(tot_before-tot_after)//tot_before:5}%")
 
+    # 書き換えも index.html だけでは足りない。印刷用の summary*.html なども対象。
     changed = 0
-    for p in pages:
+    write_pages = sorted(set(list(ROOT.glob("project-*/*.htm*")) +
+                             list(ROOT.glob("blog/*/*.htm*"))))
+    for p in write_pages:
         if rewrite_html(p, still_map, gif_map, a.write):
             changed += 1
     print(f"\n参照を書き換えるページ: {changed}")
