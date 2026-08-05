@@ -213,10 +213,15 @@ def rewrite_html(page, still_map, gif_map, write):
 def cleanup_originals(write):
     """変換後の版が揃っていて、かつ HTML から参照されていない元ファイルを削除する。
 
-    再変換はしない。安全のため次の3つを満たすものだけを対象にする:
+    再変換はしない。安全のため次の2つを満たすものだけを対象にする:
       1. 変換後のファイルが実在し、サイズが 0 でない
       2. どの HTML からも元ファイルが参照されていない
-      3. 変換後のファイルが実際に参照されている
+
+    どこからも参照されていない孤立画像も、変換後の版があれば元は削除する。
+    変換後が参照されているかどうかは削除の条件にしない（条件にすると、
+    もともとページで使われていない画像の元ファイルが永久に残るため）。
+    差し替え漏れは条件 2 が捕まえる: 書き換えに失敗していれば元ファイルが
+    参照されたままなので、その場合は削除されない。
     """
     pages = sorted(list(ROOT.glob("project-*/index.html")) +
                    list(ROOT.glob("blog/*/index.html")))
@@ -247,23 +252,26 @@ def cleanup_originals(write):
                 kept.append((f, "変換後のファイルが無い")); continue
             if f.resolve() in refs:
                 kept.append((f, "まだ HTML から参照されている")); continue
-            if not any(o.resolve() in refs for o in outs):
-                kept.append((f, "変換後が参照されていない")); continue
-            victims.append((f, sum(size(o) for o in outs)))
+            orphan = not any(o.resolve() in refs for o in outs)
+            victims.append((f, sum(size(o) for o in outs), orphan))
 
-    freed = sum(size(f) for f, _ in victims)
-    print(f"{'削除対象':56} {'元':>10} {'変換後':>10}")
-    print("-" * 82)
-    for f, after in victims:
-        print(f"{str(f.relative_to(ROOT))[:56]:56} {fmt(size(f)):>10} {fmt(after):>10}")
-    print("-" * 82)
-    print(f"{len(victims)} 個 / 解放される容量 {fmt(freed)}")
+    freed = sum(size(f) for f, _, _ in victims)
+    n_orphan = sum(1 for _, _, o in victims if o)
+    print(f"{'削除対象':56} {'元':>10} {'変換後':>10}  備考")
+    print("-" * 92)
+    for f, after, orphan in victims:
+        note = "どのページからも未参照" if orphan else ""
+        print(f"{str(f.relative_to(ROOT))[:56]:56} {fmt(size(f)):>10} "
+              f"{fmt(after):>10}  {note}")
+    print("-" * 92)
+    print(f"{len(victims)} 個 / 解放される容量 {fmt(freed)}"
+          + (f"（うち未参照の孤立画像 {n_orphan} 個）" if n_orphan else ""))
     if kept:
         print(f"\n残すもの {len(kept)} 個:")
         for f, why in kept[:20]:
             print(f"  {str(f.relative_to(ROOT))[:60]:60} {why}")
     if write:
-        for f, _ in victims:
+        for f, _, _ in victims:
             f.unlink(missing_ok=True)
         print(f"\n{len(victims)} 個を削除しました。")
     else:
