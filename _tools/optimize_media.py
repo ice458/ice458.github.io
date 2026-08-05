@@ -208,6 +208,69 @@ def rewrite_html(page, still_map, gif_map, write):
     return t != orig
 
 
+# ------------------------------------------------------------ 変換済みの元ファイル掃除
+
+def cleanup_originals(write):
+    """変換後の版が揃っていて、かつ HTML から参照されていない元ファイルを削除する。
+
+    再変換はしない。安全のため次の3つを満たすものだけを対象にする:
+      1. 変換後のファイルが実在し、サイズが 0 でない
+      2. どの HTML からも元ファイルが参照されていない
+      3. 変換後のファイルが実際に参照されている
+    """
+    pages = sorted(list(ROOT.glob("project-*/index.html")) +
+                   list(ROOT.glob("blog/*/index.html")))
+    # 参照の走査は index.html だけでは足りない。印刷用の summary*.html など
+    # 同じフォルダの別ページが画像を使っていることがある。
+    ref_pages = sorted(set(list(ROOT.glob("project-*/*.htm*")) +
+                           list(ROOT.glob("blog/*/*.htm*"))))
+    refs = set()
+    for p in ref_pages:
+        t = p.read_text(encoding="utf-8")
+        for s in re.findall(r'<(?:img|source)[^>]+src="([^"]+)"', t):
+            if s.startswith(("http://", "https://", "data:")):
+                continue
+            refs.add((p.parent / re.split(r"[?#]", s)[0]).resolve())
+
+    victims, kept = [], []
+    for p in pages:
+        d = p.parent / "img"
+        if not d.exists():
+            continue
+        for f in sorted(d.iterdir()):
+            ext = f.suffix.lower()
+            if ext not in STILL_EXT and ext != ".gif":
+                continue
+            outs = ([f.with_suffix(".webp")] if ext in STILL_EXT
+                    else [f.with_suffix(".webm"), f.with_suffix(".mp4")])
+            if not all(o.exists() and size(o) for o in outs):
+                kept.append((f, "変換後のファイルが無い")); continue
+            if f.resolve() in refs:
+                kept.append((f, "まだ HTML から参照されている")); continue
+            if not any(o.resolve() in refs for o in outs):
+                kept.append((f, "変換後が参照されていない")); continue
+            victims.append((f, sum(size(o) for o in outs)))
+
+    freed = sum(size(f) for f, _ in victims)
+    print(f"{'削除対象':56} {'元':>10} {'変換後':>10}")
+    print("-" * 82)
+    for f, after in victims:
+        print(f"{str(f.relative_to(ROOT))[:56]:56} {fmt(size(f)):>10} {fmt(after):>10}")
+    print("-" * 82)
+    print(f"{len(victims)} 個 / 解放される容量 {fmt(freed)}")
+    if kept:
+        print(f"\n残すもの {len(kept)} 個:")
+        for f, why in kept[:20]:
+            print(f"  {str(f.relative_to(ROOT))[:60]:60} {why}")
+    if write:
+        for f, _ in victims:
+            f.unlink(missing_ok=True)
+        print(f"\n{len(victims)} 個を削除しました。")
+    else:
+        print("\n※ ドライラン。--write を付けると実際に削除します。")
+    return 0
+
+
 # ------------------------------------------------------------ 本体
 
 def main():
@@ -215,12 +278,17 @@ def main():
     ap.add_argument("--write", action="store_true", help="実際に変換・書き換えする")
     ap.add_argument("--delete-originals", action="store_true",
                     help="変換に成功した元ファイルを削除する")
+    ap.add_argument("--cleanup-originals", action="store_true",
+                    help="再変換せず、変換済みで未参照になった元ファイルだけ削除する")
     a = ap.parse_args()
 
     if not (have("ffmpeg") and have("ffprobe")):
         print("ffmpeg / ffprobe が見つかりません。\n"
               "  https://www.gyan.dev/ffmpeg/builds/ から入手し、PATH を通してください。")
         return 1
+
+    if a.cleanup_originals:
+        return cleanup_originals(a.write)
 
     pages = sorted(list(ROOT.glob("project-*/index.html")) +
                    list(ROOT.glob("blog/*/index.html")))

@@ -721,7 +721,7 @@ class SiteManager:
         box.insert("1.0", dry.stdout)
         box.configure(state=tk.DISABLED)
         delvar = tk.BooleanVar(value=False)
-        ttk.Checkbutton(win, text="変換に成功した元ファイルを削除する",
+        ttk.Checkbutton(win, text="変換済みで参照されなくなった元ファイルを削除する",
                         variable=delvar).pack(anchor=tk.W, padx=12, pady=6)
         bar = ttk.Frame(win, padding=(10, 0, 10, 10)); bar.pack(fill=tk.X)
         result = {"go": False}
@@ -736,18 +736,27 @@ class SiteManager:
             self.status.set("最適化を取りやめました")
             return
 
-        args = [sys.executable, "-X", "utf8", str(script), "--write"]
-        if delvar.get():
-            args.append("--delete-originals")
         self.status.set("変換中です。しばらくかかります...")
         self.root.update_idletasks()
-        r = subprocess.run(args, cwd=ROOT, capture_output=True, text=True,
+        r = subprocess.run([sys.executable, "-X", "utf8", str(script), "--write"],
+                           cwd=ROOT, capture_output=True, text=True,
                            encoding="utf-8", errors="replace")
         if r.returncode != 0:
             messagebox.showerror("変換に失敗しました", r.stdout + r.stderr)
             self.status.set("最適化に失敗しました")
             return
-        last = [l for l in r.stdout.splitlines() if "合計" in l or "書き換え" in l]
+
+        # 元ファイルの削除は、参照が残っていないことを確かめてから行う専用処理に任せる
+        if delvar.get():
+            self.status.set("元ファイルを整理しています...")
+            self.root.update_idletasks()
+            c = subprocess.run([sys.executable, "-X", "utf8", str(script),
+                                "--cleanup-originals", "--write"],
+                               cwd=ROOT, capture_output=True, text=True,
+                               encoding="utf-8", errors="replace")
+            r.stdout += chr(10) + c.stdout
+        last = [l for l in r.stdout.splitlines()
+                if "合計" in l or "書き換え" in l or "削除しました" in l]
         messagebox.showinfo("変換しました",
                             "\n".join(last) + "\n\n"
                             "プレビューで表示を確認してください。")
