@@ -17,6 +17,9 @@ exclude:
   - __pycache__/
   - templates/
   - "*.md"
+  # 旧サイトのアーカイブ。ローカルビルドに巻き込まれないよう明示的に除外する
+  # （.gitignore 済みなので GitHub Pages 上には元々存在しない）
+  - bp/
 
 # include は exclude より優先される（Jekyll は included? を先に評価して打ち切る）。
 # engine.py は SymTF が実行時に fetch するため、上の "*.py" から除外し返す必要がある。

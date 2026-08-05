@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+{% include gtm-head.html %}
+{% include head.html %}
+</head>
+
+<body{% if page.type == 'article' %} class="blog-article"{% endif %}>
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-MMZ5XH4V"
+height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+<!-- End Google Tag Manager (noscript) -->
+
+{% include site-header.html nav=page.nav %}
+
+{{ content }}
+
+    <footer class="site-footer">
+        <div class="site-info">
+            <p>&copy; 2025 ice458の物置き　|　<a href="/privacy.html">プライバシーポリシー</a></p>
+        </div>
+    </footer>
+
+{%- if page.script %}
+    <script src="{{ page.script }}"></script>
+{%- endif %}
+    <script src="/consent.js" defer></script>
+</body>
+
+</html>

@@ -1,0 +1,22 @@
+{%- comment -%}
+パンくずリスト。page.type (project / article / doc) で中間項目が決まる。
+{%- endcomment -%}
+            <nav class="breadcrumb" aria-label="パンくずリスト">
+                <ol class="breadcrumb-list">
+                    <li class="breadcrumb-item">
+                        <a href="/" class="breadcrumb-link">ホーム</a>
+                    </li>
+{%- if page.type == 'project' %}
+                    <li class="breadcrumb-item">
+                        <a href="/#projects" class="breadcrumb-link">プロジェクト</a>
+                    </li>
+{%- elsif page.type == 'article' %}
+                    <li class="breadcrumb-item">
+                        <a href="/blog.html" class="breadcrumb-link">雑多なメモ等</a>
+                    </li>
+{%- endif %}
+                    <li class="breadcrumb-item">
+                        <span class="breadcrumb-current">{{ page.title | escape }}</span>
+                    </li>
+                </ol>
+            </nav>

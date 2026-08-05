@@ -1,0 +1,103 @@
+{%- comment -%}
+ページ <head> の共通部。page 変数から全メタタグを組み立てる。
+使う front matter: title / description / og_description / og_title_plain /
+image / keywords / permalink / og_type / mathjax / video / video_upload_date
+{%- endcomment -%}
+{%- assign page_url = site.url | append: page.permalink -%}
+{%- if page.og_title_plain -%}
+  {%- assign og_title = page.title -%}
+{%- else -%}
+  {%- assign og_title = page.title | append: " - ice458の物置き" -%}
+{%- endif -%}
+{%- assign og_desc = page.og_description | default: page.description -%}
+{%- if page.title_full -%}
+  {%- assign title_tag = page.title_full -%}
+  {%- assign og_title = page.title_full -%}
+{%- else -%}
+  {%- assign title_tag = page.title | append: " - ice458の物置き" -%}
+{%- endif -%}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title_tag | escape }}</title>
+    <meta name="description" content="{{ page.description | escape }}">
+{%- if page.keywords %}
+    <meta name="keywords" content="{{ page.keywords | escape }}">
+{%- endif %}
+    <meta name="author" content="ice458">
+
+    <!-- Canonical URL -->
+    <link rel="canonical" href="{{ page_url }}">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="{{ page.og_type | default: 'article' }}">
+    <meta property="og:url" content="{{ page_url }}">
+    <meta property="og:title" content="{{ og_title | escape }}">
+    <meta property="og:description" content="{{ og_desc | escape }}">
+{%- if page.image %}
+    <meta property="og:image" content="{{ site.url }}{{ page.image }}">
+{%- endif %}
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="{{ page_url }}">
+    <meta property="twitter:title" content="{{ og_title | escape }}">
+    <meta property="twitter:description" content="{{ og_desc | escape }}">
+{%- if page.image %}
+    <meta property="twitter:image" content="{{ site.url }}{{ page.image }}">
+{%- endif %}
+
+    <link rel="stylesheet" href="/styles.css">
+    <!-- ファビコン設定 -->
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/favicon-180x180.png">
+    <link rel="manifest" href="/site.webmanifest">
+
+    <!-- ブラウザ固有のメタタグ -->
+    <meta name="theme-color" content="#aaaeae">
+    <meta name="msapplication-TileColor" content="#aaaeae">
+    <meta name="msapplication-TileImage" content="/favicon-180x180.png">
+{%- if page.mathjax %}
+
+    <!-- MathJax for mathematical expressions -->
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+{%- endif %}
+{%- if page.site_jsonld %}
+
+    <!-- Structured data for Google -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": {{ site.title | jsonify }},
+      "description": {{ site.description | jsonify }},
+      "url": "{{ site.url }}/",
+      "author": {
+        "@type": "Person",
+        "name": {{ site.author | jsonify }}
+      },
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "{{ site.url }}/?search={search_term_string}",
+        "query-input": "required name=search_term_string"
+      }
+    }
+    </script>
+{%- endif %}
+{%- if page.video %}
+
+    <!-- Video structured data for Google -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "VideoObject",
+      "name": {{ page.title | jsonify }},
+      "description": {{ page.description | jsonify }},
+      "thumbnailUrl": "https://img.youtube.com/vi/{{ page.video }}/hqdefault.jpg",
+      "uploadDate": "{{ page.video_upload_date }}",
+      "contentUrl": "https://www.youtube.com/watch?v={{ page.video }}",
+      "embedUrl": "https://www.youtube.com/embed/{{ page.video }}"
+    }
+    </script>
+{%- endif %}

@@ -1,152 +1,24 @@
 ---
-layout: null
+layout: page
+type: project
+nav: projects
 permalink: /project-58097/
+title: デュアルトラッキング電源装置
+description: 正負の出力電圧を、その比が等しい状態で可変できるデュアルトラッキング方式の安定化電源装置を作りました。オペアンプの実験などに便利です。
+keywords: 測定器,電子工作,電子工作,製作物,DIY,ice458
+image: /logo.png
+categories:
+- 測定器
+- 電子工作
+date: 2021年9月6日
+updated: 2021年9月6日
+summary: 絶対値の等しい正負電圧を出力可能な電源装置です。
+order: 12
 sitemap:
   priority: 0.7
   changefreq: monthly
 ---
-<!DOCTYPE html>
-<html lang="ja">
 
-<head>
-<!-- Consent Mode default (runs before GTM) -->
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('consent', 'default', {
-    ad_storage: 'denied',
-    analytics_storage: 'denied',
-    ad_user_data: 'denied',
-    ad_personalization: 'denied',
-    wait_for_update: 2000
-  });
-</script>
-<!-- Google Analytics cookie domain override (host-only) -->
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('set','cookie_domain','none');
-</script>
-<!-- Consent geo override: auto-grant analytics outside EEA/UK -->
-<script>
-  (function(){
-    try {
-      var stored = null;
-      try { stored = localStorage.getItem('consent.choice'); } catch(e) {}
-      if (stored === 'denied') return;
-      if (stored === 'granted') {
-        gtag('consent','update',{
-          ad_storage:'granted', analytics_storage:'granted',
-          ad_user_data:'granted', ad_personalization:'granted'
-        });
-        return;
-      }
-      var tz = '';
-      try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone || ''; } catch(e) {}
-      var isEEA = /^Europe\//.test(tz)
-               || tz === 'Asia/Nicosia'
-               || /^Atlantic\/(Reykjavik|Madeira|Azores|Canary)$/.test(tz);
-      if (!isEEA) {
-        gtag('consent','update',{ analytics_storage:'granted' });
-      }
-    } catch(e) {}
-  })();
-</script>
-<!-- Google Tag Manager -->
-<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-})(window,document,'script','dataLayer','GTM-MMZ5XH4V');</script>
-<!-- End Google Tag Manager -->
-
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>デュアルトラッキング電源装置 - ice458の物置き</title>
-    
-    <!-- Canonical URL -->
-    <link rel="canonical" href="https://ice458.github.io/project-58097/">
-    
-    <meta name="description" content="正負の出力電圧を、その比が等しい状態で可変できるデュアルトラッキング方式の安定化電源装置を作りました。オペアンプの実験などに便利です。">
-    <meta name="keywords" content="測定器,電子工作,電子工作,製作物,DIY,ice458">
-    <meta name="author" content="ice458">
-
-    <!-- Open Graph / Facebook -->
-    <meta property="og:type" content="article">
-    <meta property="og:url" content="https://ice458.github.io/project-58097/">
-    <meta property="og:title" content="デュアルトラッキング電源装置 - ice458の物置き">
-    <meta property="og:description" content="正負の出力電圧を、その比が等しい状態で可変できるデュアルトラッキング方式の安定化電源装置を作りました。オペアンプの実験などに便利です。">
-    <meta property="og:image" content="https://ice458.github.io/logo.png">
-
-    <!-- Twitter -->
-    <meta property="twitter:card" content="summary_large_image">
-    <meta property="twitter:url" content="https://ice458.github.io/project-58097/">
-    <meta property="twitter:title" content="デュアルトラッキング電源装置 - ice458の物置き">
-    <meta property="twitter:description" content="正負の出力電圧を、その比が等しい状態で可変できるデュアルトラッキング方式の安定化電源装置を作りました。オペアンプの実験などに便利です。">
-    <meta property="twitter:image" content="https://ice458.github.io/logo.png">
-    <link rel="stylesheet" href="../styles.css">
-    <!-- ファビコン設定 -->
-    <link rel="icon" type="image/x-icon" href="../favicon.ico">
-    <link rel="icon" type="image/png" sizes="16x16" href="../favicon-16x16.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="../favicon-32x32.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="../favicon-180x180.png">
-    <link rel="manifest" href="../site.webmanifest">
-
-    <!-- ブラウザ固有のメタタグ -->
-    <meta name="theme-color" content="#aaaeae">
-    <meta name="msapplication-TileColor" content="#aaaeae">
-    <meta name="msapplication-TileImage" content="../favicon-180x180.png">
-</head>
-
-<body>
-<!-- Google Tag Manager (noscript) -->
-<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-MMZ5XH4V"
-height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
-<!-- End Google Tag Manager (noscript) -->
-
-    <header class="site-header">
-        <div class="site-branding">
-            <div class="site-logo">
-                <img src="../logo.png" alt="ロゴ" class="logo-img">
-            </div>
-            <h1 class="site-title"><a href="../index.html">ice458の物置き</a></h1>
-        </div>
-        <nav class="site-nav">
-            <a href="../index.html" class="nav-link active">プロジェクト</a>
-            <a href="../blog.html" class="nav-link">雑多なメモ等</a>
-        </nav>
-    </header>
-
-    <main class="site-main">
-        
-            <!-- パンくずリスト -->
-            <nav class="breadcrumb" aria-label="パンくずリスト">
-                <ol class="breadcrumb-list">
-                    <li class="breadcrumb-item">
-                        <a href="../index.html" class="breadcrumb-link">ホーム</a>
-                    </li>
-                    <li class="breadcrumb-item">
-                        <a href="../index.html#projects" class="breadcrumb-link">プロジェクト</a>
-                    </li>
-                    <li class="breadcrumb-item">
-                        <span class="breadcrumb-current">デュアルトラッキング電源装置</span>
-                    </li>
-                </ol>
-            </nav>
-
-        <article class="main-content">
-            <div class="article-header">
-                <h1 class="article-title">デュアルトラッキング電源装置</h1>
-                <div class="article-meta">
-                    <div class="article-categories">
-                        <span class="category-tag">測定器</span>
-                        <span class="category-tag">電子工作</span>
-                    </div>
-                    <div class="article-date">作成日: 2021年9月6日</div>
-                </div>
-            </div>
-
-            <div class="article-content">
                 <p>正負の出力電圧を、その比が等しい状態で可変できるデュアルトラッキング方式の安定化電源装置を作りました。オペアンプの実験などに便利です。</p>
                 <div class="article-image">
                     <img src="img/img_4479.png" alt="完成写真">
@@ -341,28 +213,3 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                         </table>
                     </div>
                 </div>
-            </div>
-
-            <div class="article-footer">
-                <div class="back-link">
-                    <a href="../index.html" class="back-button">← 物置きに戻る</a>
-                </div>
-                <div class="article-info">
-                    <p>最終更新: 2021年9月6日</p>
-                </div>
-            </div>
-        </article>
-        
-    </main>
-
-    <footer class="site-footer">
-        <div class="site-info">
-            <p>&copy; 2025 ice458の物置き　|　<a href="../privacy.html">プライバシーポリシー</a></p>
-        </div>
-    
-    </footer>
-
-  <script src="/consent.js" defer></script>
-</body>
-
-</html>

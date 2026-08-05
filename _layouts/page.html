@@ -1,0 +1,40 @@
+---
+layout: base
+---
+{%- if page.type == 'article' -%}
+  {%- assign back_href = '/blog.html' -%}
+  {%- assign back_text = '雑多なメモ等に戻る' -%}
+{%- else -%}
+  {%- assign back_href = '/' -%}
+  {%- assign back_text = '物置きに戻る' -%}
+{%- endif -%}
+    <main class="site-main">
+{% include breadcrumb.html %}
+
+        <article class="main-content">
+            <div class="article-header">
+                <h1 class="article-title">{{ page.title | escape }}</h1>
+                <div class="article-meta">
+                    <div class="article-categories">
+{%- for cat in page.categories %}
+                        <span class="category-tag">{{ cat | escape }}</span>
+{%- endfor %}
+                    </div>
+                    <div class="article-date">{{ page.date_label | default: '作成日' }}: {{ page.date }}</div>
+                </div>
+            </div>
+
+            <div class="article-content">
+{{ content }}
+            </div>
+
+            <div class="article-footer">
+                <div class="back-link">
+                    <a href="{{ back_href }}" class="back-button">← {{ back_text }}</a>
+                </div>
+                <div class="article-info">
+                    <p>最終更新: {{ page.updated | default: page.date }}</p>
+                </div>
+            </div>
+        </article>
+    </main>

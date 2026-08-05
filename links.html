@@ -1,102 +1,14 @@
-<!DOCTYPE html>
-<html lang="ja">
-
-<head>
-<!-- Consent Mode default (runs before GTM) -->
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('consent', 'default', {
-    ad_storage: 'denied',
-    analytics_storage: 'denied',
-    ad_user_data: 'denied',
-    ad_personalization: 'denied',
-    wait_for_update: 2000
-  });
-</script>
-<!-- Google Analytics cookie domain override (host-only) -->
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('set','cookie_domain','none');
-</script>
-<!-- Consent geo override: auto-grant analytics outside EEA/UK -->
-<script>
-  (function(){
-    try {
-      var stored = null;
-      try { stored = localStorage.getItem('consent.choice'); } catch(e) {}
-      if (stored === 'denied') return;
-      if (stored === 'granted') {
-        gtag('consent','update',{
-          ad_storage:'granted', analytics_storage:'granted',
-          ad_user_data:'granted', ad_personalization:'granted'
-        });
-        return;
-      }
-      var tz = '';
-      try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone || ''; } catch(e) {}
-      var isEEA = /^Europe\//.test(tz)
-               || tz === 'Asia/Nicosia'
-               || /^Atlantic\/(Reykjavik|Madeira|Azores|Canary)$/.test(tz);
-      if (!isEEA) {
-        gtag('consent','update',{ analytics_storage:'granted' });
-      }
-    } catch(e) {}
-  })();
-</script>
-<!-- Google Tag Manager -->
-<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-})(window,document,'script','dataLayer','GTM-MMZ5XH4V');</script>
-<!-- End Google Tag Manager -->
-
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>リンク集 - ice458の物置き</title>
-    <meta name="description" content="ice458が参考にしている技術サイトや便利なツール、関連リンクをまとめたページです。">
-    <meta name="keywords" content="リンク集,参考サイト,技術リンク,ツール,ice458">
-    <meta name="author" content="ice458">
-    
-    <!-- Canonical URL -->
-    <link rel="canonical" href="https://ice458.github.io/links.html">
-    
-    <link rel="stylesheet" href="styles.css">
-    <!-- ファビコン設定 -->
-    <link rel="icon" type="image/x-icon" href="favicon.ico">
-    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="favicon-180x180.png">
-    <link rel="manifest" href="site.webmanifest">
-
-    <!-- ブラウザ固有のメタタグ -->
-    <meta name="theme-color" content="#aaaeae">
-    <meta name="msapplication-TileColor" content="#aaaeae">
-    <meta name="msapplication-TileImage" content="favicon-180x180.png">
-</head>
-
-<body>
-<!-- Google Tag Manager (noscript) -->
-<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-MMZ5XH4V"
-height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
-<!-- End Google Tag Manager (noscript) -->
-
-    <header class="site-header">
-        <div class="site-branding">
-            <div class="site-logo">
-                <img src="logo.png" alt="ロゴ" class="logo-img">
-            </div>
-            <h1 class="site-title"><a href="index.html">ice458の物置き</a></h1>
-        </div>
-        <nav class="site-nav">
-            <a href="index.html" class="nav-link">プロジェクト</a>
-            <a href="blog.html" class="nav-link">雑多なメモ等</a>
-        </nav>
-    </header>
-
-    <main class="site-main">
+---
+layout: base
+permalink: /links.html
+title_full: リンク集 - ice458の物置き
+description: ice458が参考にしている技術サイトや便利なツール、関連リンクをまとめたページです。
+keywords: リンク集,参考サイト,技術リンク,ツール,ice458
+og_type: website
+image: /logo.png
+script: /script.js
+---
+<main class="site-main">
         <div class="blog-container">
             <!-- パンくずリスト -->
             <nav class="breadcrumb" aria-label="パンくずリスト">
@@ -163,17 +75,3 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             </div>
         </div>
     </main>
-
-    <footer class="site-footer">
-        <div class="site-info">
-            <p>&copy; 2025 ice458の物置き　|　<a href="privacy.html">プライバシーポリシー</a></p>
-        </div>
-    
-    </footer>
-
-    <script src="script.js"></script>
-
-  <script src="/consent.js" defer></script>
-</body>
-
-</html>

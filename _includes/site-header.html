@@ -1,0 +1,15 @@
+{%- comment -%}
+サイト共通ヘッダ。include 側で nav="projects" または nav="blog" を渡す。
+{%- endcomment -%}
+    <header class="site-header">
+        <div class="site-branding">
+            <div class="site-logo">
+                <img src="/logo.png" alt="ロゴ" class="logo-img">
+            </div>
+            <h1 class="site-title"><a href="/">ice458の物置き</a></h1>
+        </div>
+        <nav class="site-nav">
+            <a href="/" class="nav-link{% if include.nav == 'projects' %} active{% endif %}">プロジェクト</a>
+            <a href="/blog.html" class="nav-link{% if include.nav == 'blog' %} active{% endif %}">雑多なメモ等</a>
+        </nav>
+    </header>

@@ -1,166 +1,28 @@
 ---
-layout: null
+layout: page
+type: project
+nav: projects
 permalink: /project-45472/
+title: 実用的なVFD時計
+description: VFD (蛍光表示管) を使って実用的な時計を作りました。
+keywords: 時計,表示器,電子工作,電子工作,製作物,DIY,ice458
+image: /logo.png
+categories:
+- 時計
+- 表示器
+- 電子工作
+date: 2021年10月10日
+date_label: 公開日
+updated: 2021年10月10日
+summary: PICでダイナミック制御をします。
+order: 11
+video: oCbgDiXMtrY
+video_upload_date: '2026-07-20T00:00:00+09:00'
 sitemap:
   priority: 0.7
   changefreq: monthly
 ---
-<!DOCTYPE html>
-<html lang="ja">
 
-<head>
-<!-- Consent Mode default (runs before GTM) -->
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('consent', 'default', {
-    ad_storage: 'denied',
-    analytics_storage: 'denied',
-    ad_user_data: 'denied',
-    ad_personalization: 'denied',
-    wait_for_update: 2000
-  });
-</script>
-<!-- Google Analytics cookie domain override (host-only) -->
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('set','cookie_domain','none');
-</script>
-<!-- Consent geo override: auto-grant analytics outside EEA/UK -->
-<script>
-  (function(){
-    try {
-      var stored = null;
-      try { stored = localStorage.getItem('consent.choice'); } catch(e) {}
-      if (stored === 'denied') return;
-      if (stored === 'granted') {
-        gtag('consent','update',{
-          ad_storage:'granted', analytics_storage:'granted',
-          ad_user_data:'granted', ad_personalization:'granted'
-        });
-        return;
-      }
-      var tz = '';
-      try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone || ''; } catch(e) {}
-      var isEEA = /^Europe\//.test(tz)
-               || tz === 'Asia/Nicosia'
-               || /^Atlantic\/(Reykjavik|Madeira|Azores|Canary)$/.test(tz);
-      if (!isEEA) {
-        gtag('consent','update',{ analytics_storage:'granted' });
-      }
-    } catch(e) {}
-  })();
-</script>
-<!-- Google Tag Manager -->
-<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-})(window,document,'script','dataLayer','GTM-MMZ5XH4V');</script>
-<!-- End Google Tag Manager -->
-
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>実用的なVFD時計 - ice458の物置き</title>
-    
-    <!-- Canonical URL -->
-    <link rel="canonical" href="https://ice458.github.io/project-45472/">
-    
-    <meta name="description" content="VFD (蛍光表示管) を使って実用的な時計を作りました。">
-    <meta name="keywords" content="時計,表示器,電子工作,電子工作,製作物,DIY,ice458">
-    <meta name="author" content="ice458">
-
-    <!-- Open Graph / Facebook -->
-    <meta property="og:type" content="article">
-    <meta property="og:url" content="https://ice458.github.io/project-45472/">
-    <meta property="og:title" content="実用的なVFD時計 - ice458の物置き">
-    <meta property="og:description" content="VFD (蛍光表示管) を使って実用的な時計を作りました。">
-    <meta property="og:image" content="https://ice458.github.io/logo.png">
-
-    <!-- Twitter -->
-    <meta property="twitter:card" content="summary_large_image">
-    <meta property="twitter:url" content="https://ice458.github.io/project-45472/">
-    <meta property="twitter:title" content="実用的なVFD時計 - ice458の物置き">
-    <meta property="twitter:description" content="VFD (蛍光表示管) を使って実用的な時計を作りました。">
-    <meta property="twitter:image" content="https://ice458.github.io/logo.png">
-    <link rel="stylesheet" href="../styles.css">
-    <!-- ファビコン設定 -->
-    <link rel="icon" type="image/x-icon" href="../favicon.ico">
-    <link rel="icon" type="image/png" sizes="16x16" href="../favicon-16x16.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="../favicon-32x32.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="../favicon-180x180.png">
-    <link rel="manifest" href="../site.webmanifest">
-
-    <!-- ブラウザ固有のメタタグ -->
-    <meta name="theme-color" content="#aaaeae">
-    <meta name="msapplication-TileColor" content="#aaaeae">
-    <meta name="msapplication-TileImage" content="../favicon-180x180.png">
-    <!-- Video structured data for Google -->
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "VideoObject",
-      "name": "実用的なVFD時計",
-      "description": "VFD (蛍光表示管) を使って実用的な時計を作りました。",
-      "thumbnailUrl": "https://img.youtube.com/vi/oCbgDiXMtrY/hqdefault.jpg",
-      "uploadDate": "2026-07-20T00:00:00+09:00",
-      "contentUrl": "https://www.youtube.com/watch?v=oCbgDiXMtrY",
-      "embedUrl": "https://www.youtube.com/embed/oCbgDiXMtrY"
-    }
-    </script>
-</head>
-
-<body>
-<!-- Google Tag Manager (noscript) -->
-<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-MMZ5XH4V"
-height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
-<!-- End Google Tag Manager (noscript) -->
-
-    <header class="site-header">
-        <div class="site-branding">
-            <div class="site-logo">
-                <img src="../logo.png" alt="ロゴ" class="logo-img">
-            </div>
-            <h1 class="site-title"><a href="../index.html">ice458の物置き</a></h1>
-                </div>
-        <nav class="site-nav">
-            <a href="../index.html" class="nav-link active">プロジェクト</a>
-            <a href="../blog.html" class="nav-link">雑多なメモ等</a>
-        </nav>
-    </header>
-
-    <main class="site-main">
-        
-            <!-- パンくずリスト -->
-            <nav class="breadcrumb" aria-label="パンくずリスト">
-                <ol class="breadcrumb-list">
-                    <li class="breadcrumb-item">
-                        <a href="../index.html" class="breadcrumb-link">ホーム</a>
-                    </li>
-                    <li class="breadcrumb-item">
-                        <a href="../index.html#projects" class="breadcrumb-link">プロジェクト</a>
-                    </li>
-                    <li class="breadcrumb-item">
-                        <span class="breadcrumb-current">実用的なVFD時計</span>
-                    </li>
-                </ol>
-            </nav>
-
-        <article class="main-content">
-            <div class="article-header">
-                <h1 class="article-title">実用的なVFD時計</h1>
-                <div class="article-meta">
-                    <div class="article-categories">
-                        <span class="category-tag">時計</span>
-                        <span class="category-tag">表示器</span>
-                        <span class="category-tag">電子工作</span>
-                    </div>
-                    <div class="article-date">公開日: 2021年10月10日</div>
-                </div>
-            </div>
-
-            <div class="article-content">
                 <p>VFD (蛍光表示管) を使って実用的な時計を作りました。<a href="../project-40684/">以前にも</a> VFD時計は作りましたが、今回は専用
                     LSI を使うのではなく PIC マイコンで制御し、より実用的な機能を追加しています。</p>
 
@@ -282,28 +144,3 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                             rel="noopener">設計データ</a>をGitHubで公開しました。
                     </p>
                 </div>
-            </div>
-
-            <div class="article-footer">
-                <div class="back-link">
-                    <a href="../index.html" class="back-button">← 物置きに戻る</a>
-                </div>
-                <div class="article-info">
-                    <p>最終更新: 2021年10月10日</p>
-                </div>
-            </div>
-        </article>
-        
-    </main>
-
-    <footer class="site-footer">
-        <div class="site-info">
-            <p>&copy; 2021 ice458の物置き　|　<a href="../privacy.html">プライバシーポリシー</a></p>
-        </div>
-    
-    </footer>
-
-  <script src="/consent.js" defer></script>
-</body>
-
-</html>

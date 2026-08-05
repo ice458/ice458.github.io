@@ -1,123 +1,18 @@
 ---
-layout: null
+layout: base
+nav: blog
 permalink: /blog.html
+title_full: 雑多なメモ等 - ice458の物置き
+description: ice458の技術メモや備忘録、修理記録などを公開しているブログページです。電子工作や開発に関する実体験や学習記録を記載しています。
+keywords: 技術メモ,備忘録,修理記,ブログ,電子工作,開発,学習記録,ice458
+og_type: website
+image: /logo.png
+script: /script.js
 sitemap:
   priority: 0.8
   changefreq: weekly
 ---
-<!DOCTYPE html>
-<html lang="ja">
-
-<head>
-<!-- Consent Mode default (runs before GTM) -->
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('consent', 'default', {
-    ad_storage: 'denied',
-    analytics_storage: 'denied',
-    ad_user_data: 'denied',
-    ad_personalization: 'denied',
-    wait_for_update: 2000
-  });
-</script>
-<!-- Google Analytics cookie domain override (host-only) -->
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('set','cookie_domain','none');
-</script>
-<!-- Consent geo override: auto-grant analytics outside EEA/UK -->
-<script>
-  (function(){
-    try {
-      var stored = null;
-      try { stored = localStorage.getItem('consent.choice'); } catch(e) {}
-      if (stored === 'denied') return;
-      if (stored === 'granted') {
-        gtag('consent','update',{
-          ad_storage:'granted', analytics_storage:'granted',
-          ad_user_data:'granted', ad_personalization:'granted'
-        });
-        return;
-      }
-      var tz = '';
-      try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone || ''; } catch(e) {}
-      var isEEA = /^Europe\//.test(tz)
-               || tz === 'Asia/Nicosia'
-               || /^Atlantic\/(Reykjavik|Madeira|Azores|Canary)$/.test(tz);
-      if (!isEEA) {
-        gtag('consent','update',{ analytics_storage:'granted' });
-      }
-    } catch(e) {}
-  })();
-</script>
-<!-- Google Tag Manager -->
-<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-})(window,document,'script','dataLayer','GTM-MMZ5XH4V');</script>
-<!-- End Google Tag Manager -->
-
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>雑多なメモ等 - ice458の物置き</title>
-    <meta name="description" content="ice458の技術メモや備忘録、修理記録などを公開しているブログページです。電子工作や開発に関する実体験や学習記録を記載しています。">
-    <meta name="keywords" content="技術メモ,備忘録,修理記,ブログ,電子工作,開発,学習記録,ice458">
-    <meta name="author" content="ice458">
-    
-    <!-- Canonical URL -->
-    <link rel="canonical" href="https://ice458.github.io/blog.html">
-    
-    <!-- Open Graph / Facebook -->
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="https://ice458.github.io/blog.html">
-    <meta property="og:title" content="雑多なメモ等 - ice458の物置き">
-    <meta property="og:description" content="ice458の技術メモや備忘録、修理記録などを公開しているブログページです。電子工作や開発に関する実体験や学習記録を記載しています。">
-    <meta property="og:image" content="https://ice458.github.io/logo.png">
-
-    <!-- Twitter -->
-    <meta property="twitter:card" content="summary_large_image">
-    <meta property="twitter:url" content="https://ice458.github.io/blog.html">
-    <meta property="twitter:title" content="雑多なメモ等 - ice458の物置き">
-    <meta property="twitter:description" content="ice458の技術メモや備忘録、修理記録などを公開しているブログページです。電子工作や開発に関する実体験や学習記録を記載しています。">
-    <meta property="twitter:image" content="https://ice458.github.io/logo.png">
-    
-    <link rel="stylesheet" href="styles.css">
-    <!-- ファビコン設定 -->
-    <link rel="icon" type="image/x-icon" href="favicon.ico">
-    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="favicon-180x180.png">
-    <link rel="manifest" href="site.webmanifest">
-
-    <!-- ブラウザ固有のメタタグ -->
-    <meta name="theme-color" content="#aaaeae">
-    <meta name="msapplication-TileColor" content="#aaaeae">
-    <meta name="msapplication-TileImage" content="favicon-180x180.png">
-</head>
-
-<body>
-<!-- Google Tag Manager (noscript) -->
-<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-MMZ5XH4V"
-height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
-<!-- End Google Tag Manager (noscript) -->
-
-    <header class="site-header">
-        <div class="site-branding">
-            <div class="site-logo">
-                <img src="logo.png" alt="ロゴ" class="logo-img">
-            </div>
-            <h1 class="site-title"><a href="index.html">ice458の物置き</a></h1>
-        </div>
-        <nav class="site-nav">
-            <a href="index.html" class="nav-link">プロジェクト</a>
-            <a href="blog.html" class="nav-link active">雑多なメモ等</a>
-        </nav>
-    </header>
-
-    <main class="site-main">
+<main class="site-main">
         <div class="blog-container">
             <!-- パンくずリスト -->
             <nav class="breadcrumb" aria-label="パンくずリスト">
@@ -145,16 +40,15 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                         <input type="text" id="searchInput" class="search-input" placeholder="記事を検索...">
                         <button id="clearSearch" class="clear-search">×</button>
                     </div>
-                    <div class="filter-buttons">
-
-                    
-                    <button class="filter-btn active" data-category="all">全て</button>
-                    <button class="filter-btn" data-category="Raspberry Pi Pico">Raspberry Pi Pico</button>
-                    <button class="filter-btn" data-category="修理記">修理記</button>
-                    <button class="filter-btn" data-category="備忘録">備忘録</button>
-                    <button class="filter-btn" data-category="楽器">楽器</button>
-
-
+                                        <div class="filter-buttons">
+{%- assign items = site.pages | where: "type", "article" %}
+{%- assign cat_list = "" %}
+{%- for p in items %}{%- for c in p.categories %}{%- assign cat_list = cat_list | append: c | append: "," %}{%- endfor %}{%- endfor %}
+{%- assign cats = cat_list | split: "," | uniq | sort %}
+                        <button class="filter-btn active" data-category="all">全て</button>
+{%- for c in cats %}
+                        <button class="filter-btn" data-category="{{ c | escape }}">{{ c | escape }}</button>
+{%- endfor %}
                     </div>
                 </div>
             </div>
@@ -163,7 +57,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 <!-- ページネーション（上部） -->
                 <div class="pagination-container pagination-top">
                     <div class="pagination-info">
-                        <span id="paginationInfoTop">1-2 / 2件</span>
+                        <span id="paginationInfoTop">{{ site.pages | where: "type", "article" | size }}件</span>
                     </div>
                     <div class="pagination">
                         <button id="prevPageTop" class="pagination-btn" disabled>
@@ -188,37 +82,28 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                     </div>
                 </div>
 
-                <div class="articles-grid">
-
-                    <div class="article-card" data-categories="修理記,楽器" data-date="2024年10月21日" data-search="KORG M50 修理 シンセサイザー 楽器">
-                        <div class="article-meta">
-                            <div class="article-date">2024年10月21日</div>
-                            <div class="article-categories">
-                                <span class="category-tag">修理記</span>
-                                <span class="category-tag">楽器</span>
+                                    <div class="articles-grid">
+{%- assign articles = site.pages | where: "type", "article" | sort: "order" %}
+{%- for a in articles %}
+                        <div class="article-card" data-categories="{{ a.categories | join: ',' | escape }}" data-date="{{ a.date | escape }}" data-search="{{ a.search | escape }}">
+                            <div class="article-meta">
+                                <div class="article-date">{{ a.date }}</div>
+                                <div class="article-categories">
+{%- for c in a.categories %}
+                                    <span class="category-tag">{{ c | escape }}</span>
+{%- endfor %}
+                                </div>
                             </div>
+                            <h2 class="article-title"><a href="{{ a.permalink }}">{{ a.title | escape }}</a></h2>
+                            <p class="article-summary">{{ a.summary | default: a.description | escape }}</p>
                         </div>
-                        <h2 class="article-title"><a href="blog/article-41054/">KORG M50の修理</a></h2>
-                        <p class="article-summary">友人から修理依頼を受けて直したKORGのシンセサイザーについての記録を残します。</p>
+{%- endfor %}
                     </div>
-                    <div class="article-card" data-categories="Raspberry Pi Pico,備忘録" data-date="2024年10月03日" data-search="Raspberry Pi Pico VS Code 拡張機能 SDK">
-                        <div class="article-meta">
-                            <div class="article-date">2024年10月03日</div>
-                            <div class="article-categories">
-                                <span class="category-tag">Raspberry Pi Pico</span>
-                                <span class="category-tag">備忘録</span>
-                            </div>
-                        </div>
-                        <h2 class="article-title"><a href="blog/article-62463/">Raspberry Pi PicoのVS Code用拡張機能ではまった点</a></h2>
-                        <p class="article-summary">Raspberry Pi Pico 2が発売され、合わせてRaspberry Pi Pico SDK 2.0.0とそれを導入するためのVS Code用拡張機能が公開されましたが、導入ではまったところがあったので備忘録。</p>
-                    </div>
-
-                </div>
 
                 <!-- ページネーション（下部） -->
                 <div class="pagination-container pagination-bottom">
                     <div class="pagination-info">
-                        <span id="paginationInfoBottom">1-2 / 2件</span>
+                        <span id="paginationInfoBottom">{{ site.pages | where: "type", "article" | size }}件</span>
                     </div>
                     <div class="pagination">
                         <button id="prevPageBottom" class="pagination-btn" disabled>
@@ -246,17 +131,3 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             </div>
         </div>
     </main>
-
-    <footer class="site-footer">
-        <div class="site-info">
-            <p>&copy; 2025 ice458の物置き　|　<a href="privacy.html">プライバシーポリシー</a></p>
-        </div>
-    
-    </footer>
-
-    <script src="script.js"></script>
-
-  <script src="/consent.js" defer></script>
-</body>
-
-</html>

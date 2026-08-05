@@ -1,0 +1,25 @@
+---
+layout: base
+---
+    <main class="site-main">
+{% include breadcrumb.html %}
+
+        <article class="main-content">
+            <div class="article-header">
+                <h1 class="article-title">{{ page.title | escape }}</h1>
+            </div>
+
+            <section class="entry-content">
+{{ content }}
+            </section>
+
+            <div class="article-footer">
+                <div class="back-link">
+                    <a href="/" class="back-button">← 物置きに戻る</a>
+                </div>
+                <div class="article-info">
+                    <p>最終更新: {{ page.updated | default: '-' }}</p>
+                </div>
+            </div>
+        </article>
+    </main>

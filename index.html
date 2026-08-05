@@ -1,146 +1,19 @@
 ---
-layout: null
+layout: base
+nav: projects
+site_jsonld: true
 permalink: /
+title_full: ice458の物置き
+description: ice458の製作物等を紹介するサイトです。
+keywords: 電子工作,製作物,オーディオ,測定器,時計,電卓,技術メモ,DIY,エレクトロニクス,ice458
+og_type: website
+image: /logo.png
+script: /script.js
 sitemap:
   priority: 1.0
   changefreq: weekly
 ---
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-<!-- Consent Mode default (runs before GTM) -->
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('consent', 'default', {
-    ad_storage: 'denied',
-    analytics_storage: 'denied',
-    ad_user_data: 'denied',
-    ad_personalization: 'denied',
-    wait_for_update: 2000
-  });
-</script>
-<!-- Google Analytics cookie domain override (host-only) -->
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('set','cookie_domain','none');
-</script>
-<!-- Consent geo override: auto-grant analytics outside EEA/UK -->
-<script>
-  (function(){
-    try {
-      var stored = null;
-      try { stored = localStorage.getItem('consent.choice'); } catch(e) {}
-      if (stored === 'denied') return;
-      if (stored === 'granted') {
-        gtag('consent','update',{
-          ad_storage:'granted', analytics_storage:'granted',
-          ad_user_data:'granted', ad_personalization:'granted'
-        });
-        return;
-      }
-      var tz = '';
-      try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone || ''; } catch(e) {}
-      var isEEA = /^Europe\//.test(tz)
-               || tz === 'Asia/Nicosia'
-               || /^Atlantic\/(Reykjavik|Madeira|Azores|Canary)$/.test(tz);
-      if (!isEEA) {
-        gtag('consent','update',{ analytics_storage:'granted' });
-      }
-    } catch(e) {}
-  })();
-</script>
-<!-- Google Tag Manager -->
-<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-})(window,document,'script','dataLayer','GTM-MMZ5XH4V');</script>
-<!-- End Google Tag Manager -->
-
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ice458の物置き</title>
-    <meta name="description" content="ice458の製作物等を紹介するサイトです。">
-    <meta name="keywords" content="電子工作,製作物,オーディオ,測定器,時計,電卓,技術メモ,DIY,エレクトロニクス,ice458">
-    <meta name="author" content="ice458">
-    
-    <!-- Canonical URL -->
-    <link rel="canonical" href="https://ice458.github.io/">
-    
-    <!-- Open Graph / Facebook -->
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="https://ice458.github.io/">
-    <meta property="og:title" content="ice458の物置き">
-    <meta property="og:description" content="ice458の製作物等を紹介するサイトです。">
-    <meta property="og:image" content="https://ice458.github.io/logo.png">
-
-    <!-- Twitter -->
-    <meta property="twitter:card" content="summary_large_image">
-    <meta property="twitter:url" content="https://ice458.github.io/">
-    <meta property="twitter:title" content="ice458の物置き">
-    <meta property="twitter:description" content="ice458の製作物等を紹介するサイトです。">
-    <meta property="twitter:image" content="https://ice458.github.io/logo.png">
-    
-    <link rel="stylesheet" href="styles.css">
-
-    <!-- ファビコン設定 -->
-    <link rel="icon" type="image/x-icon" href="favicon.ico">
-    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="favicon-180x180.png">
-    <link rel="manifest" href="site.webmanifest">
-
-    <!-- ブラウザ固有のメタタグ -->
-    <meta name="theme-color" content="#aaaeae">
-    <meta name="msapplication-TileColor" content="#aaaeae">
-    <meta name="msapplication-TileImage" content="favicon-180x180.png">
-
-    <!-- Google Site Verification -->
-    <meta name="google-site-verification" content="uIemBR-P9HNV-qLowiC7wTKJ2cUEre9phKA8fp6JR3E" />
-    
-    <!-- 構造化データ (JSON-LD) -->
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "WebSite",
-      "name": "ice458の物置き",
-      "description": "ice458の製作物等を紹介するサイトです。",
-      "url": "https://ice458.github.io/",
-      "author": {
-        "@type": "Person",
-        "name": "ice458"
-      },
-      "potentialAction": {
-        "@type": "SearchAction",
-        "target": "https://ice458.github.io/?search={search_term_string}",
-        "query-input": "required name=search_term_string"
-      }
-    }
-    </script>
-</head>
-
-<body>
-<!-- Google Tag Manager (noscript) -->
-<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-MMZ5XH4V"
-height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
-<!-- End Google Tag Manager (noscript) -->
-
-    <header class="site-header">
-        <div class="site-branding">
-            <div class="site-logo">
-                <img src="logo.png" alt="ロゴ" class="logo-img">
-            </div>
-            <h1 class="site-title"><a href="index.html">ice458の物置き</a></h1>
-        </div>
-        <nav class="site-nav">
-            <a href="index.html" class="nav-link active">プロジェクト</a>
-            <a href="blog.html" class="nav-link">雑多なメモ等</a>
-        </nav>
-    </header>
-
-    <main class="site-main">
+<main class="site-main">
         <article class="main-content">
             <div class="entry-content">
                 <p class="welcome-text">ようこそ</p>
@@ -153,24 +26,22 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                         <input type="text" id="searchInput" placeholder="製作物を検索（タイトル、カテゴリ、説明）..." class="search-input">
                         <button id="clearSearch" class="clear-search">×</button>
                     </div>
-                    <div class="filter-buttons">
-
+                                        <div class="filter-buttons">
+{%- assign items = site.pages | where: "type", "project" %}
+{%- assign cat_list = "" %}
+{%- for p in items %}{%- for c in p.categories %}{%- assign cat_list = cat_list | append: c | append: "," %}{%- endfor %}{%- endfor %}
+{%- assign cats = cat_list | split: "," | uniq | sort %}
                         <button class="filter-btn active" data-category="all">全て</button>
-                        <button class="filter-btn" data-category="オーディオ">オーディオ</button>
-                        <button class="filter-btn" data-category="原理理解">原理理解</button>
-                        <button class="filter-btn" data-category="時計">時計</button>
-                        <button class="filter-btn" data-category="測定器">測定器</button>
-                        <button class="filter-btn" data-category="無線">無線</button>
-                        <button class="filter-btn" data-category="表示器">表示器</button>
-                        <button class="filter-btn" data-category="電卓">電卓</button>
-                        <button class="filter-btn" data-category="電子工作">電子工作</button>
+{%- for c in cats %}
+                        <button class="filter-btn" data-category="{{ c | escape }}">{{ c | escape }}</button>
+{%- endfor %}
                     </div>
                 </div>
 
                 <!-- ページネーション（上部） -->
                 <div class="pagination-container pagination-top">
                     <div class="pagination-info">
-                        <span id="paginationInfoTop">1-10 / 18件</span>
+                        <span id="paginationInfoTop">{{ site.pages | where: "type", "project" | size }}件</span>
                     </div>
                     <div class="pagination">
                         <button id="prevPageTop" class="pagination-btn" disabled>
@@ -205,151 +76,19 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                                 <th>説明</th>
                             </tr>
                         </thead>
-                        <tbody>
-
-                            <tr class="project-row" data-category="オーディオ,電子工作" data-search="">
-                                <td><a href="project-15750/">HRTFヘッドホンアンプ</a></td>
+                                                <tbody>
+{%- assign projects = site.pages | where: "type", "project" | sort: "order" %}
+{%- for p in projects %}
+                            <tr class="project-row" data-category="{{ p.categories | join: ',' | escape }}" data-search="{{ p.search | escape }}">
+                                <td><a href="{{ p.permalink }}">{{ p.title | escape }}</a></td>
                                 <td>
-                                    <span class="category-tag">オーディオ</span>
-                                    <span class="category-tag">電子工作</span>
+{%- for c in p.categories %}
+                                    <span class="category-tag">{{ c | escape }}</span>
+{%- endfor %}
                                 </td>
-                                <td>HRIRを使って頭外定位と音場拡張を実現するヘッドホンアンプ兼USB DACです。</td>
+                                <td>{{ p.summary | default: p.description | escape }}</td>
                             </tr>
-                            <tr class="project-row" data-category="電子工作" data-search="">
-                                <td><a href="project-28566/">アナログ回路でLチカ</a></td>
-                                <td><span class="category-tag">電子工作</span></td>
-                                <td>アナログ回路で文字通りLチカをします。</td>
-                            </tr>
-                            <tr class="project-row" data-category="オーディオ,電子工作" data-search="">
-                                <td><a href="project-37877/">低クロストークヘッドホンアンプ</a></td>
-                                <td>
-                                    <span class="category-tag">オーディオ</span>
-                                    <span class="category-tag">電子工作</span>
-                                </td>
-                                <td>アンバランスかつレールスプリッタを用いながらも非常に低いクロストークを実現しました。</td>
-                            </tr>
-                            <tr class="project-row" data-category="電子工作,電卓" data-search="">
-                                <td><a href="project-18775/">RPN関数電卓</a></td>
-                                <td>
-                                    <span class="category-tag">電子工作</span>
-                                    <span class="category-tag">電卓</span>
-                                </td>
-                                <td>逆ポーランド記法の関数電卓です。</td>
-                            </tr>
-                            <tr class="project-row" data-category="オーディオ,電子工作" data-search="">
-                                <td><a href="project-46661/">電子オルゴール</a></td>
-                                <td>
-                                    <span class="category-tag">オーディオ</span>
-                                    <span class="category-tag">電子工作</span>
-                                </td>
-                                <td>8bitPICで4chの減衰正弦波を鳴らす電子オルゴールです。</td>
-                            </tr>
-                            <tr class="project-row" data-category="表示器,電子工作" data-search="">
-                                <td><a href="project-16388/">8桁7セグLED駆動基板</a></td>
-                                <td>
-                                    <span class="category-tag">表示器</span>
-                                    <span class="category-tag">電子工作</span>
-                                </td>
-                                <td>GL91ARというLEDをシリアル制御で動かす基板です。</td>
-                            </tr>
-                            <tr class="project-row" data-category="測定器,電子工作" data-search="">
-                                <td><a href="project-22334/">USBインターフェース付きCVCC電源</a></td>
-                                <td>
-                                    <span class="category-tag">測定器</span>
-                                    <span class="category-tag">電子工作</span>
-                                </td>
-                                <td>PCからリモートで操作できる汎用電源装置です。</td>
-                            </tr>
-                            <tr class="project-row" data-category="測定器,電子工作" data-search="">
-                                <td><a href="project-24745/">高安定精密電源装置</a></td>
-                                <td>
-                                    <span class="category-tag">測定器</span>
-                                    <span class="category-tag">電子工作</span>
-                                </td>
-                                <td>6.5桁DMMの最下位を止める安定度の電源装置です。</td>
-                            </tr>
-                            <tr class="project-row" data-category="電子工作,原理理解" data-search="">
-                                <td><a href="project-38507/">逐次比較型ADC</a></td>
-                                <td>
-                                    <span class="category-tag">電子工作</span>
-                                    <span class="category-tag">原理理解</span>
-                                </td>
-                                <td>標準ロジックICで作る4bitのSAR ADCです。</td>
-                            </tr>
-                            <tr class="project-row" data-category="測定器,電子工作" data-search="">
-                                <td><a href="project-7278/">心電計</a></td>
-                                <td>
-                                    <span class="category-tag">測定器</span>
-                                    <span class="category-tag">電子工作</span>
-                                </td>
-                                <td>1チャンネルの心電図を見るための装置です。</td>
-                            </tr>
-                            <tr class="project-row" data-category="オーディオ,電子工作" data-search="">
-                                <td><a href="project-17971/">パラメトリックスピーカー</a></td>
-                                <td>
-                                    <span class="category-tag">オーディオ</span>
-                                    <span class="category-tag">電子工作</span>
-                                </td>
-                                <td>非常に強い指向性を持ったスピーカーです。</td>
-                            </tr>
-                            <tr class="project-row" data-category="時計,表示器,電子工作" data-search="">
-                                <td><a href="project-45472/">実用的なVFD時計</a></td>
-                                <td>
-                                    <span class="category-tag">時計</span>
-                                    <span class="category-tag">表示器</span>
-                                    <span class="category-tag">電子工作</span>
-                                </td>
-                                <td>PICでダイナミック制御をします。</td>
-                            </tr>
-                            <tr class="project-row" data-category="測定器,電子工作" data-search="">
-                                <td><a href="project-58097/">デュアルトラッキング電源装置</a></td>
-                                <td>
-                                    <span class="category-tag">測定器</span>
-                                    <span class="category-tag">電子工作</span>
-                                </td>
-                                <td>絶対値の等しい正負電圧を出力可能な電源装置です。</td>
-                            </tr>
-                            <tr class="project-row" data-category="測定器,電子工作" data-search="">
-                                <td><a href="project-20892/">簡易ファンクションジェネレータ</a></td>
-                                <td>
-                                    <span class="category-tag">測定器</span>
-                                    <span class="category-tag">電子工作</span>
-                                </td>
-                                <td>AD9833を使った簡易的なファンクションジェネレータです。</td>
-                            </tr>
-                            <tr class="project-row" data-category="無線,電子工作" data-search="">
-                                <td><a href="project-10604/">無電源FMラジオ</a></td>
-                                <td>
-                                    <span class="category-tag">無線</span>
-                                    <span class="category-tag">電子工作</span>
-                                </td>
-                                <td>いわゆるFM用ゲルマラジオ的なものです。</td>
-                            </tr>
-                            <tr class="project-row" data-category="時計,表示器,電子工作" data-search="">
-                                <td><a href="project-40684/">シンプルなVFD時計</a></td>
-                                <td>
-                                    <span class="category-tag">時計</span>
-                                    <span class="category-tag">表示器</span>
-                                    <span class="category-tag">電子工作</span>
-                                </td>
-                                <td>専用ICで小さくまとめます。</td>
-                            </tr>
-                            <tr class="project-row" data-category="測定器,電子工作" data-search="">
-                                <td><a href="project-30687/">放射線感知ねこ</a></td>
-                                <td>
-                                    <span class="category-tag">測定器</span>
-                                    <span class="category-tag">電子工作</span>
-                                </td>
-                                <td>PINフォトダイオードでγ線を検出します。</td>
-                            </tr>
-                            <tr class="project-row" data-category="オーディオ,電子工作" data-search="">
-                                <td><a href="project-8807/">低出力AB級パワーアンプ</a></td>
-                                <td>
-                                    <span class="category-tag">オーディオ</span>
-                                    <span class="category-tag">電子工作</span>
-                                </td>
-                                <td>できるだけ低コストでつくるオーディオアンプです。</td>
-                            </tr>
+{%- endfor %}
                         </tbody>
                     </table>
                 </div>
@@ -357,7 +96,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 <!-- ページネーション（下部） -->
                 <div class="pagination-container pagination-bottom">
                     <div class="pagination-info">
-                        <span id="paginationInfoBottom">1-10 / 18件</span>
+                        <span id="paginationInfoBottom">{{ site.pages | where: "type", "project" | size }}件</span>
                     </div>
                     <div class="pagination">
                         <button id="prevPageBottom" class="pagination-btn" disabled>
@@ -438,17 +177,3 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             </div>
         </article>
     </main>
-
-    <footer class="site-footer">
-        <div class="site-info">
-            <p>&copy; 2025 ice458の物置き　|　<a href="privacy.html">プライバシーポリシー</a></p>
-        </div>
-    
-    </footer>
-
-    <script src="script.js"></script>
-
-  <script src="/consent.js" defer></script>
-</body>
-
-</html>
