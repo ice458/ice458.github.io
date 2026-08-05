@@ -12,7 +12,6 @@ front matter という同じ材料から同じ HTML を組み立てる。
 """
 import argparse
 import http.server
-import os
 import shutil
 import socketserver
 import sys
@@ -184,9 +183,12 @@ class Builder:
 
 
 def serve(port=4000, open_browser=True):
-    os.chdir(SITE)
-
+    # os.chdir(SITE) はしない。Windows ではカレントディレクトリがロックされ、
+    # サーバ起動中の再ビルド（_site の作り直し）が失敗するため。
     class Handler(http.server.SimpleHTTPRequestHandler):
+        def __init__(self, *a, **kw):
+            super().__init__(*a, directory=str(SITE), **kw)
+
         def log_message(self, fmt, *args):
             pass
 
