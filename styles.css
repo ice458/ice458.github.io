@@ -13,6 +13,24 @@ body {
     background-color: #aaaeae;
     margin: 0;
     padding: 0;
+    /* 和欧文間に八分アキを自動で入れる。仕様上の初期値は normal だが
+       どのブラウザも明示指定しないと効かないため書いておく。
+       非対応環境ではアキ無しの通常の日本語組版になるだけ。
+       これを前提に本文中の手動半角スペースは除去済み（_tools/strip_autospace.py）。 */
+    text-autospace: normal;
+    /* 連続する約物・括弧のアキを詰める */
+    text-spacing-trim: normal;
+}
+
+/* 等幅で見せる箇所は原文どおりに詰めたまま表示する */
+pre,
+code,
+kbd,
+samp,
+.code-block,
+.inline-code {
+    text-autospace: no-autospace;
+    text-spacing-trim: space-all;
 }
 
 /* ヘッダー */

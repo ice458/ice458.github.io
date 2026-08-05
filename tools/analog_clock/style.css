@@ -44,6 +44,9 @@ body {
     background: var(--bg);
     font-family: 'Montserrat', sans-serif;
     color: var(--fg);
+    /* 和欧文間の八分アキ（styles.css と同じ方針） */
+    text-autospace: normal;
+    text-spacing-trim: normal;
 }
 
 .theme-toggle {

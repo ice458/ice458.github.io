@@ -12,6 +12,9 @@
     line-height: 1.45;
     color: #111;
     background: #fff;
+    /* 和欧文間の八分アキと約物のアキ詰め（styles.css と同じ方針） */
+    text-autospace: normal;
+    text-spacing-trim: normal;
   }
   h1 { font-size: 14pt; margin: 0 0 2mm 0; border-bottom: 1.5pt solid #333; padding-bottom: 1mm; }
   h2 { font-size: 10.5pt; margin: 3mm 0 1.5mm 0; color: #222; border-left: 3pt solid #555; padding-left: 2mm; }
@@ -50,19 +53,19 @@
 
   <p class="lead">
     HRIR (頭部インパルス応答) の畳み込みにより<strong>頭外定位</strong>を実現するヘッドホンアンプ兼USB DAC。
-    RP2350 + SGTL5000 で、4経路 256タップのFIR畳み込みに加え、方向別反射・後期残響・オールパスによる無相関化までを 48kHz 実時間処理する。
+    RP2350 + SGTL5000で、4経路256タップのFIR畳み込みに加え、方向別反射・後期残響・オールパスによる無相関化までを48kHz実時間処理する。
   </p>
 
   <div class="grid">
     <div>
-      <h2>HRTF / HRIR とは</h2>
+      <h2>HRTF / HRIRとは</h2>
       <p>
         <strong>HRTF (Head-Related Transfer Function, 頭部伝達関数)</strong> は、ある方向の音源から鼓膜までの音響伝達特性を表す関数。
         音は耳に届くまでに、頭部・耳介・胴体での反射や回折を受け、方向ごとに固有の周波数特性および左右耳への到達時間差 (ITD) ・レベル差 (ILD) が生じる。
         HRTFはこれらを「音源 → 鼓膜」のフィルタとして数値化したものである。
       </p>
       <p>
-        <strong>HRIR (Head-Related Impulse Response)</strong> はHRTFを時間領域で表現したインパルス応答であり、信号処理上はこれを音声に畳み込むことで任意方向から聞こえる音を合成できる。本機では英 York大学の <strong>SADIE II</strong> データベース (人工頭・実被験者の高密度測定データ) を採用し、被験者を切り替えられるようにしている。
+        <strong>HRIR (Head-Related Impulse Response)</strong> はHRTFを時間領域で表現したインパルス応答であり、信号処理上はこれを音声に畳み込むことで任意方向から聞こえる音を合成できる。本機では英York大学の<strong>SADIE II</strong>データベース (人工頭・実被験者の高密度測定データ) を採用し、被験者を切り替えられるようにしている。
       </p>
 
       <h2>なぜ通常のヘッドホン再生は「頭内定位」になるのか</h2>
@@ -76,13 +79,13 @@
       <h2>仕様</h2>
       <ul>
         <li><strong>マイコン:</strong> RP2350A (SYSCLK 252MHz OC)</li>
-        <li><strong>コーデック:</strong> SGTL5000 (I2S マスター / 48kHz・24bit)</li>
+        <li><strong>コーデック:</strong> SGTL5000 (I2Sマスター / 48kHz・24bit)</li>
         <li><strong>USB Audio:</strong> UAC2.0 Full-Speed, 48kHz/16bit/2ch</li>
         <li><strong>HRIR:</strong> SADIE II (±45°, EL=0°, 全被験者切替)</li>
-        <li><strong>主畳み込み:</strong> 4経路 × 256タップ FIR</li>
-        <li><strong>方向別反射:</strong> 7方向 × 24タップ + 8〜42ms 遅延線</li>
-        <li><strong>後期残響:</strong> 6 並列櫛形遅延 + 1次LPF帰還</li>
-        <li><strong>内部演算:</strong> Q15 固定小数点 (積和 64bit)</li>
+        <li><strong>主畳み込み:</strong> 4経路 × 256タップFIR</li>
+        <li><strong>方向別反射:</strong> 7方向 × 24タップ + 8〜42ms遅延線</li>
+        <li><strong>後期残響:</strong> 6並列櫛形遅延 + 1次LPF帰還</li>
+        <li><strong>内部演算:</strong> Q15固定小数点 (積和64bit)</li>
       </ul>
     </div>
 
@@ -91,11 +94,11 @@
       <p>
         仮想的にスピーカーを自身の左右前方 ±45° に設置した状況を再現する。
         左スピーカーから出た音は左耳だけでなく右耳にも回り込み、右スピーカーも同様にクロスフィードを生じる。
-        したがって耳に届く信号は、各スピーカー → 両耳の計4経路のHRIRからなる 2×2 行列の畳み込みで表せる:
+        したがって耳に届く信号は、各スピーカー → 両耳の計4経路のHRIRからなる2×2行列の畳み込みで表せる:
       </p>
       <div class="formula">(y<sub>L</sub>, y<sub>R</sub>)<sup>T</sup> = [[h<sub>LL</sub>, h<sub>RL</sub>], [h<sub>LR</sub>, h<sub>RR</sub>]] ∗ (x<sub>L</sub>, x<sub>R</sub>)<sup>T</sup></div>
       <p>
-        ここで h<sub>LL</sub> は左SPから左耳、h<sub>LR</sub> は左SPから右耳に到達するHRIR。
+        ここでh<sub>LL</sub>は左SPから左耳、h<sub>LR</sub>は左SPから右耳に到達するHRIR。
         4経路を畳み込んだ結果、左右耳に届く信号が「前方のスピーカーから届いた音」に近づく。
       </p>
 
@@ -103,21 +106,21 @@
       <p>
         頭部や耳介の形状は人によって大きく異なり、HRTFは本来、個人ごとに全く違うものになる。
         他人のHRIRを用いると前後の弁別が不安定になったり音色が不自然になったりする。
-        本機ではボタン操作で SADIE II 内の複数被験者のHRIRを切り替えられ、最も自然に前方から聞こえるデータを選んで使用する運用としている。
+        本機ではボタン操作でSADIE II内の複数被験者のHRIRを切り替えられ、最も自然に前方から聞こえるデータを選んで使用する運用としている。
       </p>
 
       <h2>動作モード</h2>
       <ul>
         <li><strong>パススルー:</strong> 畳み込みなし、0.45倍減衰のみ。</li>
-        <li><strong>頭外定位:</strong> M/S分解 → 仮想スピーカー再配分 → 4経路 FIR畳み込み。基本の頭外定位処理。</li>
+        <li><strong>頭外定位:</strong> M/S分解 → 仮想スピーカー再配分 → 4経路FIR畳み込み。基本の頭外定位処理。</li>
         <li><strong>頭外定位 + 音場拡張:</strong> 上記に方向別の初期反射・後期残響・3段オールパスによる無相関化を加算し、空間の広がりと臨場感を強化する。</li>
       </ul>
 
       <h2>ハードウェア構成</h2>
       <p>
-        SGTL5000 を I2S マスターとし、Pico 側は PIO で I2S スレーブ受け。
-        MCLK 12MHz は SYSCLK 252MHz から PWM 整数分周 (÷21) で生成する。
-        Core1 を DSP 処理に専念させ、Core0 で USB・ボタン・LED の UI 処理を行う 2 コア分担構成。
+        SGTL5000をI2Sマスターとし、Pico側はPIOでI2Sスレーブ受け。
+        MCLK 12MHzはSYSCLK 252MHzからPWM整数分周 (÷21) で生成する。
+        Core1をDSP処理に専念させ、Core0でUSB・ボタン・LEDのUI処理を行う2コア分担構成。
       </p>
     </div>
   </div>

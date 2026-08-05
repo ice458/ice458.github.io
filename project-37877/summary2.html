@@ -12,6 +12,9 @@
     line-height: 1.45;
     color: #111;
     background: #fff;
+    /* 和欧文間の八分アキと約物のアキ詰め（styles.css と同じ方針） */
+    text-autospace: normal;
+    text-spacing-trim: normal;
   }
   h1 { font-size: 14pt; margin: 0 0 2mm 0; border-bottom: 1.5pt solid #333; padding-bottom: 1mm; }
   h2 { font-size: 10.5pt; margin: 3mm 0 1.5mm 0; color: #222; border-left: 3pt solid #555; padding-left: 2mm; }
@@ -69,7 +72,7 @@
     <ul>
       <li><strong>基本方針:</strong> Z<sub>cm</sub>をフィードバックの力で1/Aにする。</li>
       <li><strong>出力コネクタ構成:</strong> 4極ジャックのスリーブを2接点化し、電流経路のS端子とクロストーク検出用のR2端子を分離。</li>
-      <li><strong>基準電位の固定:</strong> S端子電圧を制御し、回路全体の基準となるR2端子を (VDD-VSS)/2 に固定。CMRR/PSRR由来のクロストークや歪みを低減。</li>
+      <li><strong>基準電位の固定:</strong> S端子電圧を制御し、回路全体の基準となるR2端子を (VDD-VSS)/2に固定。CMRR/PSRR由来のクロストークや歪みを低減。</li>
       <li><strong>接触抵抗対策:</strong> R2端子側にバッファを設け、R2端子接触抵抗の影響を低減。</li>
       <li><strong>前段クロストーク低減:</strong> 信号増幅を反転増幅化し、信号GNDへ流れる電流を減らして出力段以前のクロストークを最小化。</li>
       <li><strong>未挿入時の安定化:</strong> R<sub>f</sub>により、ヘッドホン未挿入時でも信号GNDを固定。</li>
@@ -83,7 +86,7 @@
     </ul>
 
     <h2>測定結果</h2>
-    <p>両ch 51Ω負荷・出力 1Vrmsの正弦波で測定。<strong>全可聴帯域で -95dB以下</strong>、1kHzでは -108dB以下を達成。ただしDMMの保証確度以下なので参考値。</p>
+    <p>両ch 51Ω負荷・出力1Vrmsの正弦波で測定。<strong>全可聴帯域で -95dB以下</strong>、1kHzでは -108dB以下を達成。ただしDMMの保証確度以下なので参考値。</p>
   </div>
 
   <div class="figs">
