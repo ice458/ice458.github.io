@@ -10,22 +10,26 @@ let gameOver = false;
 
 const CPU_PLAYER = 'white';
 const HUMAN_PLAYER = 'black';
-const DEFAULT_SEARCH_DEPTH = 6; // 通常の探索深度
-let currentSearchDepth = DEFAULT_SEARCH_DEPTH; // 現在の探索深度
+const MAX_SEARCH_DEPTH = 14;               // 反復深化での探索深度の上限
+const ENDGAME_EXACT_EMPTY_THRESHOLD = 12;  // 残りマス数がこれ以下なら終局まで完全読みする
+const TIME_BUDGET_MS = 1200;               // 全力/lose モードの1手あたりの思考時間予算
 let isThinking = false; // CPU思考中フラグ
 
 const SPECIAL_SQUARES = [[1, 1], [1, 6], [6, 1], [6, 6]]; // 連続手番マスの座標
 
 // 各マスの重み (静的評価用)
 // 角、辺、X打ち/C打ちなどを考慮
+// 通常のオセロではX打ち(角の隣の斜め)は危険なので-80と大きく負にするが、
+// このゲームでは同じマスが「連続手番」を得られる特殊マスのため、
+// 危険度より連続手番の価値を優先してプラス評価にしてある。
 const SQUARE_WEIGHTS = [
     [ 120, -40,  20,   5,   5,  20, -40, 120],
-    [ -40, -80,  -5,  -5,  -5,  -5, -80, -40],
+    [ -40,  50,  -5,  -5,  -5,  -5,  50, -40],
     [  20,  -5,  15,   3,   3,  15,  -5,  20],
     [   5,  -5,   3,   3,   3,   3,  -5,   5],
     [   5,  -5,   3,   3,   3,   3,  -5,   5],
     [  20,  -5,  15,   3,   3,  15,  -5,  20],
-    [ -40, -80,  -5,  -5,  -5,  -5, -80, -40],
+    [ -40,  50,  -5,  -5,  -5,  -5,  50, -40],
     [ 120, -40,  20,   5,   5,  20, -40, 120]
 ];
 
@@ -92,14 +96,7 @@ function initializeBoard() {
     gameOver = false;
     isThinking = false;
 
-    // モードに応じて探索深度を設定
-    if (gameMode === 'sontaku') {
-        currentSearchDepth = 1; // 忖度モードは浅く探索
-        console.log("忖度モード: 探索深度 =", currentSearchDepth);
-    } else {
-        currentSearchDepth = DEFAULT_SEARCH_DEPTH; // それ以外はデフォルト深度
-        console.log("モード:", gameMode, "探索深度 =", currentSearchDepth);
-    }
+    console.log("モード:", gameMode);
 
     renderBoard();
     updateMessage();
@@ -456,27 +453,38 @@ function isPotentiallyStable(boardData, r, c, player, stableFlags) {
     return false; // 厳密な判定ではない
 }
 
+// 着手を静的重みの高い順に並べ替える（アルファベータの枝刈り効率を上げるための簡易ムーブオーダリング）
+function orderMovesByWeight(moves) {
+    return moves.slice().sort((a, b) => SQUARE_WEIGHTS[b.row][b.col] - SQUARE_WEIGHTS[a.row][a.col]);
+}
+
 // アルファベータ探索 (getValidMoves, getFlipsFromBoard を使うように変更)
-function alphaBeta(currentBoard, depth, alpha, beta, maximizingPlayer, player) {
+// deadline: performance.now() 基準の探索打ち切り時刻 (省略時は無制限)
+function alphaBeta(currentBoard, depth, alpha, beta, maximizingPlayer, player, deadline = Infinity) {
     const opponent = player === 'black' ? 'white' : 'black';
     const currentPlayerForTurn = maximizingPlayer ? player : opponent;
     const validMoves = getValidMoves(currentPlayerForTurn, currentBoard);
 
-    // 深さ限界またはゲーム終了状態
-    if (depth === 0 || (validMoves.length === 0 && getValidMoves(maximizingPlayer ? opponent : player, currentBoard).length === 0)) {
+    // 深さ限界・ゲーム終了状態・時間切れ
+    if (depth === 0 || performance.now() > deadline ||
+        (validMoves.length === 0 && getValidMoves(maximizingPlayer ? opponent : player, currentBoard).length === 0)) {
         return evaluateBoard(currentBoard, player); // 静的評価値を返す
     }
 
     // パスの処理
     if (validMoves.length === 0) {
-        return alphaBeta(currentBoard, depth -1, alpha, beta, !maximizingPlayer, player);
+        return alphaBeta(currentBoard, depth - 1, alpha, beta, !maximizingPlayer, player, deadline);
     }
+
+    const orderedMoves = orderMovesByWeight(validMoves);
 
     if (maximizingPlayer) { // 最大化ノード (CPUの番)
         let maxEval = -Infinity;
-        for (const move of validMoves) {
+        for (const move of orderedMoves) {
             const nextBoard = simulateMove(currentBoard, move.row, move.col, currentPlayerForTurn, move.flips);
-            const evalScore = alphaBeta(nextBoard, depth - 1, alpha, beta, false, player);
+            // 特殊マス（連続手番）に置いた場合は手番が変わらない
+            const nextMaximizing = isSpecialSquare(move.row, move.col) ? maximizingPlayer : !maximizingPlayer;
+            const evalScore = alphaBeta(nextBoard, depth - 1, alpha, beta, nextMaximizing, player, deadline);
             maxEval = Math.max(maxEval, evalScore);
             alpha = Math.max(alpha, evalScore);
             if (beta <= alpha) {
@@ -486,9 +494,11 @@ function alphaBeta(currentBoard, depth, alpha, beta, maximizingPlayer, player) {
         return maxEval;
     } else { // 最小化ノード (相手の番)
         let minEval = Infinity;
-        for (const move of validMoves) {
+        for (const move of orderedMoves) {
             const nextBoard = simulateMove(currentBoard, move.row, move.col, currentPlayerForTurn, move.flips);
-            const evalScore = alphaBeta(nextBoard, depth - 1, alpha, beta, true, player);
+            // 特殊マス（連続手番）に置いた場合は手番が変わらない
+            const nextMaximizing = isSpecialSquare(move.row, move.col) ? maximizingPlayer : !maximizingPlayer;
+            const evalScore = alphaBeta(nextBoard, depth - 1, alpha, beta, nextMaximizing, player, deadline);
             minEval = Math.min(minEval, evalScore);
             beta = Math.min(beta, evalScore);
             if (beta <= alpha) {
@@ -509,8 +519,79 @@ function simulateMove(currentBoard, row, col, player, flips) {
     return newBoard;
 }
 
+// 盤上の空きマス数を数える
+function countEmptySquares(boardData) {
+    let count = 0;
+    for (let r = 0; r < boardSize; r++) {
+        for (let c = 0; c < boardSize; c++) {
+            if (boardData[r][c] === null) count++;
+        }
+    }
+    return count;
+}
+
+// メインスレッドを固めないよう、非同期タスクの合間に一呼吸入れる
+function yieldToUI() {
+    return new Promise(resolve => setTimeout(resolve, 0));
+}
+
+// 反復深化で最善手（wantMax=false なら最悪手）を探す。
+// 残りマス数が少なければ終局までの完全読みに切り替える。
+// 1手あたり timeBudgetMs を超えたら、それまでに完了した最も深い探索結果を返す。
+async function findBestMoveIterative(boardState, validMoves, wantMax, timeBudgetMs) {
+    const deadline = performance.now() + timeBudgetMs;
+    const remainingEmpty = countEmptySquares(boardState);
+    // 終盤は最後まで読み切る（パスが挟まる余地を見て少し余裕を持たせる）
+    const isEndgame = remainingEmpty <= ENDGAME_EXACT_EMPTY_THRESHOLD;
+    const maxDepth = isEndgame ? remainingEmpty + 4 : MAX_SEARCH_DEPTH;
+
+    let overallBest = validMoves[Math.floor(Math.random() * validMoves.length)];
+    let overallScore = wantMax ? -Infinity : Infinity;
+    let orderedRoot = orderMovesByWeight(validMoves);
+
+    for (let depth = 1; depth <= maxDepth; depth++) {
+        let bestThisDepth = null;
+        let bestScoreThisDepth = wantMax ? -Infinity : Infinity;
+        let alpha = -Infinity;
+        let beta = Infinity;
+        let timedOut = false;
+
+        for (const move of orderedRoot) {
+            if (performance.now() > deadline) { timedOut = true; break; }
+            const nextBoard = simulateMove(boardState, move.row, move.col, CPU_PLAYER, move.flips);
+            // 特殊マス（連続手番）ならCPUの手番のまま続行
+            const nextMaximizing = isSpecialSquare(move.row, move.col) ? wantMax : !wantMax;
+            const score = alphaBeta(nextBoard, depth - 1, alpha, beta, nextMaximizing, CPU_PLAYER, deadline);
+
+            const better = wantMax ? score > bestScoreThisDepth : score < bestScoreThisDepth;
+            if (better) {
+                bestScoreThisDepth = score;
+                bestThisDepth = move;
+                if (wantMax) alpha = Math.max(alpha, score); else beta = Math.min(beta, score);
+            } else if (score === bestScoreThisDepth && Math.random() < 0.1) {
+                bestThisDepth = move;
+            }
+        }
+
+        // この深さを最後まで探索し切れていれば結果を採用し、次の深さ用に手の並びをPVムーブ優先にする
+        if (bestThisDepth) {
+            overallBest = bestThisDepth;
+            overallScore = bestScoreThisDepth;
+            orderedRoot = [bestThisDepth, ...orderedRoot.filter(m => m !== bestThisDepth)];
+        }
+
+        if (timedOut || isEndgame && depth >= maxDepth) break;
+        if (performance.now() > deadline) break;
+
+        // 1手ごとの重い探索の合間にUIスレッドを解放する
+        await yieldToUI();
+    }
+
+    return { move: overallBest, score: overallScore };
+}
+
 // CPUの手を実行 (モードに応じて動作変更)
-function makeComputerMove() {
+async function makeComputerMove() {
     const validMoves = getValidMoves(CPU_PLAYER, board);
 
     if (validMoves.length === 0) {
@@ -520,55 +601,31 @@ function makeComputerMove() {
         return;
     }
 
-    let bestScore;
-    let bestMove = validMoves[0]; // 初期値
-    let alpha = -Infinity;
-    let beta = Infinity;
+    let bestMove;
 
-    if (gameMode === 'lose') {
-        // --- 全力で負けようとするモード ---
-        bestScore = Infinity; // 最小スコアを探すので初期値は無限大
+    if (gameMode === 'sontaku') {
+        // --- 忖度モード：探索は行わず、その場で最も多くひっくり返せる手を選ぶだけの貪欲法 ---
+        // 位置・機動力・確定石を一切考慮しないため、角を安易に譲るなど初心者が陥りがちな弱さになる。
+        let bestFlips = -1;
+        bestMove = validMoves[0];
         for (const move of validMoves) {
-            const nextBoard = simulateMove(board, move.row, move.col, CPU_PLAYER, move.flips);
-            // 評価値を計算 (探索深度は通常通りでOK、評価結果の解釈を変える)
-            const score = alphaBeta(nextBoard, currentSearchDepth - 1, alpha, beta, false, CPU_PLAYER);
-
-            if (score < bestScore) { // 評価値が最も低い手を選ぶ
-                bestScore = score;
+            if (move.flips.length > bestFlips) {
+                bestFlips = move.flips.length;
                 bestMove = move;
-                // αβカットは通常通りで良い（探索効率のため）
-                // beta = Math.min(beta, score); // 最小化ノードのカット条件は変わらない
-            }
-             // 評価値が同じ場合、たまに違う手を選ぶ
-            else if (score === bestScore && Math.random() < 0.1) {
-                 bestMove = move;
+            } else if (move.flips.length === bestFlips && Math.random() < 0.3) {
+                bestMove = move;
             }
         }
-        console.log(`CPU (Lose Mode) chooses: (${bestMove.row}, ${bestMove.col}) with score: ${bestScore}`);
+        console.log(`CPU (Sontaku Mode) chooses: (${bestMove.row}, ${bestMove.col}) by greedy flip count: ${bestFlips}`);
 
     } else {
-        // --- 全力モード または 忖度モード ---
-        // (忖度モードは initializeBoard で currentSearchDepth が変更されている)
-        bestScore = -Infinity; // 最大スコアを探す
-         bestMove = validMoves[Math.floor(Math.random() * validMoves.length)]; // ランダム初期化
-
-        for (const move of validMoves) {
-            const nextBoard = simulateMove(board, move.row, move.col, CPU_PLAYER, move.flips);
-            // 評価値を計算 (currentSearchDepth を使用)
-            const score = alphaBeta(nextBoard, currentSearchDepth - 1, alpha, beta, false, CPU_PLAYER);
-
-            if (score > bestScore) { // 評価値が最も高い手を選ぶ
-                bestScore = score;
-                bestMove = move;
-                alpha = Math.max(alpha, score);
-            }
-             else if (score === bestScore && Math.random() < 0.1) {
-                 bestMove = move;
-            }
-        }
-         console.log(`CPU (${gameMode === 'sontaku' ? 'Sontaku Mode' : 'Normal Mode'}) chooses: (${bestMove.row}, ${bestMove.col}) with score: ${bestScore}`);
+        // --- 全力モード／全力で負けようとするモード ---
+        // 探索エンジンは共通。lose モードは自分にとって最悪の評価値を狙うだけの違い。
+        const wantMax = gameMode !== 'lose';
+        const result = await findBestMoveIterative(board, validMoves, wantMax, TIME_BUDGET_MS);
+        bestMove = result.move;
+        console.log(`CPU (${gameMode === 'lose' ? 'Lose Mode' : 'Normal Mode'}) chooses: (${bestMove.row}, ${bestMove.col}) with score: ${result.score}`);
     }
-
 
     // 最善手 (または最悪手) に石を置く
     placeDisc(bestMove.row, bestMove.col, CPU_PLAYER, bestMove.flips);
