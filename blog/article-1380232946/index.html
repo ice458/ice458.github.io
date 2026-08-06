@@ -1,0 +1,230 @@
+---
+layout: page
+type: article
+nav: blog
+permalink: /blog/article-1380232946/
+title: PCBWayでPCBAを発注した
+description: PCBWayよりPRで無料枠をいただき、High-PSRR電源基板のPCB＋PCBAを発注しました。やり取りの経緯と使ってみた感想の紹介記事です。
+keywords: PCBWay,PCBA,PCB発注,基板製造,スポンサー,PR,電源回路,TPS65130,ice458
+image: /logo.png
+categories:
+- PR
+date: 2026年08月06日
+updated: 2026年08月06日
+summary: PCBWayよりPRで無料枠をいただいたので、実際に発注してみた経緯と感想を紹介します。
+search: PCBWay PCBA PR スポンサー 基板発注
+order: 0
+sitemap:
+  priority: 0.6
+  changefreq: monthly
+---
+
+                <div class="article-overview">
+                    <h2>概要</h2>
+                    <p>PCBWayよりPRで無料枠をいただいたので紹介記事です。今回はTPS65130を使った電源基板（<a href="https://www.pcbway.com/" target="_blank" rel="noopener">PCBWay</a>でのPCB製造＋PCBA組み立て）を対象に、スポンサーの申し出から基板到着までのやり取りと、実際に使ってみた感想をまとめます。</p>
+                </div>
+
+                <div class="article-section">
+                    <h2>きっかけ</h2>
+                    <p>2026年4月1日、XのDMでPCBWayの担当者から「サイト上のプロジェクトを見て、次回作のPCBプロトタイプをスポンサーしたい」という申し出があった。当時は具体的な予定がなかったため、いったん次回のプロジェクトができたタイミングで改めて連絡する旨を伝え、あわせてスポンサー制度の条件を確認した。</p>
+                    <p>翌4月2日に回答があり、要点は以下の通りだった。</p>
+                    <ul>
+                        <li>PCB製造・PCBA実装ともに対象（送料込みで合計US$100以内なら全額スポンサー、超過分は要相談）</li>
+                        <li>見返りとして、記事やSNSでの発注に関する感想（品質・スピードなど）の共有、基板の写真、PCBWayサイトへのリンクの掲載</li>
+                    </ul>
+                    <p>この条件で問題ないと回答し、プロジェクトができ次第連絡することにした。</p>
+                </div>
+
+                <div class="article-section">
+                    <h2>発注までの経緯</h2>
+                    <p>2026年6月14日、TPS65130とディスクリートLDOを用いたデュアル電源基板（2層、34mm×79mm、PCBA込み）の設計が完了したため、スポンサーの件で連絡した。返信が滞っていたが、こちらから再度連絡したところ改めて手続きを進めてもらえることになった。</p>
+                    <p>7月2日、PCBWayのオンライン注文フォームから見積もりを作成し（支払いは不要）、Product Numberを担当者にメールする流れの案内を受けた。あわせて配送先住所の登録も必要とのこと。</p>
+                    <div class="blog-notice">
+                        <p>日本から発注する場合、End-Use Statement（誓約書）の提出が必要になる。カートに追加して手続きを進めようとしたところ「Please contact a sales representative」と表示されて先に進めなくなり、担当の営業から改めて連絡が来る仕組みだった。実際にはサポートからのメールで案内があり、誓約書とパスポートのコピーを送付することで解決した。書類提出自体はやや手間だったが、案内は具体的でスムーズに完了した。</p>
+                    </div>
+                    <p>審査通過後、PCBA担当の営業(DMとは別の方)と部品の価格・調達先を確認し、7月7日に見積もりを確定。この時点でのカート画面は以下の通り。</p>
+
+                    <div class="article-image">
+                        <img src="img/cart.webp" alt="PCBWayのカート画面。PCB本体とPCBAが別項目になっている">
+                        <p class="image-caption">カート画面。PCB本体(2層 34×79mm、5枚)が$5.00、PCBA(2枚)が$80.73(内訳: Assembly Cost $29.00 + Components cost $51.73)で、合計$85.73</p>
+                    </div>
+
+                    <p>PCB自体は5枚で$5.00と安価な一方、PCBAは部品代とアセンブリ費用が乗るため2枚で$80.73となり、合計$85.73だった。この金額はスポンサーの予算(送料込みUS$100以内)に収まったため、全額スポンサーとしてクレジットが付与され、支払いを行った。SMT（PCBA）注文は配送料が最大US$30割引になるとのことで、配送業者はFedExとOCSから選択できた。支払い後は特に問題なく製造工程に入り、7月31日に基板が到着した。</p>
+                </div>
+
+                <div class="article-section">
+                    <h2>部品表(BOM)のやり取り</h2>
+                    <p>PCBAの部品確認では、KiCadから出力したBOMをもとに、PCBWay側で調達可能な部品・単価を当てはめたシートを送り返してもらい、内容を確認するという流れだった。</p>
+
+                    <p>BOMの出力にはKiCadのプラグイン&コンテンツマネージャーからインストールできるPCBWay関連のプラグインを使った。PCBWay提供のプラグインには2種類あり、「PCBWay Plug-in for KiCad」と、「PCBWay Fabrication Toolkit」がある。今回は後者のFabrication Toolkitを使い、出力したBOM(CSV)をWebサイトにアップロードした。</p>
+
+                    <div class="article-image">
+                        <img src="img/ss.webp" alt="KiCadのプラグイン&コンテンツマネージャーでPCBWay関連プラグインを選択している画面">
+                        <p class="image-caption">KiCadのプラグイン&コンテンツマネージャー。PCBWay関連のプラグインは2種類あり、今回は画像中で選択されている「PCBWay Fabrication Toolkit」を使用した</p>
+                    </div>
+
+                    <p>標準的な内容に加え、MPN(型番)とManufacturerの列が必要な模様。実際の行の例を2つ抜粋する。</p>
+
+                    <div class="parts-table">
+                        <table class="parts-list">
+                            <thead>
+                                <tr>
+                                    <th>Designator</th>
+                                    <th>Quantity</th>
+                                    <th>Value</th>
+                                    <th>Footprint</th>
+                                    <th>Package</th>
+                                    <th>MPN</th>
+                                    <th>DNP</th>
+                                    <th>Mount_Type</th>
+                                    <th>Description</th>
+                                    <th>KiLib_Generator</th>
+                                    <th>Manufacturer</th>
+                                    <th>Sim.Device</th>
+                                    <th>Sim.Pins</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>C53, C58</td>
+                                    <td>2</td>
+                                    <td>1n</td>
+                                    <td>C_0603_1608Metric</td>
+                                    <td></td>
+                                    <td>GRM1885C1H102JA01D</td>
+                                    <td></td>
+                                    <td>smt</td>
+                                    <td>Unpolarized capacitor</td>
+                                    <td>SMD_2terminal_chip_molded</td>
+                                    <td>Murata Electronics</td>
+                                    <td></td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td>U11</td>
+                                    <td>1</td>
+                                    <td>TPS65130RGE</td>
+                                    <td>VQFN-24-1EP_4x4mm_P0.5mm_EP2.45x2.45mm_ThermalVias</td>
+                                    <td></td>
+                                    <td>TPS65130</td>
+                                    <td></td>
+                                    <td>smt</td>
+                                    <td>Split-Rail Converter with Dual, Positive and Negative Outputs (300mA typ, Switch Current Limit 800mA typ), 2.7-5.5V, VQFN-24</td>
+                                    <td>package/no_lead</td>
+                                    <td>Texas Instruments</td>
+                                    <td></td>
+                                    <td></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <p>このCSVを送ると、PCBWay側で仕入れ可能な部品と単価を当てはめたExcel(xls)形式の確認シートが返送されてくる。列としては品番・数量・メーカー・型番に加え、単価・納期・実際に仕入れる型番・PCBWay側からの注記・こちらの回答欄などが追加されている。以下は実際に返ってきたシートからの抜粋で、2行目は電解コンデンサを手はんだ実装用にDNP(部品未実装)指定した例。PCBWay側から「DNP不要贴(=貼り付け不要)」という注記が付き、"Customer Reply"欄に"DNP"と記入して確認・返信した。</p>
+
+                    <div class="parts-table">
+                        <table class="parts-list">
+                            <thead>
+                                <tr>
+                                    <th>Item #</th>
+                                    <th>Designator</th>
+                                    <th>Qty</th>
+                                    <th>Manufacturer</th>
+                                    <th>Mfg Part #</th>
+                                    <th>Description / Value</th>
+                                    <th>Package/Footprint</th>
+                                    <th>Mounting Type</th>
+                                    <th>Your Instructions / Notes</th>
+                                    <th>Unit Price(2 units)</th>
+                                    <th>Total</th>
+                                    <th>Delivery Time</th>
+                                    <th>Actual Purchase Mfg Part #</th>
+                                    <th>PCBWay Note</th>
+                                    <th>Customer Reply</th>
+                                    <th>PCBWay Update</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>1</td>
+                                    <td>C53, C58</td>
+                                    <td>2</td>
+                                    <td>Murata Electronics</td>
+                                    <td>GRM1885C1H102JA01D</td>
+                                    <td>1n / Unpolarized capacitor / SMD_2terminal_chip_molded</td>
+                                    <td>C_0603_1608Metric</td>
+                                    <td>smt</td>
+                                    <td></td>
+                                    <td>$0.189</td>
+                                    <td>$0.756</td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td>2</td>
+                                    <td>C54</td>
+                                    <td>1</td>
+                                    <td></td>
+                                    <td></td>
+                                    <td>22u / Polarized capacitor / capacitor/THT/other</td>
+                                    <td>CP_Radial_D6.3mm_P2.50mm</td>
+                                    <td>tht</td>
+                                    <td>Yes</td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td>[DNP不要贴];</td>
+                                    <td>DNP</td>
+                                    <td></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <p>型番まで明記したBOMさえ渡せば、あとは金額・納期・DNP指定などを確認して返信するだけで済むので、部品調達にかかる手間はほとんどなかった。</p>
+                </div>
+
+                <div class="article-section">
+                    <h2>到着した基板</h2>
+                    <p>今回発注したのは、TPS65130（デュアル昇降圧コンバータ）とディスクリートLDOを組み合わせた電源モジュール。2層基板・34mm×79mmで、PCBA込みで発注した。</p>
+
+                    <div class="image-row">
+                        <div class="image-item">
+                            <img src="img/IMG_0100.webp" alt="PCBA済みの基板表面全体">
+                            <p class="image-caption">実装済みの基板。TPS65130周辺のインダクタやMLCCもきれいに収まっている</p>
+                        </div>
+                        <div class="image-item">
+                            <img src="img/IMG_0099.webp" alt="TPS65130周辺のクローズアップ">
+                            <p class="image-caption">TPS65130（QFN）周辺のクローズアップ。1608Mサイズの部品も含め実装精度は良好</p>
+                        </div>
+                    </div>
+
+                    <p>今回は5枚製造、2枚PCBAありでの発注のため、未実装の基板も3枚同梱されていた。イラストのシルクはやや滲むが通常の文字は全く良好。</p>
+
+                    <div class="image-row">
+                        <div class="image-item">
+                            <img src="img/IMG_0101.webp" alt="未実装の基板（表面）">
+                            <p class="image-caption">未実装基板（表面）</p>
+                        </div>
+                        <div class="image-item">
+                            <img src="img/IMG_0102.webp" alt="基板裏面のペンギンのアートワーク">
+                            <p class="image-caption">イラストを入れた基板裏面</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="article-section">
+                    <h2>感想</h2>
+                    <p>基板のパターン精度、シルクの品質ともに問題なく、PCBAの実装も部品の向き・はんだ付けともにきれいに仕上がっていた。今回のような細かいピッチのQFNパッケージや小型受動部品が混在する基板でも不良は見当たらなかった。</p>
+                    <p>部品調達については、型番さえ指定しておけば手配は基本的にPCBWay側に任せられるのが便利だった。個人で少量の部品を複数の販社から集めるのは地味に手間がかかる作業なので、この点はPCBAを頼む大きなメリットだと感じた。</p>
+                    <p>サポート対応も総じて丁寧で、質問への回答や見積もり・支払いの案内はいずれも具体的でわかりやすかった。日本からの発注特有の手続きとしてEnd-Use Statementの提出が必要になった点は面倒ではあったものの、対応自体はスムーズだった。</p>
+
+                    <div class="blog-tip">
+                        <p>普段JLCPCBを使うことが多いが、そちらと比較すると価格は高め。ただしPCBAの部品調達を任せられる利便性やサポートの手厚さを踏まえると、その分の価値はあると感じた。基板単体で気軽に頼むというよりは、PCBAまで含めてまとめて任せたいときに向いている印象。</p>
+                    </div>
+
+                    <p>今回スポンサーいただいた<a href="https://www.pcbway.com/" target="_blank" rel="noopener">PCBWay</a>へのリンク</p>
+                </div>
