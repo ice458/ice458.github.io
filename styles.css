@@ -2162,7 +2162,8 @@ a.banner-item {
     padding: 8px 4px 0;
 }
 
-.banner-title {
+/* .banner-description p (詳細度0,1,1) に負けないよう要素セレクタを付与 */
+p.banner-title {
     font-weight: 600;
     font-size: 0.9rem;
     color: #333;
@@ -2170,7 +2171,7 @@ a.banner-item {
     line-height: 1.3;
 }
 
-.banner-text {
+p.banner-text {
     font-size: 0.8rem;
     color: #666;
     line-height: 1.4;
@@ -2212,5 +2213,385 @@ a.banner-item {
         word-break: break-word;
         overflow-wrap: break-word;
         hyphens: auto;
+    }
+}
+
+/* =========================== */
+/* ダークモード（OS設定追従）    */
+/* 既存のライトモード定義は変更せず、prefers-color-scheme: dark 時のみ上書きする */
+/* =========================== */
+@media (prefers-color-scheme: dark) {
+    :root {
+        color-scheme: dark;
+    }
+
+    body,
+    .site-header,
+    .site-main {
+        background-color: #16181a;
+    }
+
+    body {
+        color: #c7cbd1;
+    }
+
+    .site-header {
+        border-bottom-color: #2a2e31;
+    }
+
+    .site-title,
+    .welcome-text,
+    .description,
+    .site-title a {
+        color: #e8eaed;
+    }
+
+    .site-title a:hover {
+        color: #6ea8fe;
+    }
+
+    .nav-link {
+        background-color: rgba(255, 255, 255, 0.08);
+        color: #e8eaed;
+        border-color: rgba(255, 255, 255, 0.15);
+    }
+
+    .nav-link:hover {
+        background-color: rgba(255, 255, 255, 0.15);
+    }
+
+    /* リンク（ボタン化したブランドカラーのリンクは対象外） */
+    a {
+        color: #6ea8fe;
+    }
+
+    a:hover {
+        color: #8fbbff;
+        background-color: rgba(110, 168, 254, 0.15);
+    }
+
+    /* カード・パネル類（半透明の白パネル→半透明の暗パネルに） */
+    .search-filter-container,
+    .pagination-container,
+    .disclaimer-section,
+    .breadcrumb,
+    .article-header,
+    .article-content,
+    .blog-filters,
+    .article-card {
+        background-color: rgba(30, 33, 36, 0.92);
+    }
+
+    .article-card:hover {
+        background-color: rgba(30, 33, 36, 1);
+    }
+
+    .search-input,
+    .search-suggestions,
+    .filter-btn,
+    .projects-table,
+    .projects-list,
+    .projects-list td,
+    .pagination-btn,
+    .pagination-number,
+    .page-size-select,
+    .parts-list,
+    .results-table,
+    .banner-item {
+        background-color: #22262a;
+        border-color: #3a3f45;
+    }
+
+    .search-input {
+        color: #e8eaed;
+    }
+
+    .suggestions-header {
+        background-color: #2a2e33;
+        border-color: #3a3f45;
+        color: #9aa4b2;
+    }
+
+    .suggestion-item {
+        color: #c7cbd1;
+        border-bottom-color: #2a2e33;
+    }
+
+    .suggestion-item:hover,
+    .suggestion-item.selected {
+        background-color: #1e3350;
+        color: #8fbbff;
+    }
+
+    .filter-btn {
+        color: #9aa4b2;
+    }
+
+    .filter-btn:hover {
+        border-color: #6ea8fe;
+        color: #6ea8fe;
+    }
+
+    .results-info {
+        background-color: #2a2e33;
+        color: #b0b8c1;
+    }
+
+    .projects-list th,
+    .parts-list th,
+    .results-table th {
+        background-color: #2b2f34;
+    }
+
+    .projects-list tr:nth-child(even) td,
+    .parts-list tr:nth-child(even) td,
+    .results-table tr:nth-child(even) td {
+        background-color: #202327;
+    }
+
+    .projects-list tr:hover td,
+    .parts-list tr:hover td,
+    .results-table tr:hover td {
+        background-color: #1e3350;
+    }
+
+    .projects-list td,
+    .parts-list td,
+    .results-table td {
+        border-bottom-color: #2a2e33;
+        color: #c7cbd1;
+    }
+
+    .projects-list a {
+        color: #7fb0ff;
+    }
+
+    .projects-list a:hover {
+        background-color: #1e3350;
+        color: #a9cbff;
+    }
+
+    .pagination-info,
+    .pagination-ellipsis,
+    .pagination-size,
+    .article-date,
+    .article-info,
+    .disclaimer-title,
+    .disclaimer-content,
+    .image-caption,
+    .breadcrumb-item:not(:last-child)::after {
+        color: #9aa4b2;
+    }
+
+    .pagination-btn,
+    .pagination-number {
+        color: #c7cbd1;
+    }
+
+    .pagination-btn:hover:not(:disabled),
+    .pagination-number:hover {
+        border-color: #6ea8fe;
+        color: #6ea8fe;
+        background-color: #2a2e33;
+    }
+
+    .page-size-select {
+        color: #c7cbd1;
+    }
+
+    ::-webkit-scrollbar-track {
+        background: #1c1e21;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: #4a4f55;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+        background: #62676d;
+    }
+
+    .breadcrumb-link {
+        color: #6ea8fe;
+    }
+
+    .breadcrumb-link:hover {
+        color: #8fbbff;
+    }
+
+    .breadcrumb-current {
+        color: #c7cbd1;
+    }
+
+    .article-title {
+        color: #e8eaed;
+        border-bottom-color: #6ea8fe;
+    }
+
+    .article-section h2 {
+        color: #7fb0ff;
+        border-bottom-color: #3a3f45;
+    }
+
+    .article-section h2::before {
+        background-color: #6ea8fe;
+    }
+
+    .article-section h3,
+    .process-step h3 {
+        color: #b8d4ff;
+    }
+
+    .article-section p,
+    .article-section li,
+    .blog-article .article-section p {
+        color: #c7cbd1;
+    }
+
+    .article-overview {
+        background: linear-gradient(135deg, #16283a, #163247);
+        border-color: #2c5c7a;
+    }
+
+    .article-overview h2 {
+        color: #7cc4f2;
+        border-bottom-color: #4a9bce;
+    }
+
+    .notice-box {
+        background-color: #3a1e1e;
+    }
+
+    .notice-box h3 {
+        color: #f28b8b;
+    }
+
+    .notice-box p {
+        color: #f3b4b4;
+    }
+
+    .spec-list,
+    .process-step,
+    .reference-list li,
+    .banner-description {
+        background-color: #2a2e33;
+        border-color: #3a3f45;
+    }
+
+    .spec-list li {
+        border-bottom-color: #3a3f45;
+    }
+
+    .spec-list strong {
+        color: #b0b8c1;
+    }
+
+    .reference-list a {
+        color: #6ea8fe;
+    }
+
+    .reference-list a:hover {
+        color: #8fbbff;
+    }
+
+    .image-placeholder {
+        background: linear-gradient(135deg, #22262a, #2a2e33);
+        border-color: #3a3f45;
+        color: #9aa4b2;
+    }
+
+    .article-footer {
+        border-top-color: #3a3f45;
+    }
+
+    /* コードブロック（.blog-article 配下は元々ダーク固定なので対象外） */
+    .code-block {
+        background-color: #1e1e1e;
+        color: #d4d4d4;
+        border-color: #3e3e3e;
+    }
+
+    .code-header {
+        background-color: #2d2d30;
+        color: #cccccc;
+        border-color: #3e3e3e;
+    }
+
+    .inline-code {
+        background-color: #2b2e33;
+    }
+
+    .content-notice,
+    .blog-notice {
+        background: linear-gradient(135deg, #423419, #4a3418);
+        border-left-color: #d99a2b;
+    }
+
+    .content-notice h3,
+    .blog-notice h3 {
+        color: #f2b95c;
+    }
+
+    .content-notice p,
+    .blog-notice p {
+        color: #e8c98c;
+    }
+
+    .content-tip,
+    .blog-tip {
+        background: linear-gradient(135deg, #16332a, #1a3d2e);
+        border-left-color: #22b57e;
+    }
+
+    .content-tip h3,
+    .blog-tip h3 {
+        color: #6ee7b7;
+    }
+
+    .content-tip p,
+    .blog-tip p {
+        color: #a7f3d0;
+    }
+
+    .links-content p {
+        color: #9aa4b2;
+    }
+
+    .banner-description p {
+        color: #9aa4b2;
+    }
+
+    p.banner-title {
+        color: #e8eaed;
+    }
+
+    p.banner-text {
+        color: #9aa4b2;
+    }
+
+    .banner-img {
+        background: #2a2e33;
+        border-color: #3a3f45;
+    }
+
+    .banner-item:hover {
+        border-color: #6ea8fe;
+    }
+
+    .article-card .article-date,
+    .article-card .article-summary {
+        color: #9aa4b2;
+    }
+
+    .article-card .article-title a {
+        color: #7fb0ff;
+    }
+
+    .article-card .article-title a:hover {
+        color: #6ea8fe;
+    }
+
+    .site-footer {
+        background-color: #101213;
     }
 }

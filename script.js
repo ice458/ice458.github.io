@@ -31,22 +31,15 @@ document.addEventListener('DOMContentLoaded', function() {
     const nextPageBottomBtn = document.getElementById('nextPageBottom');
     const pageSizeTopSelect = document.getElementById('pageSizeTop');
     const pageSizeBottomSelect = document.getElementById('pageSizeBottom');
-    
-    // 後方互換性のための旧要素（残っている場合）
-    const paginationInfo = document.getElementById('paginationInfo');
-    const paginationNumbers = document.getElementById('paginationNumbers');
-    const prevPageBtn = document.getElementById('prevPage');
-    const nextPageBtn = document.getElementById('nextPage');
-    const pageSizeSelect = document.getElementById('pageSize');
-    
+
     // 状態管理
     let currentFilter = 'all';
     let currentSearchTerm = '';
     let currentPage = 1;
     let pageSize = 10;
-    
+
     // ページネーション機能が利用可能かチェック
-    const paginationEnabled = !!(paginationContainers.length > 0 && (paginationInfoTop || paginationInfo) && (paginationNumbersTop || paginationNumbers));
+    const paginationEnabled = !!(paginationContainers.length > 0 && paginationInfoTop && paginationNumbersTop);
     
     // 検索履歴管理
     let searchHistory = JSON.parse(localStorage.getItem('searchHistory') || '[]');
@@ -104,10 +97,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
         });
-        
-        console.log('検出されたカテゴリ:', sortedCategories);
     }
-    
+
     // フィルタされた行を取得
     function getFilteredRows() {
         return Array.from(targetItems).filter(item => {
@@ -236,8 +227,6 @@ document.addEventListener('DOMContentLoaded', function() {
         // 上下両方の情報を更新
         if (paginationInfoTop) paginationInfoTop.textContent = infoText;
         if (paginationInfoBottom) paginationInfoBottom.textContent = infoText;
-        // 後方互換性のため
-        if (paginationInfo) paginationInfo.textContent = infoText;
     }
     
     // ページネーション制御の更新
@@ -245,7 +234,6 @@ document.addEventListener('DOMContentLoaded', function() {
         // 上下両方のページ番号をクリア
         if (paginationNumbersTop) paginationNumbersTop.innerHTML = '';
         if (paginationNumbersBottom) paginationNumbersBottom.innerHTML = '';
-        if (paginationNumbers) paginationNumbers.innerHTML = '';
         
         // ページネーションコンテナを取得
         const paginationDivs = document.querySelectorAll('.pagination-container .pagination');
@@ -257,7 +245,7 @@ document.addEventListener('DOMContentLoaded', function() {
             });
             
             // 全ボタンを無効化
-            [prevPageTopBtn, nextPageTopBtn, prevPageBottomBtn, nextPageBottomBtn, prevPageBtn, nextPageBtn]
+            [prevPageTopBtn, nextPageTopBtn, prevPageBottomBtn, nextPageBottomBtn]
                 .forEach(btn => { if (btn) btn.disabled = true; });
             return;
         }
@@ -277,7 +265,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         // 上下両方にページ番号を追加
-        [paginationNumbersTop, paginationNumbersBottom, paginationNumbers].forEach(container => {
+        [paginationNumbersTop, paginationNumbersBottom].forEach(container => {
             if (!container) return;
             
             // 最初のページ
@@ -317,11 +305,11 @@ document.addEventListener('DOMContentLoaded', function() {
         const isFirstPage = currentPage <= 1;
         const isLastPage = currentPage >= totalPages;
         
-        [prevPageTopBtn, prevPageBottomBtn, prevPageBtn].forEach(btn => {
+        [prevPageTopBtn, prevPageBottomBtn].forEach(btn => {
             if (btn) btn.disabled = isFirstPage;
         });
-        
-        [nextPageTopBtn, nextPageBottomBtn, nextPageBtn].forEach(btn => {
+
+        [nextPageTopBtn, nextPageBottomBtn].forEach(btn => {
             if (btn) btn.disabled = isLastPage;
         });
     }
@@ -681,30 +669,30 @@ document.addEventListener('DOMContentLoaded', function() {
     // ページネーションのイベントリスナー
     if (paginationEnabled) {
         
-        // ページサイズ選択（上下両方と後方互換性）
-        [pageSizeTopSelect, pageSizeBottomSelect, pageSizeSelect].forEach(select => {
+        // ページサイズ選択（上下両方を同期）
+        [pageSizeTopSelect, pageSizeBottomSelect].forEach(select => {
             if (select) {
                 // 初期値設定
                 if (!pageSize) pageSize = parseInt(select.value || 10);
-                
+
                 select.addEventListener('change', function() {
                     pageSize = parseInt(this.value);
                     currentPage = 1; // ページサイズ変更時は1ページ目に戻る
-                    
+
                     // 他の選択ボックスも同期
-                    [pageSizeTopSelect, pageSizeBottomSelect, pageSizeSelect].forEach(otherSelect => {
+                    [pageSizeTopSelect, pageSizeBottomSelect].forEach(otherSelect => {
                         if (otherSelect && otherSelect !== this) {
                             otherSelect.value = this.value;
                         }
                     });
-                    
+
                     updateProjectDisplay();
                 });
             }
         });
-        
-        // 前後ボタンのイベントリスナー（上下両方と後方互換性）
-        [prevPageTopBtn, prevPageBottomBtn, prevPageBtn].forEach(btn => {
+
+        // 前後ボタンのイベントリスナー（上下両方）
+        [prevPageTopBtn, prevPageBottomBtn].forEach(btn => {
             if (btn) {
                 btn.addEventListener('click', function() {
                     if (currentPage > 1) {
@@ -714,8 +702,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
             }
         });
-        
-        [nextPageTopBtn, nextPageBottomBtn, nextPageBtn].forEach(btn => {
+
+        [nextPageTopBtn, nextPageBottomBtn].forEach(btn => {
             if (btn) {
                 btn.addEventListener('click', function() {
                     const filteredRows = getFilteredRows();
