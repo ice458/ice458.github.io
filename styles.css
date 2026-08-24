@@ -1328,6 +1328,134 @@ a:hover {
     background-color: #e3f2fd;
 }
 
+/* マニュアルバージョン表（取扱説明書ダウンロードページ） */
+.table-responsive {
+    overflow-x: auto;
+    margin: 20px 0;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.manual-table {
+    width: 100%;
+    min-width: 640px;
+    border-collapse: separate;
+    border-spacing: 0;
+    background-color: #fff;
+    border-radius: 8px;
+    overflow: hidden;
+    font-size: 0.95rem;
+}
+
+.manual-table th {
+    background-color: #475569;
+    color: #fff;
+    padding: 16px 12px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 0.9rem;
+    white-space: nowrap;
+}
+
+.manual-table td {
+    padding: 14px 12px;
+    border-bottom: 1px solid #e9ecef;
+    color: #374151;
+    vertical-align: top;
+}
+
+.manual-table tr:last-child td {
+    border-bottom: none;
+}
+
+.manual-table tr:nth-child(even) td {
+    background-color: #f8f9fa;
+}
+
+.manual-table tr:hover td {
+    background-color: #e3f2fd;
+}
+
+.manual-table code {
+    background-color: #f1f5f9;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.85em;
+    color: #1e293b;
+    white-space: nowrap;
+}
+
+.version-badge {
+    display: inline-block;
+    background-color: #1e40af;
+    color: #fff;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.latest-badge {
+    display: inline-block;
+    margin-left: 6px;
+    background-color: #22c55e;
+    color: #fff;
+    padding: 3px 8px;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.firmware-version {
+    display: inline-block;
+    background-color: #eef2ff;
+    color: #3730a3;
+    padding: 3px 9px;
+    border-radius: 6px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    text-decoration: none;
+    border: 1px solid #c7d2fe;
+    margin: 2px 4px 2px 0;
+    white-space: nowrap;
+    transition: all 0.2s ease;
+}
+
+.firmware-version:hover {
+    background-color: #3730a3;
+    color: #fff;
+    border-color: #3730a3;
+}
+
+.changes-list ul {
+    margin: 0;
+    padding-left: 1.1em;
+}
+
+.changes-list li {
+    margin: 2px 0;
+}
+
+.download-link {
+    display: inline-block;
+    background-color: #2563eb;
+    color: #fff;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: all 0.2s ease;
+}
+
+.download-link:hover {
+    background-color: #1e40af;
+    transform: translateY(-1px);
+}
+
 /* 製作過程 */
 .process-step {
     background-color: #fafafa;
@@ -1571,6 +1699,15 @@ a:hover {
     .parts-list td,
     .results-table th,
     .results-table td {
+        padding: 10px 8px;
+    }
+
+    .manual-table {
+        font-size: 0.85rem;
+    }
+
+    .manual-table th,
+    .manual-table td {
         padding: 10px 8px;
     }
 
@@ -2593,5 +2730,44 @@ p.banner-text {
 
     .site-footer {
         background-color: #101213;
+    }
+
+    /* マニュアルバージョン表 */
+    .manual-table {
+        background-color: #22262a;
+    }
+
+    .manual-table th {
+        background-color: #2b2f34;
+    }
+
+    .manual-table tr:nth-child(even) td {
+        background-color: #202327;
+    }
+
+    .manual-table tr:hover td {
+        background-color: #1e3350;
+    }
+
+    .manual-table td {
+        border-bottom-color: #2a2e33;
+        color: #c7cbd1;
+    }
+
+    .manual-table code {
+        background-color: #2b2e33;
+        color: #e8eaed;
+    }
+
+    .firmware-version {
+        background-color: rgba(99, 102, 241, 0.15);
+        color: #b4b8ff;
+        border-color: #454a8f;
+    }
+
+    .firmware-version:hover {
+        background-color: #4338ca;
+        color: #fff;
+        border-color: #4338ca;
     }
 }
