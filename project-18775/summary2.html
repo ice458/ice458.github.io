@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>RPN35 要約 - ice458</title>
+<style>
+  @page { size: A4 landscape; margin: 12mm 14mm; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: "Yu Gothic", "Hiragino Sans", "Meiryo", sans-serif;
+    font-size: 9.5pt;
+    line-height: 1.40;
+    color: #111;
+    background: #fff;
+    /* 和欧文間の八分アキと約物のアキ詰め（styles.css と同じ方針） */
+    text-autospace: normal;
+    text-spacing-trim: normal;
+  }
+  h1 { font-size: 14pt; margin: 0 0 2mm 0; border-bottom: 1.5pt solid #333; padding-bottom: 1mm; }
+  h2 { font-size: 10.5pt; margin: 2.2mm 0 1.2mm 0; color: #222; border-left: 3pt solid #555; padding-left: 2mm; }
+  p { margin: 0 0 1.2mm 0; }
+  ul { margin: 0 0 1.2mm 4mm; padding: 0; }
+  li { margin: 0; }
+  .meta { font-size: 8.5pt; color: #555; margin-bottom: 2mm; }
+  .lead { font-size: 10pt; margin-bottom: 2mm; }
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4mm;
+    align-items: start;
+  }
+  .spec li { margin-bottom: 0.3mm; }
+  .keys { font-family: "Consolas", "SF Mono", monospace; font-size: 9pt; }
+  table.cmp {
+    border-collapse: collapse;
+    width: 100%;
+    font-size: 8.3pt;
+    line-height: 1.3;
+    margin: 0 0 1.2mm 0;
+  }
+  table.cmp th, table.cmp td {
+    border: 0.5pt solid #bbb;
+    padding: 0.4mm 1.5mm;
+    text-align: left;
+    vertical-align: top;
+  }
+  table.cmp th { background: #f0f0f0; font-weight: bold; }
+  table.cmp td.item { background: #fafafa; white-space: nowrap; }
+  strong { color: #000; }
+
+  /* --- 2ページ目: 図とリンク --- */
+  .page2 { page-break-before: always; }
+  .p2head {
+    font-size: 9pt; color: #555;
+    border-bottom: 0.5pt solid #bbb;
+    padding-bottom: 1mm; margin-bottom: 8mm;
+  }
+  .figs-lg { text-align: center; }
+  .figs-lg img { max-width: 78%; max-height: 95mm; object-fit: contain; }
+  .figs-lg .cap { font-size: 8.5pt; color: #444; margin-top: 1.5mm; }
+  .qr-row { display: flex; justify-content: center; gap: 12mm; margin-top: 10mm; }
+  .qr { text-align: center; width: 48mm; }
+  .qr img { width: 30mm; height: 30mm; display: block; margin: 0 auto 1mm auto; }
+  .qr .qr-t { font-size: 9pt; font-weight: bold; }
+  .qr .qr-u { font-size: 7pt; color: #666; word-break: break-all; line-height: 1.25; }
+</style>
+</head>
+<body>
+  <h1>RPN35 — 逆ポーランド関数電卓 (頒布版)</h1>
+  <div class="meta">ice458 / 2025年09月24日 — 電子工作・電卓</div>
+
+  <p class="lead">
+    自作RPN関数電卓 (別紙) の後継機。演算コアを自作18桁BCDライブラリから
+    <strong>Intel&reg; Decimal Floating-Point Math Library (decimal128 / 内部34桁)</strong> へ、
+    MCUを<strong>RP2350</strong>へ刷新し、2行×16桁LCDの筐体に変数メモリ・キー操作マクロ・多段Undo・Resumeを搭載した。
+    消費電力は増えたものの、電源は先代同様に単4乾電池1本のみ。
+  </p>
+
+  <div class="grid">
+    <div>
+      <h2>基本仕様</h2>
+      <ul class="spec">
+        <li><strong>入力方式:</strong> RPN (逆ポーランド) / <strong>スタック:</strong> X, Y, Z, T の4段</li>
+        <li><strong>表示:</strong> 2行×16桁キャラクタLCD (下段X / 上段Y)</li>
+        <li><strong>キー:</strong> 5×7の35キー + 電源キー / シフトによる2面配置</li>
+        <li><strong>計算範囲:</strong> ±1×10<sup>−6143</sup> 〜 ±9.99…9×10<sup>6144</sup> および0 (実数のみ)</li>
+        <li><strong>内部計算桁数:</strong> 34桁 / <strong>表示桁数:</strong> 最大32桁 (符号・指数部含む)</li>
+        <li><strong>角度単位:</strong> DEG / RAD / GRAD、<strong>入力文字数上限:</strong> 40文字</li>
+        <li><strong>変数メモリ:</strong> A〜Fの6個 / <strong>マクロ:</strong> 3スロット×各1024イベント</li>
+        <li><strong>科学定数:</strong> 2グループ×10種 (CODATA 2022) / <strong>サイズ:</strong> 約100×62×10mm</li>
+        <li><strong>電源:</strong> 単4乾電池1本</li>
+        <li><strong>消費電力 @1.5V:</strong> 約7.5mW (入力待ち) / 約18mW (動作時)</li>
+      </ul>
+
+      <h2>演算コア: decimal128</h2>
+      <p>
+        先代では十進演算のためにBCDライブラリを自作したが、本機では Intel&reg; Decimal Floating-Point Math Library を採用した。
+        内部34桁・指数範囲10<sup>−6143</sup>〜10<sup>6144</sup>という仕様は <strong>IEEE 754-2008 の decimal128</strong> そのもので、
+        二進浮動小数点のような「十進で有限桁の値が内部で循環小数になる」問題が原理的に発生しない。
+      </p>
+      <p>
+        固定小数桁表示 (Digits 0〜9) では<strong>銀行家の丸め (round-half-to-even)</strong> を用い、丸め方向の偏りによる累積誤差を避けている。
+      </p>
+
+      <h2>先代 (自作RPN関数電卓) からの変更点</h2>
+      <table class="cmp">
+        <tr><th>項目</th><th>先代 (2024)</th><th>RPN35</th></tr>
+        <tr><td class="item">演算コア</td><td>自作BCD 18桁</td><td>Intel DFP / decimal128 34桁</td></tr>
+        <tr><td class="item">表示桁数</td><td>10桁</td><td>最大32桁 (2行×16桁LCD)</td></tr>
+        <tr><td class="item">MCU</td><td>PIC32CM2532LE00048</td><td>RP2350</td></tr>
+        <tr><td class="item">機能</td><td>関数26種</td><td>関数群＋定数20種・変数6・マクロ</td></tr>
+        <tr><td class="item">消費電力</td><td>1mW / 9mW</td><td>7.5mW / 18mW</td></tr>
+        <tr><td class="item">更新手段</td><td>—</td><td>USB経由 (UF2)</td></tr>
+      </table>
+    </div>
+
+    <div>
+      <h2>設定メニュー</h2>
+      <p>
+        <span class="keys">Conf</span> で開く階層メニュー。<span class="keys">Enter</span> で値を切替、変更は即時反映・電源OFF時に保存。
+      </p>
+      <table class="cmp">
+        <tr><th>分類</th><th>項目</th><th>設定値</th></tr>
+        <tr><td class="item" rowspan="4">Settings<br>(計算)</td><td class="item">Ang. Unit</td><td>DEG / RAD / GRAD</td></tr>
+        <tr><td class="item">Display</td><td>NORM / SCI / ENG</td></tr>
+        <tr><td class="item">Digits</td><td>ALL (自動トリム) / 0〜9 (固定小数桁・銀行家の丸め)</td></tr>
+        <tr><td class="item">Hyp. Mode</td><td>OFF / ON (三角系キーを双曲線関数へ切替)</td></tr>
+        <tr><td class="item" rowspan="6">System<br>(電源・表示)</td><td class="item">Auto Off</td><td>OFF / 3m / 5m / 10m</td></tr>
+        <tr><td class="item">Resume</td><td>OFF / ON (OFF時の状態を保存・復帰)</td></tr>
+        <tr><td class="item">Last Key</td><td>Last X / Undo</td></tr>
+        <tr><td class="item">LCD Contrast</td><td>任意の値</td></tr>
+        <tr><td class="item">Reset</td><td>Stack / Vars / Stack&amp;Vars / FactoryReset</td></tr>
+        <tr><td class="item">About</td><td>ファームウェアのバージョンとビルド日付</td></tr>
+      </table>
+
+      <h2>Undo / Resume</h2>
+      <p>
+        <span class="keys">Last</span> キーの動作は設定で <strong>Last X / Undo</strong> を切り替えられる。
+        Undo側では最大100ステップの多段Undo (スタックのみ) が可能で、マクロ再生後にUndoすると実行前の状態まで一括で戻る。
+        Resume はOFF時にスタック・変数・Last Xを保存し、次回起動で復帰する。
+      </p>
+
+      <h2>変数メモリとマクロ</h2>
+      <p>
+        変数はA〜Fの6個。<span class="keys">ST</span>/<span class="keys">LD</span>/<span class="keys">CLR</span> で変数操作モードに入り、
+        変数キーを押すと操作が実行されて抜ける (ロードは変数キー直接押下でも可)。
+      </p>
+      <p>
+        マクロは<strong>キー押下イベントの記録・再生</strong>であり、数値入力のキー操作も記録される。
+        このため、標準にない定数をワンアクションで入力させる用途にも使える。
+      </p>
+
+      <h2>ファームウェア更新</h2>
+      <p>
+        更新はRP2350のUF2機構で行う (BOOTSELを押しながら電源投入 → USBマスストレージに .uf2 をコピー)。
+        ファームウェアはPico C SDKとIntel DFP Math Library (3条項BSD) を利用。
+      </p>
+    </div>
+  </div>
+</body>
+</html>

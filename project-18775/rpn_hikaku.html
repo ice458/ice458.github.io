@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>電卓くらべ - ice458</title>
+<style>
+  * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    color-adjust: exact;
+  }
+  :root {
+    --primary: #1e40af;
+    --primary-soft: #dbeafe;
+    --primary-border: #93c5fd;
+    --accent: #c2410c;
+    --accent-soft: #ffedd5;
+    --accent-border: #fdba74;
+  }
+  @page { size: A4 portrait; margin: 10mm 14mm; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: "Yu Gothic", "Hiragino Sans", "Meiryo", sans-serif;
+    font-size: 10.5pt;
+    line-height: 1.45;
+    color: #111;
+    background: #fff;
+  }
+  h1 {
+    font-size: 16pt;
+    margin: 0 0 1mm 0;
+    color: var(--primary);
+  }
+  .subtitle {
+    font-size: 10pt;
+    color: #555;
+    margin-bottom: 2.5mm;
+  }
+  .intro {
+    background: var(--primary-soft);
+    border: 1pt solid var(--primary-border);
+    border-radius: 3mm;
+    padding: 2.5mm 4mm;
+    margin-bottom: 3mm;
+    font-size: 10pt;
+  }
+  .intro strong { color: var(--primary); }
+  .steps {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 2mm;
+    margin: 2mm 0 1mm 0;
+    flex-wrap: wrap;
+  }
+  .step {
+    background: #fff;
+    border: 1pt solid var(--primary-border);
+    border-radius: 2mm;
+    padding: 1mm 3mm;
+    font-size: 9pt;
+    text-align: center;
+    color: var(--primary);
+  }
+  .arrow { font-size: 11pt; color: var(--primary); }
+  .to { font-weight: bold; color: var(--accent); }
+  .to-callout {
+    margin-top: 2mm;
+    padding-top: 1.5mm;
+    border-top: 1pt dashed var(--primary-border);
+    font-size: 9.5pt;
+  }
+
+  .example {
+    border: 1pt solid #ddd;
+    border-radius: 3mm;
+    padding: 2.5mm 4mm;
+    margin-bottom: 2.5mm;
+    page-break-inside: avoid;
+  }
+  .example-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 1.5mm;
+  }
+  .example-title {
+    font-size: 11.5pt;
+    font-weight: bold;
+  }
+  .example-answer {
+    font-size: 10.5pt;
+    color: var(--primary);
+    font-weight: bold;
+  }
+  .row {
+    display: flex;
+    align-items: center;
+    gap: 2.5mm;
+    margin: 1mm 0;
+    flex-wrap: wrap;
+  }
+  .row-label {
+    width: 26mm;
+    flex-shrink: 0;
+    font-size: 9pt;
+    color: #444;
+    font-weight: bold;
+  }
+  .row-label.rpn { color: var(--accent); }
+  .keys { display: flex; gap: 1mm; flex-wrap: wrap; align-items: center; }
+  .key {
+    display: inline-block;
+    min-width: 6mm;
+    padding: 0.8mm 2mm;
+    border-radius: 1.5mm;
+    text-align: center;
+    font-size: 9.5pt;
+    font-weight: bold;
+    border: 1pt solid rgba(0,0,0,0.15);
+  }
+  .key-num { background: #eef0f2; color: #222; }
+  .key-op  { background: var(--primary-soft); color: var(--primary); }
+  .key-paren { background: #e7e7e7; color: #555; }
+  .key-enter { background: var(--accent-soft); color: var(--accent); border-color: var(--accent-border); }
+  .key-eq { background: var(--primary-soft); color: var(--primary); border-color: var(--primary-border); }
+  .presses { font-size: 8.5pt; color: #888; margin-left: 1mm; }
+  .jphrase {
+    margin-top: 0.5mm;
+    font-size: 9pt;
+    color: #333;
+  }
+  .point {
+    margin-top: 1.5mm;
+    font-size: 9pt;
+    color: #444;
+    border-left: 2.5pt solid var(--accent);
+    padding-left: 2.5mm;
+  }
+
+  .benefits {
+    background: var(--primary-soft);
+    border: 1pt solid var(--primary-border);
+    border-radius: 3mm;
+    padding: 2.5mm 4mm;
+    margin-top: 3mm;
+  }
+  .benefits h2 {
+    font-size: 12pt;
+    margin: 0 0 2mm 0;
+    color: var(--primary);
+  }
+  .benefits ul {
+    margin: 0;
+    padding-left: 5mm;
+  }
+  .benefits li {
+    margin-bottom: 1.5mm;
+    font-size: 9.8pt;
+  }
+  .benefits li:last-child { margin-bottom: 0; }
+  .benefits strong { color: var(--accent); }
+</style>
+</head>
+<body>
+  <h1>「普通の電卓」と「RPN電卓」の使い方の違い</h1>
+  <div class="subtitle">同じ答えになる計算を、2種類の電卓でどう入力するか見くらべてみてください</div>
+
+  <div class="intro">
+    RPN電卓には「＝」ボタンがありません。かわりに、数字を入力したら
+    <strong>ENTER</strong>で区切り、最後に演算子（＋−×÷）を押します。
+    数字を先に全部入れてから、あとで計算のしかたを指示するイメージです。
+    このやり方を逆ポーランド記法（RPN）と呼びます。
+    <div class="steps">
+      <div class="step">① 数字を入力</div>
+      <span class="arrow">→</span>
+      <div class="step">② ENTERで確定</div>
+      <span class="arrow">→</span>
+      <div class="step">③ 次の数字→演算子</div>
+    </div>
+    <div class="to-callout">
+      この<strong>ENTER</strong>は、日本語の「<span class="to">〜と</span>」に似ています。<br>
+      <span class="key key-num">3</span><span class="key key-enter">ENTER</span><span class="key key-num">5</span><span class="key key-op">＋</span>
+      は、「3<span class="to">と</span>5を足す」という日本語の語順そのままなのです。
+    </div>
+  </div>
+
+  <div class="example">
+    <div class="example-head">
+      <div class="example-title">例① 3 + 5</div>
+      <div class="example-answer">= 8</div>
+    </div>
+    <div class="row">
+      <div class="row-label">普通の電卓</div>
+      <div class="keys">
+        <span class="key key-num">3</span><span class="key key-op">＋</span><span class="key key-num">5</span><span class="key key-eq">＝</span>
+      </div>
+      <span class="presses">（4回）</span>
+    </div>
+    <div class="row">
+      <div class="row-label rpn">RPN電卓</div>
+      <div class="keys">
+        <span class="key key-num">3</span><span class="key key-enter">ENTER</span><span class="key key-num">5</span><span class="key key-op">＋</span>
+      </div>
+      <span class="presses">（4回）</span>
+    </div>
+    <div class="jphrase">→「3<span class="to">と</span>5を足す」</div>
+    <div class="point">押す回数はほぼ同じ。「＝」がなく、「＋」を一番最後に押すのがRPNの特徴です。</div>
+  </div>
+
+  <div class="example">
+    <div class="example-head">
+      <div class="example-title">例② (2 + 3) × 4</div>
+      <div class="example-answer">= 20</div>
+    </div>
+    <div class="row">
+      <div class="row-label">普通の電卓</div>
+      <div class="keys">
+        <span class="key key-paren">(</span><span class="key key-num">2</span><span class="key key-op">＋</span><span class="key key-num">3</span><span class="key key-paren">)</span><span class="key key-op">×</span><span class="key key-num">4</span><span class="key key-eq">＝</span>
+      </div>
+      <span class="presses">（8回）</span>
+    </div>
+    <div class="row">
+      <div class="row-label rpn">RPN電卓</div>
+      <div class="keys">
+        <span class="key key-num">2</span><span class="key key-enter">ENTER</span><span class="key key-num">3</span><span class="key key-op">＋</span><span class="key key-num">4</span><span class="key key-op">×</span>
+      </div>
+      <span class="presses">（6回）</span>
+    </div>
+    <div class="jphrase">→「2<span class="to">と</span>3を足して、4を掛ける」</div>
+    <div class="point">カッコが要りません。先に計算してほしい部分を先に入力するだけで、順番が自然に決まります。</div>
+  </div>
+
+  <div class="example">
+    <div class="example-head">
+      <div class="example-title">例③ (3 + 4) × (5 − 2)</div>
+      <div class="example-answer">= 21</div>
+    </div>
+    <div class="row">
+      <div class="row-label">普通の電卓</div>
+      <div class="keys">
+        <span class="key key-paren">(</span><span class="key key-num">3</span><span class="key key-op">＋</span><span class="key key-num">4</span><span class="key key-paren">)</span><span class="key key-op">×</span><span class="key key-paren">(</span><span class="key key-num">5</span><span class="key key-op">−</span><span class="key key-num">2</span><span class="key key-paren">)</span><span class="key key-eq">＝</span>
+      </div>
+      <span class="presses">（12回）</span>
+    </div>
+    <div class="row">
+      <div class="row-label rpn">RPN電卓</div>
+      <div class="keys">
+        <span class="key key-num">3</span><span class="key key-enter">ENTER</span><span class="key key-num">4</span><span class="key key-op">＋</span><span class="key key-num">5</span><span class="key key-enter">ENTER</span><span class="key key-num">2</span><span class="key key-op">−</span><span class="key key-op">×</span>
+      </div>
+      <span class="presses">（9回）</span>
+    </div>
+    <div class="jphrase">→「3<span class="to">と</span>4を足して、5<span class="to">と</span>2を引いて、その二つを掛ける」</div>
+    <div class="point">カッコが増えるほど、RPNのほうが押す回数が少なくなります。閉じカッコを数える必要もありません。</div>
+  </div>
+
+  <div class="benefits">
+    <h2>結局、何がうれしいのか？</h2>
+    <ul>
+      <li><strong>日本語の語順そのままで考えられる</strong> — 「3と5を足す」「3と4を足して、5と2を引いて、その二つを掛ける」のように、頭に浮かんだ日本語の順番どおりにボタンを押すだけです。＝の電卓のように、先に答えの式全体を組み立てておく必要がありません。</li>
+      <li><strong>ボタンを押す回数が少ない</strong> — カッコが増えるほど差が広がります。例③では、普通の電卓が12回に対してRPN電卓は9回。カッコの開き忘れ・閉じ忘れを心配する必要もありません。</li>
+    </ul>
+  </div>
+
+</body>
+</html>

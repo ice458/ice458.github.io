@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>アナログ回路でLチカ 要約 - ice458</title>
+<style>
+  @page { size: A4 landscape; margin: 12mm 14mm; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: "Yu Gothic", "Hiragino Sans", "Meiryo", sans-serif;
+    font-size: 9.5pt;
+    line-height: 1.40;
+    color: #111;
+    background: #fff;
+    /* 和欧文間の八分アキと約物のアキ詰め（styles.css と同じ方針） */
+    text-autospace: normal;
+    text-spacing-trim: normal;
+  }
+  h1 { font-size: 14pt; margin: 0 0 2mm 0; border-bottom: 1.5pt solid #333; padding-bottom: 1mm; }
+  h2 { font-size: 10.5pt; margin: 2.2mm 0 1.2mm 0; color: #222; border-left: 3pt solid #555; padding-left: 2mm; }
+  p { margin: 0 0 1.2mm 0; }
+  ul { margin: 0 0 1.5mm 4mm; padding: 0; }
+  li { margin: 0; }
+  .meta { font-size: 8.5pt; color: #555; margin-bottom: 2mm; }
+  .lead { font-size: 10pt; margin-bottom: 2mm; }
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4mm;
+    align-items: start;
+  }
+  /* --- 2ページ目: 図とリンク --- */
+  .page2 { page-break-before: always; }
+  .p2head {
+    font-size: 9pt; color: #555;
+    border-bottom: 0.5pt solid #bbb;
+    padding-bottom: 1mm; margin-bottom: 8mm;
+  }
+  .figs-lg { text-align: center; }
+  .figs-lg img { max-width: 100%; max-height: 100mm; object-fit: contain; }
+  .figs-lg .cap { font-size: 8.5pt; color: #444; margin-top: 1.5mm; }
+  .qr-row { display: flex; justify-content: center; gap: 16mm; margin-top: 10mm; }
+  .qr { text-align: center; width: 52mm; }
+  .qr img { width: 30mm; height: 30mm; display: block; margin: 0 auto 1mm auto; }
+  .qr .qr-t { font-size: 9pt; font-weight: bold; }
+  .qr .qr-u { font-size: 7pt; color: #666; word-break: break-all; line-height: 1.25; }
+  .formula {
+    font-family: "Cambria Math", serif;
+    text-align: center;
+    margin: 1mm 0;
+    font-size: 10pt;
+  }
+  .spec li { margin-bottom: 0.3mm; }
+  .note { font-size: 8.5pt; color: #555; }
+  strong { color: #000; }
+</style>
+</head>
+<body>
+  <h1>アナログ回路でLチカ</h1>
+  <div class="meta">ice458 / 2026年02月02日 — 電子工作</div>
+
+  <p class="lead">
+    マイコンを一切使わず、オシロスコープのXYモード上に<strong>文字「L」を描画し、それを点滅させる</strong>純アナログ回路。
+    2つの発振器で塗りつぶし矩形を作り、三角波の閾値検出に同期して正弦波をクリップすることでL字に整形する。
+    クリップ電圧の生成に<strong>LEDの順方向電圧降下V<sub>f</sub></strong>を使うことで、LEDが「L字の生成」と「点滅」の両方を担う。
+  </p>
+
+  <div class="grid">
+    <div>
+      <h2>XYモードによる図形生成</h2>
+      <p>
+        XYモードはCh1をX軸、Ch2をY軸に割り当てる表示モードで、輝点の軌跡がそのまま図形になる。
+        ラスタスキャンと同じ考え方で、<strong>Xに高い周波数の正弦波、Yに低い周波数の三角波</strong>を与えると、
+        輝点が高速に左右を往復しながらゆっくり上下するため、画面は塗りつぶされた矩形に見える。
+      </p>
+
+      <h2>L字への整形</h2>
+      <p>
+        矩形のうち「右上の領域だけを消す」とL字になる。
+        すなわち、<strong>Y (三角波) が閾値より上にある区間だけ、X (正弦波) の正側をクリップする</strong>。
+        掲載図の例では、三角波が−0.7V以上のときに正弦波を−0.5Vでクリップしている。
+        これにより画面上側ではXが左端付近に制限されて縦棒となり、下側ではフル振幅の掃引がそのまま残って横棒となる。
+      </p>
+      <div class="formula">X<sub>out</sub> = min(V<sub>sin</sub>, V<sub>clip</sub>) &nbsp;(Y &gt; V<sub>th</sub> のとき) / V<sub>sin</sub> (それ以外)</div>
+      <p>
+        縦棒の太さと高さは、それぞれクリップ電圧V<sub>clip</sub>と閾値V<sub>th</sub>で独立に決まる。
+        本機ではV<sub>th</sub>を半固定抵抗RV1で可変とし、L字のプロポーションを調整できるようにしている。
+      </p>
+
+      <h2>点滅 (Lチカ) の実現</h2>
+      <p>
+        弛緩発振回路で低周波の矩形波を作り、これで<strong>禁止回路</strong> (Q1・Q3) を駆動する。
+        禁止期間はX・Y両chの出力を−15Vに固定するため、輝点は画面の隅に張り付いた一点となり、Lの表示が消える。
+        この動作はLEDへの電流遮断と同時に起こるため、オシロ上のLと実物のLEDが同期して明滅する。
+      </p>
+    </div>
+
+    <div>
+      <h2>回路構成</h2>
+      <ul class="spec">
+        <li><strong>電源:</strong> ±15V (J1)、出力はX (J4) / Y (J2)</li>
+        <li><strong>U2A (TL072):</strong> ウィーンブリッジ発振回路 → 正弦波 (X源)</li>
+        <li><strong>U1A + U1B (LM358):</strong> ヒステリシスコンパレータ + 積分器による三角波発振回路 (Y源)</li>
+        <li><strong>U2B (TL072):</strong> 三角波バッファ → Y出力</li>
+        <li><strong>U3B (NJM2903):</strong> 閾値検出 (三角波 vs RV1で設定した閾値)</li>
+        <li><strong>Q2 + D1 (LED):</strong> クリップ回路 (閾値検出出力でゲート)</li>
+        <li><strong>U3A (NJM2903):</strong> 弛緩発振回路 → 点滅用矩形波</li>
+        <li><strong>Q1・Q3 (2SC1815):</strong> 禁止回路 (X・Y出力を−15Vへ引き落とし)</li>
+      </ul>
+
+      <h2>設計上の要点</h2>
+      <ul>
+        <li><strong>LEDをクリップ素子として使う:</strong> クリップ電圧をLEDのV<sub>f</sub>で作っているため、クリップ電流＝LED電流となる。表示用の整形素子がそのまま発光素子を兼ねる。</li>
+        <li><strong>整形はX側のみ:</strong> Y (三角波) には手を加えず、Xのクリップと禁止だけで文字を作る。走査そのものは常に一定で、描画内容だけが変わる構成。</li>
+        <li><strong>1か所のみの調整箇所:</strong> RV1でL字の縦横比を調整できる。複雑な調整は不要。</li>
+        <li><strong>禁止は両ch同時:</strong> 片chのみ落とすと線分が残ってしまうため、X・Yを同時に−15Vへ固定して点にする。</li>
+      </ul>
+    </div>
+  </div>
+</body>
+</html>

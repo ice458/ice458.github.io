@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>頭外定位を体験しよう - ice458</title>
+<style>
+  * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    color-adjust: exact;
+  }
+  :root {
+    --primary: #1e40af;
+    --primary-soft: #dbeafe;
+    --primary-border: #93c5fd;
+    --accent: #c2410c;
+    --accent-soft: #ffedd5;
+    --accent-border: #fdba74;
+  }
+  @page { size: A4 portrait; margin: 10mm 14mm; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: "Yu Gothic", "Hiragino Sans", "Meiryo", sans-serif;
+    font-size: 10.5pt;
+    line-height: 1.45;
+    color: #111;
+    background: #fff;
+  }
+  h1 {
+    font-size: 17pt;
+    margin: 0 0 1.5mm 0;
+    color: var(--primary);
+  }
+  .subtitle {
+    font-size: 10.5pt;
+    color: #555;
+    margin-bottom: 3mm;
+  }
+  .intro {
+    background: var(--primary-soft);
+    border: 1pt solid var(--primary-border);
+    border-radius: 3mm;
+    padding: 3.5mm 5mm;
+    margin-bottom: 4mm;
+    font-size: 11pt;
+  }
+  .intro strong { color: var(--primary); }
+
+  .compare {
+    display: flex;
+    gap: 4mm;
+    margin-bottom: 4mm;
+  }
+  .compare-box {
+    flex: 1;
+    border: 1pt solid #ddd;
+    border-radius: 3mm;
+    padding: 4mm;
+    text-align: center;
+  }
+  .compare-box svg {
+    width: 85%;
+    height: auto;
+  }
+  .compare-title {
+    font-size: 12.5pt;
+    font-weight: bold;
+    margin-bottom: 1.5mm;
+  }
+  .compare-caption {
+    font-size: 11pt;
+    color: #333;
+    margin-top: 2mm;
+  }
+
+  .card-solo {
+    display: flex;
+    align-items: center;
+    gap: 4mm;
+    border: 1pt solid var(--accent-border);
+    background: var(--accent-soft);
+    border-radius: 3mm;
+    padding: 3.5mm 5mm;
+    margin-bottom: 4mm;
+  }
+  .card-solo-num {
+    flex: 0 0 36mm;
+    font-size: 15pt;
+    font-weight: bold;
+    color: var(--accent);
+    text-align: center;
+    line-height: 1.25;
+  }
+  .card-solo-text {
+    font-size: 10.8pt;
+    color: #333;
+  }
+
+  .closing {
+    background: var(--primary-soft);
+    border: 1pt solid var(--primary-border);
+    border-radius: 3mm;
+    padding: 3.5mm 5mm;
+    margin-top: 4mm;
+  }
+  .closing h2 {
+    font-size: 13.5pt;
+    margin: 0 0 2.5mm 0;
+    color: var(--primary);
+  }
+  .closing ul {
+    margin: 0;
+    padding-left: 5mm;
+  }
+  .closing li {
+    margin-bottom: 2mm;
+    font-size: 10.8pt;
+  }
+  .closing li:last-child { margin-bottom: 0; }
+  .closing strong { color: var(--accent); }
+</style>
+</head>
+<body>
+  <h1>ヘッドホンなのに、音が頭の外から聞こえてくる不思議なアンプ</h1>
+  <div class="subtitle">実際にヘッドホンをつけて、切り替えながら聴き比べてみてください</div>
+
+  <div class="intro">
+    普通のヘッドホンで音楽を聴くと、音は頭の中や耳のすぐそばに張り付いたように聞こえます。これは、耳や頭の形によって本来起きるはずの反射や、両耳に音が届くまでのわずかな時間差が、ヘッドホンでは再現されないからです。このアンプは、その足りない情報を<strong>コンピュータで補って</strong>、まるでスピーカーで聴いているように、音を頭の外・前方の空間から聞こえるようにします。
+  </div>
+
+  <div class="compare">
+    <div class="compare-box">
+      <div class="compare-title">普通のヘッドホン</div>
+      <svg viewBox="0 0 140 110">
+        <text x="70" y="12" text-anchor="middle" font-size="8" fill="#888">前</text>
+        <circle cx="70" cy="68" r="24" fill="#fff" stroke="#1e40af" stroke-width="2"/>
+        <polygon points="70,34 64,44 76,44" fill="#fff" stroke="#1e40af" stroke-width="2"/>
+        <ellipse cx="46" cy="68" rx="7" ry="10" fill="#fff" stroke="#1e40af" stroke-width="2"/>
+        <ellipse cx="94" cy="68" rx="7" ry="10" fill="#fff" stroke="#1e40af" stroke-width="2"/>
+        <circle cx="48" cy="60" r="4.5" fill="#c2410c"/>
+        <circle cx="92" cy="60" r="4.5" fill="#c2410c"/>
+        <text x="40" y="54" text-anchor="middle" font-size="8" fill="#c2410c" font-weight="bold">L</text>
+        <text x="100" y="54" text-anchor="middle" font-size="8" fill="#c2410c" font-weight="bold">R</text>
+      </svg>
+      <div class="compare-caption">左右の音が耳もとに張りつく<br>（頭内定位）</div>
+    </div>
+    <div class="compare-box">
+      <div class="compare-title">このアンプ（頭外定位オン）</div>
+      <svg viewBox="0 0 140 110">
+        <text x="70" y="12" text-anchor="middle" font-size="8" fill="#888">前</text>
+        <line x1="38" y1="36" x2="70" y2="68" stroke="#c2410c" stroke-width="1" stroke-dasharray="2,2" opacity="0.55"/>
+        <line x1="102" y1="36" x2="70" y2="68" stroke="#c2410c" stroke-width="1" stroke-dasharray="2,2" opacity="0.55"/>
+        <circle cx="70" cy="68" r="24" fill="#fff" stroke="#1e40af" stroke-width="2"/>
+        <polygon points="70,34 64,44 76,44" fill="#fff" stroke="#1e40af" stroke-width="2"/>
+        <ellipse cx="46" cy="68" rx="7" ry="10" fill="#fff" stroke="#1e40af" stroke-width="2"/>
+        <ellipse cx="94" cy="68" rx="7" ry="10" fill="#fff" stroke="#1e40af" stroke-width="2"/>
+        <circle cx="38" cy="36" r="4.5" fill="#c2410c"/>
+        <circle cx="102" cy="36" r="4.5" fill="#c2410c"/>
+        <text x="30" y="30" text-anchor="middle" font-size="8" fill="#c2410c" font-weight="bold">L</text>
+        <text x="110" y="30" text-anchor="middle" font-size="8" fill="#c2410c" font-weight="bold">R</text>
+      </svg>
+      <div class="compare-caption">前方・左右2か所の空間から聞こえる<br>（頭外定位）</div>
+    </div>
+  </div>
+
+  <!-- <div class="card-solo">
+    <div class="card-solo-num">毎秒<br>約4900万回</div>
+    <div class="card-solo-text">耳や頭の形によって音がどう変わるかを表す実測データ(HRTF)をもとに、両耳に届く音を1秒間に48,000回、休みなく計算し直しています。この足し算・掛け算の回数は、合わせて毎秒約4900万回以上です。</div>
+  </div> -->
+
+  <!-- <div class="closing">
+    <h2>ぜひ切り替えて聴いてみてください</h2>
+    <ul>
+      <li><strong>ボタンで「そのまま」⇄「頭外定位」を切り替え可能</strong> — 曲を再生したまま切り替えられるので、変化がはっきり分かります。</li>
+      <li><strong>効き方には個人差があります</strong> — 耳や頭の形は人によって違うため、実測データの被験者を切り替えると、しっくりくる感じ方も変わります。ちょうど良い設定を一緒に探してみましょう。</li>
+    </ul>
+  </div> -->
+
+</body>
+</html>

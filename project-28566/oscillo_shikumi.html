@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>Lチカのしくみ - ice458</title>
+<style>
+  * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    color-adjust: exact;
+  }
+  :root {
+    --primary: #1e40af;
+    --primary-soft: #dbeafe;
+    --primary-border: #93c5fd;
+    --accent: #c2410c;
+    --accent-soft: #ffedd5;
+    --accent-border: #fdba74;
+  }
+  @page { size: A4 portrait; margin: 10mm 14mm; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: "Yu Gothic", "Hiragino Sans", "Meiryo", sans-serif;
+    font-size: 10.5pt;
+    line-height: 1.45;
+    color: #111;
+    background: #fff;
+  }
+  h1 {
+    font-size: 16pt;
+    margin: 0 0 1mm 0;
+    color: var(--primary);
+  }
+  .subtitle {
+    font-size: 10pt;
+    color: #555;
+    margin-bottom: 2.5mm;
+  }
+  .intro {
+    background: var(--primary-soft);
+    border: 1pt solid var(--primary-border);
+    border-radius: 3mm;
+    padding: 2.5mm 4mm;
+    margin-bottom: 3mm;
+    font-size: 10pt;
+  }
+  .intro strong { color: var(--primary); }
+
+  .card {
+    display: flex;
+    gap: 3mm;
+    border: 1pt solid #ddd;
+    border-radius: 3mm;
+    padding: 2.5mm 4mm;
+    margin-bottom: 2.5mm;
+    page-break-inside: avoid;
+    align-items: center;
+  }
+  .card-img {
+    flex: 0 0 95mm;
+    text-align: center;
+  }
+  .card-img img {
+    max-width: 95mm;
+    max-height: 62mm;
+    width: 100%;
+    object-fit: contain;
+    border: 1pt solid #ccc;
+    border-radius: 1.5mm;
+  }
+  .card-body { flex: 1; }
+  .card-title {
+    font-size: 11.5pt;
+    font-weight: bold;
+    margin-bottom: 1.5mm;
+  }
+  .card-result {
+    display: inline-block;
+    background: var(--accent-soft);
+    color: var(--accent);
+    border: 1pt solid var(--accent-border);
+    border-radius: 2mm;
+    padding: 0.8mm 3mm;
+    font-size: 10pt;
+    font-weight: bold;
+    margin-bottom: 1.5mm;
+  }
+  .card-text {
+    font-size: 10pt;
+    color: #333;
+  }
+
+  .closing {
+    background: var(--primary-soft);
+    border: 1pt solid var(--primary-border);
+    border-radius: 3mm;
+    padding: 3.5mm 5mm;
+    margin-top: 3mm;
+  }
+  .closing h2 {
+    font-size: 13.5pt;
+    margin: 0 0 2.5mm 0;
+    color: var(--primary);
+  }
+  .closing ul {
+    margin: 0;
+    padding-left: 5mm;
+  }
+  .closing li {
+    margin-bottom: 2mm;
+    font-size: 10.5pt;
+  }
+  .closing li:last-child { margin-bottom: 0; }
+  .closing strong { color: var(--accent); }
+  .closing-lead {
+    font-size: 10.5pt;
+    color: #333;
+    margin: 0 0 2.5mm 0;
+  }
+</style>
+</head>
+<body>
+  <h1>マイコンなし！アナログ回路だけで「L」チカ</h1>
+  <div class="subtitle">画面に映る「Ｌ」の文字をアナログ回路でどう作るかの解説です</div>
+
+  <div class="intro">
+    オシロスコープは、電気信号を目に見えるグラフにする道具です。通常は「時間とともに動くする波」を描きますが、<strong>ＸＹモード</strong>という設定にすると、2つの電圧をヨコ(X)とタテ(Y)の位置として使い、点の動きが図形として描かれます。
+  </div>
+
+  <div class="card">
+    <div class="card-img"><img src="img/xy_example_1.webp" alt="Ch1のみに正弦波を入れた例"></div>
+    <div class="card-body">
+      <div class="card-title">① ヨコだけ動かす</div>
+      <div class="card-result">→ 横一直線</div>
+      <div class="card-text">正弦波をヨコ(Ch1)だけに入れます。点は左右にしか動かないので、横向きの線になります。</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-img"><img src="img/xy_example_2.webp" alt="速い正弦波と遅い三角波を組み合わせた例"></div>
+    <div class="card-body">
+      <div class="card-title">② ヨコとタテを同時に動かす</div>
+      <div class="card-result">→ 四角形</div>
+      <div class="card-text">ヨコに速い正弦波、タテにゆっくりした三角波を同時に入れます。点が画面を塗りつぶすように動き、四角形に見えます。</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-img"><img src="img/xy_example_3.webp" alt="波形をクリップしてL字にした例"></div>
+    <div class="card-body">
+      <div class="card-title">③ 波形の一部を「削る」</div>
+      <div class="card-result">→ 「Ｌ」の形</div>
+      <div class="card-text">三角波である決まったタイミングだけ、正弦波を一定の電圧で削り取ります(クリップ)。四角形の一部だけが残って、「Ｌ」の形になります。</div>
+    </div>
+  </div>
+</body>
+</html>

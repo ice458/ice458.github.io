@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>RPN関数電卓 要約 - ice458</title>
+<style>
+  @page { size: A4 landscape; margin: 12mm 14mm; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: "Yu Gothic", "Hiragino Sans", "Meiryo", sans-serif;
+    font-size: 9.5pt;
+    line-height: 1.40;
+    color: #111;
+    background: #fff;
+    /* 和欧文間の八分アキと約物のアキ詰め（styles.css と同じ方針） */
+    text-autospace: normal;
+    text-spacing-trim: normal;
+  }
+  h1 { font-size: 14pt; margin: 0 0 2mm 0; border-bottom: 1.5pt solid #333; padding-bottom: 1mm; }
+  h2 { font-size: 10.5pt; margin: 2.2mm 0 1.2mm 0; color: #222; border-left: 3pt solid #555; padding-left: 2mm; }
+  p { margin: 0 0 1.2mm 0; }
+  ul { margin: 0 0 1.5mm 4mm; padding: 0; }
+  li { margin: 0; }
+  .meta { font-size: 8.5pt; color: #555; margin-bottom: 2mm; }
+  .lead { font-size: 10pt; margin-bottom: 2mm; }
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4mm;
+    align-items: start;
+  }
+  .fig { text-align: center; }
+  .fig img { max-width: 100%; object-fit: contain; }
+  .fig .cap { font-size: 8pt; color: #444; margin-top: 0.5mm; }
+  .code {
+    font-family: "Consolas", "SF Mono", monospace;
+    font-size: 8pt;
+    line-height: 1.3;
+    background: #f5f5f5;
+    border-left: 2pt solid #999;
+    padding: 1mm 2mm;
+    margin: 1mm 0 1.5mm 0;
+    white-space: pre;
+  }
+  .spec li { margin-bottom: 0.3mm; }
+  .keys { font-family: "Consolas", "SF Mono", monospace; font-size: 9pt; }
+  strong { color: #000; }
+
+  /* --- 2ページ目: 図とリンク --- */
+  .page2 { page-break-before: always; }
+  .p2head {
+    font-size: 9pt; color: #555;
+    border-bottom: 0.5pt solid #bbb;
+    padding-bottom: 1mm; margin-bottom: 5mm;
+  }
+  .figs-lg { text-align: center; }
+  .figs-lg img { max-width: 100%; max-height: 118mm; object-fit: contain; }
+  .qr-row { display: flex; justify-content: center; gap: 12mm; margin-top: 6mm; }
+  .qr { text-align: center; width: 48mm; }
+  .qr img { width: 30mm; height: 30mm; display: block; margin: 0 auto 1mm auto; }
+  .qr .qr-t { font-size: 9pt; font-weight: bold; }
+  .qr .qr-u { font-size: 7pt; color: #666; word-break: break-all; line-height: 1.25; }
+</style>
+</head>
+<body>
+  <h1>RPN関数電卓</h1>
+  <div class="meta">ice458 / 2024年06月29日 — 電子工作・電卓</div>
+
+  <p class="lead">
+    逆ポーランド記法 (RPN) で入力する自作の関数電卓。
+    二進浮動小数点数による誤差を避けるため<strong>18桁の十進浮動小数点演算ライブラリを自作</strong>して演算コアとし、
+    PIC32CM Lx (Arm Cortex-M23) と動的クロック制御により<strong>単4電池1本・待機1mW / 計算時9mW</strong>で動作する。
+  </p>
+
+  <div class="grid">
+    <div>
+      <h2>仕様</h2>
+      <ul class="spec">
+        <li><strong>桁数:</strong> 表示10桁 / 内部計算18桁</li>
+        <li><strong>計算範囲:</strong> ±1E-99 〜 ±9.999999999E99 および 0</li>
+        <li><strong>関数:</strong> 26種 / <strong>スタック:</strong> 4段 (X, Y, Z, T)</li>
+        <li><strong>表示:</strong> 科学的表記・工学的表記 / <strong>角度:</strong> 度数法・弧度法</li>
+        <li><strong>MCU:</strong> PIC32CM2532LE00048 (Cortex-M23)</li>
+        <li><strong>電源:</strong> 単4×1 + XC9140 昇圧DCDC</li>
+        <li><strong>消費電力:</strong> 待機 1mW / 計算時 9mW</li>
+        <li><strong>サイズ:</strong> 100×62×10mm (電池を除く) / 自動電源オフ10分</li>
+      </ul>
+
+      <h2>RPN (逆ポーランド記法) とは</h2>
+      <p>
+        演算子を被演算子の<strong>後</strong>に置く記法。中置記法の電卓が <span class="keys">[1][+][2][=]</span> と入力するのに対し、
+        RPN電卓では <span class="keys">[1][Enter][2][+]</span> と入力する。
+        実装は<strong>スタックマシン</strong>そのもので、数値入力はプッシュ、演算子は「2値ポップ → 演算 → 結果をプッシュ」に対応する。
+        構文解析器も優先順位表も不要で、限られた資源上でも実装できる。
+      </p>
+      <p>
+        括弧と「=」が不要になるため、式が複雑になるほど打鍵数が減る ((1+2)×(3−4) は中置11打鍵に対しRPNは9打鍵)。
+        さらに「1に2を足して、3から4を引いて、その二つを掛ける」という日本語の語順のまま入力でき、
+        式全体を先に組み立てる必要がない点が実用上大きい。スタック全体のロールや任意段のスワップも備える。
+      </p>
+
+      <h2>自作ならではの機能</h2>
+      <p>
+        電子回路でよく使う演算を専用キーとして持たせている。
+        並列抵抗演算 (x×y)÷(x+y) や、RC・LCフィルタのカットオフ周波数を直接求める関数を実装した。
+      </p>
+
+      <h2>電源制御回路</h2>
+      <p>
+        市販電卓と同じ「キー押下で電源ON、時間経過や特定キーでOFF」を実現するため、PMOSを電源スイッチとし、
+        そのゲート電圧を<strong>モーメンタリスイッチとNMOSのOR</strong>で制御する。
+        キー押下でDCDCが起動 → マイコンが起動直後に power_en をHighにして自己保持し、OFF時はLowに戻して回路全体の電源を落とす。
+        単4アルカリ1本では0.9V程度でPMOSをONさせる必要があるため、V<sub>th</sub> = −0.3〜−0.9V の <strong>AO3415A</strong> を採用した。
+      </p>
+    </div>
+
+    <div>
+      <h2>二進浮動小数点数の問題</h2>
+      <p>
+        float / double は数値を二進で表現するため、十進で有限桁の値が二進では循環小数となる。
+        十進の0.1は二進で 0.000110011001100… と無限に続き、有限桁では正確に表現できない。
+        結果として入力値と内部値に差が生じ、連続演算では誤差が累積する
+        (<span class="keys">=(100.01-100)*100-1</span> が0にならないExcelの例が有名)。
+        電卓としては「表示した値がそのまま内部値である」ことが要求されるため、この差は許容できない。
+      </p>
+
+      <h2>十進浮動小数点演算ライブラリ</h2>
+      <p>
+        解決策として、内部演算も十進で行う。二進化十進数 (BCD) は各桁を十進数として直接保持するため、
+        0.1のような値を誤差なく表現できる (十進で循環する値については同じ問題が残る)。
+        浮動小数点数を次の構造体で表現した (下は3桁の例、実際は18桁)。
+      </p>
+      <div class="code">typedef struct
+{
+    // [0][1,0,0][0]  →  1.0E0
+    // [0][3,1,4][-1] →  3.14E-1
+    // [1][3,1,4][2]  → -3.14E2
+    uint8_t sign;        // 符号
+    uint8_t mantissa[3]; // 仮数部
+    int16_t exponent;    // 指数部
+} df_t;</div>
+      <p>
+        四則演算は筆算を基本に実装する。四則演算が揃えば、
+        <strong>テイラー展開やニュートン法</strong>によって三角関数・対数・平方根などの数学関数も構成できる。
+        この18桁ライブラリを電卓のコアとした。
+      </p>
+
+      <h2>開発の経緯</h2>
+      <ul>
+        <li><strong>初回試作 (PIC18F27Q43 + XCL103):</strong> 十進演算による関数計算に最大3秒かかりレスポンスが不足。消費電力も30mWと大きい。</li>
+        <li><strong>改良版 (PIC32CM2532LE00048 + XC9140):</strong> 低消費電力なCortex-M23コア。豊富なクロック設定とスイッチングレギュレータによるコア電圧生成を持つ。<strong>動的なクロック周波数変更</strong>で待機1mW / 計算時9mWを達成。</li>
+      </ul>
+      <p>
+        後継機として、演算コアをIntel&reg; Decimal Floating-Point Math Library (decimal128 / 34桁) に、
+        MCUをRP2350に置き換えた<strong>RPN35</strong>を頒布している (別紙参照)。
+      </p>
+    </div>
+  </div>
+
+  <div class="page2">
+    <div class="p2head">RPN関数電卓 — 図とリンク</div>
+    <div class="figs-lg">
+      <img src="img/p_sw.webp" alt="電源回りの回路図">
+      <div class="cap" style="font-size:8.5pt;color:#444;margin-top:1mm;">電源回りの回路図。SW29 (POWER) で起動し、マイコンが power_en をHighにしてQ1経由でPMOS (AO3415A) のゲートを保持する</div>
+    </div>
+    <div class="qr-row">
+      <div class="qr">
+        <img src="img/qr_calc_page.svg" alt="プロジェクトページのQRコード">
+        <div class="qr-t">プロジェクトページ</div>
+        <div class="qr-u">ice458.github.io/project-18775/</div>
+      </div>
+      <div class="qr">
+        <img src="img/qr_calc_github.svg" alt="設計データのQRコード">
+        <div class="qr-t">設計データ (GitHub)</div>
+        <div class="qr-u">github.com/ice458/RPN_Scientific_Calc</div>
+      </div>
+      <div class="qr">
+        <img src="img/qr_calc_zine.svg" alt="詳細解説同人誌のQRコード">
+        <div class="qr-t">詳細解説 (同人誌)</div>
+        <div class="qr-u">ice458.booth.pm/items/7218610</div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
